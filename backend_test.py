@@ -44,7 +44,8 @@ class ShunyaBackendTester:
     def generate_test_email(self):
         """Generate unique test email"""
         timestamp = str(int(time.time()))
-        return f"meditator_{timestamp}@shunya.app"
+        random_suffix = ''.join(random.choices(string.ascii_lowercase, k=4))
+        return f"meditator_{timestamp}_{random_suffix}@shunya.app"
     
     def test_user_registration(self):
         """Test user registration endpoint"""
