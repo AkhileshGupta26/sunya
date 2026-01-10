@@ -97,8 +97,10 @@ class ShunyaBackendTester:
                                        json=register_payload, headers=HEADERS, timeout=10)
             
             if reg_response.status_code != 200:
+                print(f"Registration failed with status: {reg_response.status_code}")
+                print(f"Response text: {reg_response.text}")
                 self.log_result("authentication", "User Login Setup", False, 
-                              reg_response, "Failed to register test user")
+                              reg_response, f"Failed to register test user - Status: {reg_response.status_code}")
                 return False
             
             # Now test login
