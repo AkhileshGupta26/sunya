@@ -162,7 +162,7 @@ export default function Meditation() {
               <Text style={styles.probeButtonText}>Still Present ✓</Text>
             </TouchableOpacity>
           </View>
-        )>
+        )}
 
         <View style={styles.timerContainer}>
           <Text style={styles.timerText}>{formatTime(timeRemaining)}</Text>
