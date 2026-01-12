@@ -8,22 +8,48 @@ import {
   TextInput,
   Alert,
   RefreshControl,
+  Share,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import Modal from 'react-native-modal';
+import * as Linking from 'expo-linking';
+import { useLocalSearchParams } from 'expo-router';
+import { useThemeColor } from '../../hooks/useThemeColor';
+import * as Haptics from 'expo-haptics';
+import { Platform } from 'react-native';
+
+const triggerHaptic = (type: 'impact' | 'notification' | 'selection', style?: any) => {
+  if (Platform.OS === 'web') return;
+  try {
+    if (type === 'impact') Haptics.impactAsync(style);
+    else if (type === 'notification') Haptics.notificationAsync(style);
+    else Haptics.selectionAsync();
+  } catch (e) { }
+};
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function Circle() {
   const { token } = useAuth();
+  const THEME_COLOR = useThemeColor();
   const [refreshing, setRefreshing] = useState(false);
   const [circle, setCircle] = useState<any>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [circleName, setCircleName] = useState('');
   const [joinCode, setJoinCode] = useState('');
+
+  // Deep Link Handling
+  const params = useLocalSearchParams();
+
+  useEffect(() => {
+    if (params.code) {
+      setJoinCode(params.code as string);
+      setShowJoinModal(true);
+    }
+  }, [params.code]);
 
   useEffect(() => {
     loadCircle();
@@ -47,6 +73,7 @@ export default function Circle() {
   };
 
   const onRefresh = async () => {
+    triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Light);
     setRefreshing(true);
     await loadCircle();
     setRefreshing(false);
@@ -57,6 +84,8 @@ export default function Circle() {
       Alert.alert('Error', 'Please enter a circle name');
       return;
     }
+
+    triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Medium);
 
     try {
       const response = await fetch(`${API_URL}/api/circles/create`, {
@@ -69,6 +98,7 @@ export default function Circle() {
       });
 
       if (response.ok) {
+        triggerHaptic('notification', Haptics.NotificationFeedbackType.Success);
         const data = await response.json();
         setCircle(data);
         setShowCreateModal(false);
@@ -87,6 +117,8 @@ export default function Circle() {
       return;
     }
 
+    triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Medium);
+
     try {
       const response = await fetch(`${API_URL}/api/circles/join`, {
         method: 'POST',
@@ -98,6 +130,7 @@ export default function Circle() {
       });
 
       if (response.ok) {
+        triggerHaptic('notification', Haptics.NotificationFeedbackType.Success);
         const data = await response.json();
         setCircle(data);
         setShowJoinModal(false);
@@ -113,11 +146,67 @@ export default function Circle() {
     }
   };
 
+  const handleShare = async () => {
+    if (!circle) return;
+
+    triggerHaptic('selection');
+
+    // Create deep link
+    const link = Linking.createURL('/(tabs)/circle', {
+      queryParams: { code: circle.code },
+    });
+
+    try {
+      await Share.share({
+        message: `Join my Zen Circle "${circle.name}"! Use code: ${circle.code}\n\nJoin automatically here: ${link}`,
+        url: link, // iOS only
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to share');
+    }
+  };
+
+  const handleLeaveCircle = async () => {
+    Alert.alert(
+      'Leave Circle?',
+      'Are you sure you want to leave this circle? You will need a code to rejoin.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Leave',
+          style: 'destructive',
+          onPress: async () => {
+            triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Heavy);
+            try {
+              const response = await fetch(`${API_URL}/api/circles/leave`, {
+                method: 'POST',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              if (response.ok) {
+                triggerHaptic('notification', Haptics.NotificationFeedbackType.Success);
+                setCircle(null);
+                Alert.alert('Left Circle', 'You have successfully left the circle.');
+              } else {
+                Alert.alert('Error', 'Failed to leave circle');
+              }
+            } catch (error) {
+              console.error('Failed to leave circle:', error);
+              Alert.alert('Error', 'Failed to leave circle');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   if (!circle) {
     return (
       <ScrollView
         style={styles.container}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={THEME_COLOR} />}
       >
         <View style={styles.header}>
           <Text style={styles.title}>Family Circle</Text>
@@ -130,17 +219,17 @@ export default function Circle() {
             Create a circle for your family or join an existing one to meditate together
           </Text>
 
-          <TouchableOpacity style={styles.actionButton} onPress={() => setShowCreateModal(true)}>
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: THEME_COLOR }]} onPress={() => setShowCreateModal(true)}>
             <MaterialCommunityIcons name="plus-circle" size={20} color="#FFFFFF" />
             <Text style={styles.actionButtonText}>Create Circle</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionButton, styles.secondaryButton]}
+            style={[styles.actionButton, styles.secondaryButton, { borderColor: THEME_COLOR }]}
             onPress={() => setShowJoinModal(true)}
           >
-            <MaterialCommunityIcons name="login" size={20} color="#7C3AED" />
-            <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>Join Circle</Text>
+            <MaterialCommunityIcons name="login" size={20} color={THEME_COLOR} />
+            <Text style={[styles.actionButtonText, styles.secondaryButtonText, { color: THEME_COLOR }]}>Join Circle</Text>
           </TouchableOpacity>
         </View>
 
@@ -151,7 +240,7 @@ export default function Circle() {
           style={styles.modal}
         >
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Create Family Circle</Text>
+            <Text style={[styles.modalTitle, { color: THEME_COLOR }]}>Create Family Circle</Text>
             <TextInput
               style={styles.input}
               placeholder="Circle Name (e.g., Smith Family)"
@@ -159,7 +248,7 @@ export default function Circle() {
               value={circleName}
               onChangeText={setCircleName}
             />
-            <TouchableOpacity style={styles.modalButton} onPress={handleCreateCircle}>
+            <TouchableOpacity style={[styles.modalButton, { backgroundColor: THEME_COLOR }]} onPress={handleCreateCircle}>
               <Text style={styles.modalButtonText}>Create</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -178,7 +267,7 @@ export default function Circle() {
           style={styles.modal}
         >
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Join Circle</Text>
+            <Text style={[styles.modalTitle, { color: THEME_COLOR }]}>Join Circle</Text>
             <TextInput
               style={styles.input}
               placeholder="Enter 6-digit code"
@@ -188,7 +277,7 @@ export default function Circle() {
               keyboardType="number-pad"
               maxLength={6}
             />
-            <TouchableOpacity style={styles.modalButton} onPress={handleJoinCircle}>
+            <TouchableOpacity style={[styles.modalButton, { backgroundColor: THEME_COLOR }]} onPress={handleJoinCircle}>
               <Text style={styles.modalButtonText}>Join</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -206,36 +295,41 @@ export default function Circle() {
   return (
     <ScrollView
       style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={THEME_COLOR} />}
     >
       <View style={styles.header}>
         <Text style={styles.title}>{circle.name}</Text>
       </View>
 
-      <View style={styles.codeCard}>
-        <MaterialCommunityIcons name="qrcode" size={32} color="#7C3AED" />
-        <View style={styles.codeInfo}>
-          <Text style={styles.codeLabel}>Circle Code</Text>
-          <Text style={styles.codeText}>{circle.code}</Text>
+      <View style={[styles.codeCard, { borderColor: THEME_COLOR }]}>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+          <MaterialCommunityIcons name="qrcode" size={32} color={THEME_COLOR} />
+          <View style={styles.codeInfo}>
+            <Text style={styles.codeLabel}>Circle Code</Text>
+            <Text style={styles.codeText}>{circle.code}</Text>
+          </View>
         </View>
+        <TouchableOpacity style={[styles.shareButton, { backgroundColor: THEME_COLOR }]} onPress={handleShare}>
+          <MaterialCommunityIcons name="share-variant" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.harmonyCard}>
         <Text style={styles.harmonyTitle}>Harmony Score</Text>
-        <Text style={styles.harmonyScore}>{Math.round(circle.harmony_score)}%</Text>
+        <Text style={[styles.harmonyScore, { color: THEME_COLOR }]}>{Math.round(circle.harmony_score)}%</Text>
         <Text style={styles.harmonySubtitle}>Members meditating today</Text>
       </View>
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Members</Text>
-        <Text style={styles.memberCount}>{circle.members.length}</Text>
+        <Text style={[styles.memberCount, { color: THEME_COLOR }]}>{circle.members.length}</Text>
       </View>
 
       <View style={styles.membersList}>
         {circle.members.map((member: any, index: number) => (
           <View key={index} style={styles.memberCard}>
-            <View style={styles.memberAvatar}>
-              <MaterialCommunityIcons name="account" size={24} color="#7C3AED" />
+            <View style={[styles.memberAvatar, { backgroundColor: `${THEME_COLOR}20` }]}>
+              <MaterialCommunityIcons name="account" size={24} color={THEME_COLOR} />
             </View>
             <View style={styles.memberInfo}>
               <Text style={styles.memberName}>{member.name}</Text>
@@ -245,6 +339,11 @@ export default function Circle() {
             </View>
           </View>
         ))}
+
+        <TouchableOpacity style={styles.leaveButton} onPress={handleLeaveCircle}>
+          <MaterialCommunityIcons name="exit-to-app" size={20} color="#EF4444" />
+          <Text style={styles.leaveButtonText}>Leave Circle</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -310,6 +409,7 @@ const styles = StyleSheet.create({
   codeCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: '#1F1F2E',
     marginHorizontal: 24,
     borderRadius: 16,
@@ -330,6 +430,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     letterSpacing: 2,
+  },
+  shareButton: {
+    padding: 12,
+    borderRadius: 8,
+    marginLeft: 16,
   },
   harmonyCard: {
     backgroundColor: '#1F1F2E',
@@ -450,5 +555,22 @@ const styles = StyleSheet.create({
   modalCancelText: {
     color: '#9CA3AF',
     fontSize: 14,
+  },
+  leaveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#EF4444',
+    backgroundColor: '#EF444410',
+  },
+  leaveButtonText: {
+    color: '#EF4444',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 });

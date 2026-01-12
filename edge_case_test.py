@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Edge Case Testing for Shunya Meditation App Backend
+Edge Case Testing for Sunya Meditation App Backend
 Tests error scenarios and edge cases
 """
 

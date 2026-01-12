@@ -6,148 +6,319 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Image,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import Constants from 'expo-constants';
+import { api } from '../services/api';
 import { Audio } from 'expo-av';
+import { useThemeColor } from '../hooks/useThemeColor';
+import * as Haptics from 'expo-haptics';
+import { Platform } from 'react-native';
 
-const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL;
+const triggerHaptic = (type: 'impact' | 'notification' | 'selection', style?: any) => {
+  if (Platform.OS === 'web') return;
+  try {
+    if (type === 'impact') Haptics.impactAsync(style);
+    else if (type === 'notification') Haptics.notificationAsync(style);
+    else Haptics.selectionAsync();
+  } catch (e) { }
+};
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  Easing,
+  cancelAnimation
+} from 'react-native-reanimated';
+
+
+
+const AUDIO_FILES = {
+  vedic: require('../assets/vedic.mp3'),
+  nature: require('../assets/nature.mp3'),
+  guided: require('../assets/guided.mp3'),
+  flute: require('../assets/flute.mp3'),
+  forest: require('../assets/forest.mp4'),
+};
 
 const MEDITATION_TRACKS = [
+  {
+    id: 'flute',
+    name: 'Krishna Flute',
+    icon: 'music-clef-treble',
+    color: '#F472B6',
+    description: 'Divine, relaxing flute melody',
+    source: AUDIO_FILES.flute,
+  },
+  {
+    id: 'rain',
+    name: 'Rain Sounds',
+    icon: 'weather-pouring',
+    color: '#3B82F6',
+    description: 'Soothing rainfall for deep sleep',
+    source: AUDIO_FILES.nature, // Using nature as proxy for now
+  },
+  {
+    id: 'forest',
+    name: 'Forest Ambience',
+    icon: 'tree',
+    color: '#10B981',
+    description: 'Birds and rustling leaves',
+    source: AUDIO_FILES.forest,
+  },
   {
     id: 'vedic',
     name: 'Vedic Chants',
     icon: 'om',
     color: '#F59E0B',
     description: 'Ancient mantras for deep focus',
-  },
-  {
-    id: 'nature',
-    name: 'Nature Sounds',
-    icon: 'nature',
-    color: '#10B981',
-    description: 'Forest ambience and flowing water',
+    source: AUDIO_FILES.vedic,
   },
   {
     id: 'guided',
-    name: 'Guided Meditation',
+    name: 'Guided Session',
     icon: 'account-voice',
-    color: '#3B82F6',
+    color: '#8B5CF6',
     description: 'Gentle voice guidance',
+    source: AUDIO_FILES.guided,
   },
   {
     id: 'silence',
     name: 'Pure Silence',
     icon: 'volume-off',
-    color: '#8B5CF6',
+    color: '#6B7280',
     description: 'Deep stillness and awareness',
+    uri: null,
   },
 ];
 
 export default function Meditation() {
   const router = useRouter();
-  const { token, refreshUser } = useAuth();
+  const { token, user } = useAuth();
+  const THEME_COLOR = useThemeColor();
+  const { autoStart, trackId } = useLocalSearchParams();
   const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
+
   const [meditating, setMeditating] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(600); // 10 minutes
+  const [paused, setPaused] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(10 * 60); // 10 minutes default
+  const [breakTimeRemaining, setBreakTimeRemaining] = useState(2 * 60); // 2 min break limit
   const [awarenessProbe, setAwarenessProbe] = useState(false);
-  const [probePassed, setProbePassed] = useState(false);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [startTime, setStartTime] = useState<Date | null>(null);
+
+  // Animation Shared Value
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: scale.value }],
+    };
+  });
 
   useEffect(() => {
-    if (meditating && timeRemaining > 0) {
-      const interval = setInterval(() => {
-        setTimeRemaining(prev => {
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
+  }, [sound]);
+
+  // Breathing Animation Effect
+  useEffect(() => {
+    if (meditating && !paused) {
+      // Breathe in (4s), Breathe out (4s)
+      scale.value = withRepeat(
+        withTiming(1.05, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
+        -1, // infinite
+        true // reverse
+      );
+    } else {
+      cancelAnimation(scale);
+      scale.value = withTiming(1, { duration: 500 });
+    }
+  }, [meditating, paused]);
+
+  useEffect(() => {
+    let interval: any;
+    if (meditating && !paused && timeRemaining > 0) {
+      interval = setInterval(() => {
+        setTimeRemaining((prev) => {
           if (prev <= 1) {
-            clearInterval(interval);
-            completeMeditation();
+            completeSession();
+            return 0;
+          }
+          return prev - 1;
+        });
+
+        // Randomly trigger awareness probe (1% chance per second)
+        if (!awarenessProbe && Math.random() < 0.01) {
+          setAwarenessProbe(true);
+          triggerHaptic('notification', Haptics.NotificationFeedbackType.Warning);
+        }
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [meditating, paused, timeRemaining, awarenessProbe]);
+
+  // Break Timer
+  useEffect(() => {
+    let interval: any;
+    if (paused && breakTimeRemaining > 0) {
+      interval = setInterval(() => {
+        setBreakTimeRemaining((prev) => {
+          if (prev <= 1) {
+            handleStop(); // End session if break too long
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
-
-      // Schedule awareness probe at random time between 2-8 minutes
-      const probeTime = Math.random() * (480 - 120) + 120; // 2-8 minutes in seconds
-      const probeTimeout = setTimeout(() => {
-        setAwarenessProbe(true);
-        playProbeSound();
-      }, probeTime * 1000);
-
-      return () => {
-        clearInterval(interval);
-        clearTimeout(probeTimeout);
-      };
     }
-  }, [meditating, timeRemaining]);
+    return () => clearInterval(interval);
+  }, [paused, breakTimeRemaining]);
 
-  const playProbeSound = async () => {
+  useEffect(() => {
+    if (autoStart && trackId) {
+      setSelectedTrack(trackId as string);
+    }
+  }, [autoStart, trackId]);
+
+  useEffect(() => {
+    if (autoStart && selectedTrack && !meditating) {
+      startMeditation();
+    }
+  }, [autoStart, selectedTrack]);
+
+  const startMeditation = async () => {
+    if (!selectedTrack) {
+      Alert.alert('Select a Track', 'Please choose a meditation track first.');
+      return;
+    }
+
+    if (user?.settings_bpm_check && !autoStart) {
+      router.push({
+        pathname: '/bpm-check',
+        params: { phase: 'before', trackId: selectedTrack }
+      });
+      return;
+    }
+
+    triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Medium);
+
+    const track = MEDITATION_TRACKS.find(t => t.id === selectedTrack);
+    if (!track) return;
+
     try {
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3' },
-        { shouldPlay: true }
-      );
-      await sound.playAsync();
+      if (sound) await sound.unloadAsync();
+
+      if (track.source) {
+        const { sound: newSound } = await Audio.Sound.createAsync(
+          track.source,
+          { shouldPlay: true, isLooping: true }
+        );
+        setSound(newSound);
+      }
+
+      setMeditating(true);
+      setPaused(false);
+      setStartTime(new Date());
+      setTimeRemaining(10 * 60);
+      setBreakTimeRemaining(2 * 60);
+
+      await api.post('/api/sessions/start', {});
+
     } catch (error) {
-      console.error('Failed to play probe sound:', error);
+      console.error('Failed to start session/audio', error);
+      // Alert.alert('Error', 'Could not play audio track.'); // Optional: Don't block user if tracking fails
+    }
+  };
+
+  const handlePause = async () => {
+    triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Light);
+    setPaused(true);
+    if (sound) {
+      await sound.pauseAsync();
+    }
+  };
+
+  const handleResume = async () => {
+    triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Light);
+    setPaused(false);
+    if (sound) {
+      await sound.playAsync();
+    }
+  };
+
+  const handleStop = async () => {
+    triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Heavy);
+    if (sound) {
+      await sound.stopAsync();
+      await sound.unloadAsync();
+      setSound(null);
+    }
+    setMeditating(false);
+    setPaused(false);
+    setAwarenessProbe(false);
+  };
+
+  const completeSession = async () => {
+    triggerHaptic('notification', Haptics.NotificationFeedbackType.Success);
+    if (sound) {
+      await sound.stopAsync();
+      await sound.unloadAsync();
+      setSound(null);
+    }
+    setMeditating(false);
+
+    if (user?.settings_bpm_check) {
+      router.push({
+        pathname: '/bpm-check',
+        params: {
+          phase: 'after',
+          trackId: selectedTrack,
+          awarenessPassed: 'true'
+        }
+      });
+      return;
+    }
+
+    try {
+      const data: any = await api.post('/api/sessions/complete', {
+        track_type: selectedTrack,
+        completed: true,
+        bpm_verified: true,
+        awareness_probe_passed: true
+      });
+
+      // Auto-route to Detox with calculated duration
+      // data.next_detox_duration is in seconds from backend
+      router.push({
+        pathname: '/detox',
+        params: {
+          autoStart: 'true',
+          duration: data.next_detox_duration || 1800 // Default to 30m if missing
+        }
+      });
+      Alert.alert('Namaste', 'Session completed. Starting Digital Detox...');
+
+    } catch (error) {
+      console.error('Completion error', error);
     }
   };
 
   const handleAwarenessResponse = () => {
+    triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Medium);
     setAwarenessProbe(false);
-    setProbePassed(true);
-  };
-
-  const startMeditation = () => {
-    if (!selectedTrack) {
-      Alert.alert('Select a Track', 'Please choose your meditation style');
-      return;
-    }
-
-    router.push('/bpm-check?phase=before');
-  };
-
-  const completeMeditation = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/sessions/complete`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          track_type: selectedTrack,
-          completed: true,
-          bpm_verified: true,
-          awareness_probe_passed: probePassed,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        await refreshUser();
-
-        Alert.alert(
-          'Meditation Complete! 🎉',
-          `Streak: ${data.new_streak} days\nTotal: ${data.total_days} days${data.zen_passes > 0 ? `\nZen Pass Earned!` : ''}`,
-          [
-            {
-              text: 'Great!',
-              onPress: () => router.replace('/(tabs)/home'),
-            },
-          ]
-        );
-      }
-    } catch (error) {
-      console.error('Failed to complete meditation:', error);
-      Alert.alert('Error', 'Failed to save meditation session');
-    }
   };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -158,40 +329,70 @@ export default function Meditation() {
           <View style={styles.probeOverlay}>
             <MaterialCommunityIcons name="bell-ring" size={60} color="#F59E0B" />
             <Text style={styles.probeText}>Are you still present?</Text>
-            <TouchableOpacity style={styles.probeButton} onPress={handleAwarenessResponse}>
+            <TouchableOpacity style={[styles.probeButton, { backgroundColor: THEME_COLOR }]} onPress={handleAwarenessResponse}>
               <Text style={styles.probeButtonText}>Still Present ✓</Text>
             </TouchableOpacity>
           </View>
         )}
 
+        {paused && (
+          <View style={styles.pausedOverlay}>
+            <Text style={styles.pausedTitle}>Session Paused</Text>
+            <Text style={[styles.pausedTimer, { color: THEME_COLOR }]}>Resuming in {formatTime(breakTimeRemaining)}</Text>
+            <Text style={styles.pausedHint}>Session ends if timer runs out.</Text>
+            <TouchableOpacity style={[styles.resumeButton, { backgroundColor: THEME_COLOR }]} onPress={handleResume}>
+              <MaterialCommunityIcons name="play" size={32} color="white" />
+              <Text style={styles.resumeText}>Resume</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={styles.timerContainer}>
-          <Text style={styles.timerText}>{formatTime(timeRemaining)}</Text>
+          <Text style={[styles.timerText, { color: THEME_COLOR }]}>{formatTime(timeRemaining)}</Text>
           <Text style={styles.timerLabel}>Remaining</Text>
         </View>
 
-        <MaterialCommunityIcons name="meditation" size={100} color="#7C3AED" />
+        <Animated.Image
+          source={user?.settings_gender === 'female' ? require('../assets/images/female/user.png') : require('../assets/images/male/user.png')}
+          style={[styles.meditationImage, animatedStyle]}
+        />
 
-        <Text style={styles.breatheText}>Breathe...</Text>
+        <Text style={styles.breatheText}>{paused ? 'Paused' : 'Breathe...'}</Text>
 
-        <TouchableOpacity
-          style={styles.stopButton}
-          onPress={() => {
-            Alert.alert(
-              'Stop Meditation?',
-              'Stopping now will not count towards your streak.',
-              [
-                { text: 'Continue', style: 'cancel' },
-                {
-                  text: 'Stop',
-                  style: 'destructive',
-                  onPress: () => router.back(),
-                },
-              ]
-            );
-          }}
-        >
-          <Text style={styles.stopButtonText}>Stop</Text>
-        </TouchableOpacity>
+        <View style={styles.controlsRow}>
+          {!paused && (
+            <TouchableOpacity
+              style={[styles.pauseButton, { backgroundColor: THEME_COLOR }]}
+              onPress={handlePause}
+            >
+              <MaterialCommunityIcons name="pause" size={32} color="white" />
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={styles.stopButton}
+            onPress={() => {
+              // Pause while confirming
+              handlePause();
+              Alert.alert(
+                'Stop Meditation?',
+                'Stopping now will not count towards your streak.',
+                [
+                  { text: 'Resume', style: 'cancel', onPress: handleResume },
+                  {
+                    text: 'End Session',
+                    style: 'destructive',
+                    onPress: () => {
+                      handleStop();
+                    },
+                  },
+                ]
+              );
+            }}
+          >
+            <Text style={styles.stopButtonText}>Stop</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -211,9 +412,12 @@ export default function Meditation() {
             key={track.id}
             style={[
               styles.trackCard,
-              selectedTrack === track.id && styles.trackCardSelected,
+              selectedTrack === track.id && { borderColor: THEME_COLOR, backgroundColor: THEME_COLOR + '20' },
             ]}
-            onPress={() => setSelectedTrack(track.id)}
+            onPress={() => {
+              triggerHaptic('selection');
+              setSelectedTrack(track.id);
+            }}
           >
             <View style={[styles.trackIcon, { backgroundColor: track.color + '20' }]}>
               <MaterialCommunityIcons name={track.icon as any} size={32} color={track.color} />
@@ -223,22 +427,39 @@ export default function Meditation() {
               <Text style={styles.trackDescription}>{track.description}</Text>
             </View>
             {selectedTrack === track.id && (
-              <MaterialCommunityIcons name="check-circle" size={24} color="#7C3AED" />
+              <MaterialCommunityIcons name="check-circle" size={24} color={THEME_COLOR} />
             )}
           </TouchableOpacity>
         ))}
       </View>
 
       <View style={styles.infoCard}>
-        <MaterialCommunityIcons name="information" size={24} color="#7C3AED" />
+        <MaterialCommunityIcons name="clock-outline" size={24} color={THEME_COLOR} />
         <Text style={styles.infoText}>
-          Your 10-minute meditation session will include a random awareness check.
-          Stay present and focused.
+          Duration: {timeRemaining / 60} Minutes
         </Text>
       </View>
 
+      <View style={styles.durationSelector}>
+        {[5, 10, 20].map(min => (
+          <TouchableOpacity
+            key={min}
+            style={[
+              styles.durationOption,
+              timeRemaining === min * 60 && { backgroundColor: THEME_COLOR, borderColor: THEME_COLOR }
+            ]}
+            onPress={() => {
+              triggerHaptic('selection');
+              setTimeRemaining(min * 60);
+            }}
+          >
+            <Text style={[styles.durationText, timeRemaining === min * 60 && { color: '#FFF' }]}>{min}m</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       <TouchableOpacity
-        style={[styles.startButton, !selectedTrack && styles.startButtonDisabled]}
+        style={[styles.startButton, { backgroundColor: THEME_COLOR }, !selectedTrack && styles.startButtonDisabled]}
         onPress={startMeditation}
         disabled={!selectedTrack}
       >
@@ -281,10 +502,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#2D2D3D',
   },
-  trackCardSelected: {
-    borderColor: '#7C3AED',
-    backgroundColor: '#7C3AED10',
-  },
   trackIcon: {
     width: 56,
     height: 56,
@@ -322,7 +539,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   startButton: {
-    backgroundColor: '#7C3AED',
     marginHorizontal: 24,
     borderRadius: 12,
     padding: 18,
@@ -341,17 +557,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0F0F1E',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-evenly', // Better vertical distribution
     padding: 24,
+    paddingTop: 40,
   },
   timerContainer: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 0,
   },
   timerText: {
     fontSize: 72,
     fontWeight: 'bold',
-    color: '#7C3AED',
   },
   timerLabel: {
     fontSize: 16,
@@ -361,10 +577,9 @@ const styles = StyleSheet.create({
   breatheText: {
     fontSize: 24,
     color: '#D1D5DB',
-    marginTop: 48,
+    marginTop: 0,
   },
   stopButton: {
-    marginTop: 48,
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 8,
@@ -374,6 +589,58 @@ const styles = StyleSheet.create({
   stopButtonText: {
     color: '#EF4444',
     fontSize: 14,
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 48,
+    gap: 24,
+  },
+  pauseButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pausedOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2000,
+  },
+  pausedTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 16,
+  },
+  pausedTimer: {
+    fontSize: 24,
+    marginBottom: 8,
+  },
+  pausedHint: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    marginBottom: 48,
+  },
+  resumeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  resumeText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
   },
   probeOverlay: {
     position: 'absolute',
@@ -394,7 +661,6 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   probeButton: {
-    backgroundColor: '#7C3AED',
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 12,
@@ -403,5 +669,33 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  meditationImage: {
+    width: '100%',
+    height: 250,
+    resizeMode: 'contain',
+    marginVertical: 20,
+  },
+  durationSelector: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12,
+    marginBottom: 24,
+    paddingHorizontal: 24,
+  },
+  durationOption: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#2D2D3D',
+    backgroundColor: '#1F1F2E',
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  durationText: {
+    color: '#9CA3AF',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });

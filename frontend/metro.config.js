@@ -5,11 +5,11 @@ const { FileStore } = require('metro-cache');
 
 const config = getDefaultConfig(__dirname);
 
-// Use a stable on-disk store (shared across web/android)
-const root = process.env.METRO_CACHE_ROOT || path.join(__dirname, '.metro-cache');
-config.cacheStores = [
-  new FileStore({ root: path.join(root, 'cache') }),
-];
+// // Use a stable on-disk store (shared across web/android)
+// const root = process.env.METRO_CACHE_ROOT || path.join(__dirname, '.metro-cache');
+// config.cacheStores = [
+//   new FileStore({ root: path.join(root, 'cache') }),
+// ];
 
 
 // // Exclude unnecessary directories from file watching
@@ -20,6 +20,6 @@ config.cacheStores = [
 // config.resolver.blacklistRE = /node_modules\/.*\/(android|ios|windows|macos|__tests__|\.git|.*\.android\.js|.*\.ios\.js)$/;
 
 // Reduce the number of workers to decrease resource usage
-config.maxWorkers = 2;
+// config.maxWorkers = 2;
 
 module.exports = config;

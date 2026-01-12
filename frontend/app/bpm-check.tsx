@@ -8,70 +8,87 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Camera } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import { api } from '../services/api';
 
 export default function BPMCheck() {
   const router = useRouter();
-  const { phase } = useLocalSearchParams();
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const { phase, trackId, awarenessPassed } = useLocalSearchParams();
+  const [permission, requestPermission] = useCameraPermissions();
   const [checking, setChecking] = useState(false);
   const [countdown, setCountdown] = useState(10);
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === 'granted');
-    })();
-  }, []);
+  const [simulatedBpm, setSimulatedBpm] = useState(0);
 
   useEffect(() => {
     if (checking && countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+        // Simulate fluctuation
+        setSimulatedBpm(Math.floor(Math.random() * (85 - 65 + 1) + 65));
+      }, 1000);
       return () => clearTimeout(timer);
     } else if (checking && countdown === 0) {
       handleComplete();
     }
   }, [checking, countdown]);
 
-  const startCheck = () => {
+  const startCheck = async () => {
+    if (!permission?.granted) {
+      const result = await requestPermission();
+      if (!result.granted) {
+        Alert.alert("Permission Required", "Camera access is needed for BPM check.");
+        return;
+      }
+    }
     setChecking(true);
   };
 
-  const handleComplete = () => {
-    if (phase === 'before') {
-      Alert.alert(
-        'BPM Recorded',
-        'Heart rate captured. Begin your meditation now.',
-        [
-          {
-            text: 'Start',
-            onPress: () => router.back(),
-          },
-        ]
-      );
+  const handleComplete = async () => {
+    const finalBpm = simulatedBpm || 72;
+    setChecking(false);
+
+    if (phase === 'after') {
+      try {
+        const data: any = await api.post('/api/sessions/complete', {
+          track_type: trackId,
+          completed: true,
+          bpm_verified: true,
+          awareness_probe_passed: awarenessPassed === 'true'
+        });
+
+        setTimeout(() => {
+          router.push({
+            pathname: '/detox',
+            params: {
+              autoStart: 'true',
+              duration: data.next_detox_duration || 1800
+            }
+          });
+          Alert.alert('Namaste', 'Session verified & completed. Starting Digital Detox...');
+        }, 1500);
+
+      } catch (error) {
+        console.error('BPM Check Complete Error', error);
+        Alert.alert('Error', 'Failed to complete session');
+        router.back();
+      }
     } else {
-      Alert.alert(
-        'BPM Verified',
-        'Heart rate shows relaxation. Well done!',
-        [
-          {
-            text: 'Complete',
-            onPress: () => router.back(),
-          },
-        ]
-      );
+      // Before phase - Go to meditation
+      setTimeout(() => {
+        router.replace({
+          pathname: '/meditation',
+          params: { autoStart: 'true', trackId: trackId as string }
+        });
+      }, 1500);
     }
   };
 
-  if (hasPermission === null) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.text}>Requesting camera permission...</Text>
-      </View>
-    );
+  if (!permission) {
+    // Camera permissions are still loading.
+    return <View style={styles.container} />;
   }
 
-  if (hasPermission === false) {
+  if (!permission.granted) {
     return (
       <View style={styles.container}>
         <MaterialCommunityIcons name="camera-off" size={60} color="#EF4444" />
@@ -79,8 +96,11 @@ export default function BPMCheck() {
         <Text style={styles.subtitle}>
           We need camera access to verify your heart rate through your fingertip.
         </Text>
-        <TouchableOpacity style={styles.button} onPress={() => router.back()}>
-          <Text style={styles.buttonText}>Go Back</Text>
+        <TouchableOpacity style={styles.button} onPress={requestPermission}>
+          <Text style={styles.buttonText}>Grant Permission</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.skipButton} onPress={() => router.back()}>
+          <Text style={styles.skipButtonText}>Cancel</Text>
         </TouchableOpacity>
       </View>
     );
@@ -88,46 +108,64 @@ export default function BPMCheck() {
 
   return (
     <View style={styles.container}>
-      <MaterialCommunityIcons name="heart-pulse" size={80} color="#EC4899" />
-      
-      <Text style={styles.title}>
-        {phase === 'before' ? 'Pre-Meditation' : 'Post-Meditation'} BPM Check
-      </Text>
-      
-      <Text style={styles.instructions}>
-        {checking
-          ? `Hold your finger steady... ${countdown}s`
-          : 'Place your index finger gently over the rear camera lens'}
-      </Text>
+      {/* Camera View for "Scanning" effect */}
+      <View style={styles.cameraContainer}>
+        <CameraView style={styles.camera} facing="back">
+          <View style={styles.overlay} />
+        </CameraView>
+      </View>
 
-      {checking ? (
-        <View style={styles.checkingContainer}>
-          <View style={styles.pulse}>
-            <MaterialCommunityIcons name="heart-pulse" size={48} color="#EC4899" />
+      <View style={styles.contentContainer}>
+        <MaterialCommunityIcons name="heart-pulse" size={80} color="#EC4899" />
+
+        <Text style={styles.title}>
+          {phase === 'before' ? 'Pre-Meditation' : 'Post-Meditation'} BPM Check
+        </Text>
+
+        <Text style={styles.instructions}>
+          {checking
+            ? `Hold your finger steady... ${countdown}s`
+            : 'Place your index finger gently over the rear camera lens'}
+        </Text>
+
+        {checking ? (
+          <View style={styles.checkingContainer}>
+            <View style={styles.pulse}>
+              <MaterialCommunityIcons name="heart-pulse" size={48} color="#EC4899" />
+            </View>
+            <Text style={styles.countdown}>{countdown}</Text>
+            <Text style={styles.checkingText}>
+              {simulatedBpm > 0 ? `${simulatedBpm} BPM` : 'Reading...'}
+            </Text>
           </View>
-          <Text style={styles.countdown}>{countdown}</Text>
-          <Text style={styles.checkingText}>Reading your heart rate...</Text>
-        </View>
-      ) : (
-        <View style={styles.instructionCard}>
-          <Text style={styles.instructionStep}>1. Ensure good lighting</Text>
-          <Text style={styles.instructionStep}>2. Cover the camera completely</Text>
-          <Text style={styles.instructionStep}>3. Stay still for 10 seconds</Text>
-        </View>
-      )}
+        ) : simulatedBpm > 0 ? (
+          <View style={styles.checkingContainer}>
+            <MaterialCommunityIcons name="check-circle" size={64} color="#10B981" />
+            <Text style={styles.title}>Check Complete</Text>
+            <Text style={styles.checkingText}>{simulatedBpm} BPM</Text>
+            <Text style={styles.subtitle}>Starting meditation...</Text>
+          </View>
+        ) : (
+          <View style={styles.instructionCard}>
+            <Text style={styles.instructionStep}>1. Ensure good lighting</Text>
+            <Text style={styles.instructionStep}>2. Cover the camera completely</Text>
+            <Text style={styles.instructionStep}>3. Stay still for 10 seconds</Text>
+          </View>
+        )}
 
-      {!checking && (
-        <TouchableOpacity style={styles.startButton} onPress={startCheck}>
-          <Text style={styles.startButtonText}>Start BPM Check</Text>
+        {!checking && simulatedBpm === 0 && (
+          <TouchableOpacity style={styles.startButton} onPress={startCheck}>
+            <Text style={styles.startButtonText}>Start BPM Check</Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity
+          style={styles.skipButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.skipButtonText}>Cancel</Text>
         </TouchableOpacity>
-      )}
-
-      <TouchableOpacity
-        style={styles.skipButton}
-        onPress={() => router.back()}
-      >
-        <Text style={styles.skipButtonText}>Skip (Not Recommended)</Text>
-      </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -136,6 +174,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0F0F1E',
+  },
+  cameraContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: -1,
+    opacity: 0.3, // Dim camera so it acts as background texture
+  },
+  camera: {
+    flex: 1,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: '#0F0F1E',
+    opacity: 0.8,
+  },
+  contentContainer: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -146,10 +200,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginTop: 24,
     textAlign: 'center',
-  },
-  text: {
-    fontSize: 16,
-    color: '#9CA3AF',
   },
   subtitle: {
     fontSize: 14,
@@ -196,9 +246,10 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   checkingText: {
-    fontSize: 14,
+    fontSize: 18,
     color: '#9CA3AF',
     marginTop: 8,
+    fontWeight: '600',
   },
   startButton: {
     backgroundColor: '#7C3AED',

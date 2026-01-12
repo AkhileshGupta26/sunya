@@ -1,7 +1,12 @@
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAuth } from '../../contexts/AuthContext';
+import { useThemeColor } from '../../hooks/useThemeColor';
 
 export default function TabLayout() {
+  const { user } = useAuth();
+  const THEME_COLOR = useThemeColor(); // Use Hook
+
   return (
     <Tabs
       screenOptions={{
@@ -13,7 +18,7 @@ export default function TabLayout() {
           paddingBottom: 8,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: '#7C3AED',
+        tabBarActiveTintColor: THEME_COLOR,
         tabBarInactiveTintColor: '#6B7280',
       }}
     >
@@ -41,6 +46,16 @@ export default function TabLayout() {
           title: 'Circle',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="account-group" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="leaderboard"
+        options={{
+          href: '/leaderboard',
+          title: 'Leaders',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="trophy" size={size} color={color} />
           ),
         }}
       />

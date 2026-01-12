@@ -46,7 +46,7 @@ export default function Login() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <MaterialCommunityIcons name="meditation" size={80} color="#7C3AED" />
-          <Text style={styles.title}>Shunya</Text>
+          <Text style={styles.title}>Sunya</Text>
           <Text style={styles.subtitle}>Your Sacred Morning Journey</Text>
         </View>
 

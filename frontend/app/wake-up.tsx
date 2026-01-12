@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Speech from 'expo-speech';
+import { useThemeColor } from '../hooks/useThemeColor';
 
 export default function WakeUp() {
   const router = useRouter();
+  const THEME_COLOR = useThemeColor();
 
   const handleContinue = () => {
     Speech.speak('The path to peace begins now. Choose your meditation when you are ready.');
@@ -17,7 +19,7 @@ export default function WakeUp() {
   return (
     <View style={styles.container}>
       <MaterialCommunityIcons name="weather-sunny" size={100} color="#F59E0B" />
-      
+
       <Text style={styles.title}>Good Morning!</Text>
       <Text style={styles.message}>
         Your 30-minute grace period has begun.
@@ -28,11 +30,11 @@ export default function WakeUp() {
       </Text>
 
       <View style={styles.timerInfo}>
-        <MaterialCommunityIcons name="clock-outline" size={32} color="#7C3AED" />
+        <MaterialCommunityIcons name="clock-outline" size={32} color={THEME_COLOR} />
         <Text style={styles.timerText}>Grace timer is running</Text>
       </View>
 
-      <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
+      <TouchableOpacity style={[styles.continueButton, { backgroundColor: THEME_COLOR }]} onPress={handleContinue}>
         <Text style={styles.continueButtonText}>Continue to Meditation</Text>
         <MaterialCommunityIcons name="arrow-right" size={20} color="#FFFFFF" />
       </TouchableOpacity>
@@ -41,7 +43,7 @@ export default function WakeUp() {
         style={styles.backButton}
         onPress={() => router.back()}
       >
-        <Text style={styles.backButtonText}>Return to Home</Text>
+        <Text style={[styles.backButtonText, { color: THEME_COLOR }]}>Return to Home</Text>
       </TouchableOpacity>
     </View>
   );

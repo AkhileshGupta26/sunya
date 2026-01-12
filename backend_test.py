@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend Testing for Shunya Meditation App
+Comprehensive Backend Testing for Sunya Meditation App
 Tests all backend APIs including authentication, sessions, circles, and institutions
 """
 
@@ -12,10 +12,10 @@ import random
 import string
 
 # Configuration
-BASE_URL = "https://mindfulstart.preview.emergentagent.com/api"
+BASE_URL = "http://localhost:8000/api"
 HEADERS = {"Content-Type": "application/json"}
 
-class ShunyaBackendTester:
+class SunyaBackendTester:
     def __init__(self):
         self.auth_token = None
         self.user_id = None
@@ -45,7 +45,7 @@ class ShunyaBackendTester:
         """Generate unique test email"""
         timestamp = str(int(time.time()))
         random_suffix = ''.join(random.choices(string.ascii_lowercase, k=4))
-        return f"meditator_{timestamp}_{random_suffix}@shunya.app"
+        return f"meditator_{timestamp}_{random_suffix}@sunya.app"
     
     def test_user_registration(self):
         """Test user registration endpoint"""
@@ -495,7 +495,7 @@ class ShunyaBackendTester:
     
     def run_all_tests(self):
         """Run all backend tests"""
-        print("🚀 Starting Shunya Backend API Tests...")
+        print("🚀 Starting Sunya Backend API Tests...")
         print(f"🌐 Testing against: {BASE_URL}")
         
         # Authentication Tests
@@ -525,7 +525,7 @@ class ShunyaBackendTester:
     def print_summary(self):
         """Print test results summary"""
         print("\n" + "="*60)
-        print("📊 SHUNYA BACKEND TEST RESULTS SUMMARY")
+        print("📊 SUNYA BACKEND TEST RESULTS SUMMARY")
         print("="*60)
         
         total_passed = 0
@@ -556,5 +556,5 @@ class ShunyaBackendTester:
         print("="*60)
 
 if __name__ == "__main__":
-    tester = ShunyaBackendTester()
+    tester = SunyaBackendTester()
     tester.run_all_tests()

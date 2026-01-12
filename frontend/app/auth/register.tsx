@@ -20,6 +20,7 @@ export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [gender, setGender] = useState('male'); // Default
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -35,7 +36,7 @@ export default function Register() {
 
     setLoading(true);
     try {
-      await register(name, email, password);
+      await register(name, email, password, gender);
       router.replace('/(tabs)/home');
     } catch (error: any) {
       Alert.alert('Registration Failed', error.message || 'Please try again');
@@ -52,11 +53,33 @@ export default function Register() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <MaterialCommunityIcons name="meditation" size={80} color="#7C3AED" />
-          <Text style={styles.title}>Join Shunya</Text>
+          <Text style={styles.title}>Join Sunya</Text>
           <Text style={styles.subtitle}>Begin your mindful journey</Text>
         </View>
 
         <View style={styles.form}>
+          {/* Gender Selection */}
+          <View style={styles.genderContainer}>
+            <Text style={styles.label}>Select Your Theme</Text>
+            <View style={styles.genderRow}>
+              <TouchableOpacity
+                style={[styles.genderOption, gender === 'male' && { borderColor: '#2DD4BF', backgroundColor: '#2DD4BF20' }]}
+                onPress={() => setGender('male')}
+              >
+                <MaterialCommunityIcons name="gender-male" size={24} color={gender === 'male' ? '#2DD4BF' : '#6B7280'} />
+                <Text style={[styles.genderText, gender === 'male' ? { color: '#2DD4BF' } : { color: '#6B7280' }]}>Male (Teal)</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.genderOption, gender === 'female' && { borderColor: '#FB7185', backgroundColor: '#FB718520' }]}
+                onPress={() => setGender('female')}
+              >
+                <MaterialCommunityIcons name="gender-female" size={24} color={gender === 'female' ? '#FB7185' : '#6B7280'} />
+                <Text style={[styles.genderText, gender === 'female' ? { color: '#FB7185' } : { color: '#6B7280' }]}>Female (Rose)</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
           <View style={styles.inputContainer}>
             <MaterialCommunityIcons name="account-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
             <TextInput
@@ -184,5 +207,34 @@ const styles = StyleSheet.create({
   linkText: {
     color: '#7C3AED',
     fontSize: 14,
+  },
+  genderContainer: {
+    marginBottom: 20,
+  },
+  label: {
+    color: '#9CA3AF',
+    marginBottom: 10,
+    fontSize: 16,
+  },
+  genderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  genderOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#2D2D3D',
+    backgroundColor: '#1F1F2E',
+  },
+  genderText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
