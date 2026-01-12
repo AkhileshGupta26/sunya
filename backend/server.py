@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 @app.get("/")
 def read_root():
-    return {"message": "Sunyab API is running code"}
+    return {"message": "Sunya API is Live!"}
 
 @app.on_event("startup")
 async def startup_db_client():
