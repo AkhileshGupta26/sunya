@@ -9,9 +9,9 @@ app = FastAPI()
 
 # Include Routers
 app.include_router(auth.router, prefix="/api")
-app.include_router(users.router) # /api/user/* is defined in the router itself or we can strip the prefix from router
-app.include_router(sessions.router) # /api/sessions
-app.include_router(circles.router) # /api/circles etc
+app.include_router(users.router) 
+app.include_router(sessions.router) 
+app.include_router(circles.router) 
 
 # Configure CORS
 app.add_middleware(
