@@ -16,13 +16,8 @@ app.include_router(circles.router) # /api/circles etc
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=[
-        "http://localhost:8081",
-        "https://sunya.vercel.app",
-        "https://sunya-7xppqyywg-akhil000026s-projects.vercel.app",
-        "*"
-    ],
+    allow_credentials=False, # We use Bearer tokens, not cookies
+    allow_origins=["*"],     # Allow all origins safely since credentials are off
     allow_methods=["*"],
     allow_headers=["*"],
 )
