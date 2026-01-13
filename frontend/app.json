@@ -20,6 +20,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000"
       },
+      "package": "com.akhileshgupta.sunya",
       "edgeToEdgeEnabled": true,
       "permissions": [
         "CAMERA",
@@ -50,11 +51,16 @@
           "backgroundColor": "#000"
         }
       ],
-      "expo-font",
-      "expo-web-browser"
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "27c1e7fa-9a3f-4b2a-a1df-1e07015af49f"
+      }
     }
   }
 }

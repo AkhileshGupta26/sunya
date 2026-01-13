@@ -1,0 +1,21 @@
+# Exclude heavy folders
+node_modules/
+**/node_modules/
+node_modules
+/node_modules
+
+# Native build artifact caches (MUST IGNORE these for Bare Workflow)
+android/.gradle/
+android/app/build/
+android/build/
+
+# Expo & Tools
+.expo/
+.git/
+dist/
+web-build/
+
+# Logs
+npm-debug.log
+yarn-error.log
+.DS_Store
