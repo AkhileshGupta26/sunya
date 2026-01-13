@@ -31,7 +31,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "single",
+      "output": "static",
       "favicon": "./assets/images/favicon.png",
       "display": "standalone",
       "scope": "/",
@@ -58,6 +58,7 @@
     },
     "extra": {
       "router": {},
+      "EXPO_PUBLIC_BACKEND_URL": "https://sunya.onrender.com",
       "eas": {
         "projectId": "27c1e7fa-9a3f-4b2a-a1df-1e07015af49f"
       }
