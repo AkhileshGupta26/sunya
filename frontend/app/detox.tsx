@@ -20,6 +20,7 @@ export default function Detox() {
     const [pointsEarned, setPointsEarned] = useState(0);
     // @ts-ignore: detox_streak might not be in the type hint yet but is in backend
     const [detoxStreak, setDetoxStreak] = useState(user?.detox_streak || 0);
+    const [isFailed, setIsFailed] = useState(false);
 
 
 
