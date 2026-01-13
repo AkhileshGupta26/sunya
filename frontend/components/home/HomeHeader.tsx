@@ -17,7 +17,7 @@ export const HomeHeader: React.FC<{ themeColor: string }> = ({ themeColor }) => 
     return (
         <View style={styles.header}>
             <View>
-                <Text style={styles.greeting}>Good morning,</Text>
+                <Text style={styles.greeting}>Good morning, (v2.0 Live)</Text>
                 <View style={styles.nameRow}>
                     <Text style={styles.name}>{user?.name}</Text>
                     {(user?.current_streak || 0) > 0 && (
