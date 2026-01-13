@@ -1,0 +1,37 @@
+env: load .env
+env: export EXPO_TUNNEL_SUBDOMAIN EXPO_PACKAGER_HOSTNAME EXPO_PUBLIC_BACKEND_URL EXPO_USE_FAST_RESOLVER METRO_CACHE_ROOT
+Experimental module resolution is enabled.
+Starting Metro Bundler
+Static rendering is enabled. Learn more: https://docs.expo.dev/router/reference/static-rendering/
+Favicon source file in Expo config (web.favicon) does not exist: ./assets/images/favicon.png
+λ Bundling failed 9787ms node_modules\expo-router\node\render.js (1310 modules)
+Error: Cannot find module '@react-native/js-polyfills/error-guard'
+Require stack:
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\build\src\start\server\metro\withMetroMultiPlatform.js
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\build\src\start\server\metro\instantiateMetro.js
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\build\src\start\server\metro\MetroBundlerDevServer.js
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\build\src\export\exportApp.js
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\build\src\export\exportAsync.js
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\build\src\export\index.js
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\build\bin\cli
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\expo\bin\cli
+Error: Cannot find module '@react-native/js-polyfills/error-guard'
+Require stack:
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\build\src\start\server\metro\withMetroMultiPlatform.js
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\build\src\start\server\metro\instantiateMetro.js
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\build\src\start\server\metro\MetroBundlerDevServer.js
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\build\src\export\exportApp.js
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\build\src\export\exportAsync.js
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\build\src\export\index.js
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\build\bin\cli
+- C:\Users\akhil\Desktop\sunyab\frontend\node_modules\expo\bin\cli
+    at Function.Module._resolveFilename (node:internal/modules/cjs/loader:1225:15)
+    at Function.resolve (node:internal/modules/helpers:190:19)
+    at Object.getPolyfills (C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\src\start\server\metro\withMetroMultiPlatform.ts:85:17)
+    at getPrependedScripts (C:\Users\akhil\Desktop\sunyab\frontend\node_modules\metro\src\lib\getPrependedScripts.js:19:6)
+    at IncrementalBundler.buildGraph (C:\Users\akhil\Desktop\sunyab\frontend\node_modules\metro\src\IncrementalBundler.js:141:27)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at C:\Users\akhil\Desktop\sunyab\frontend\node_modules\metro\src\IncrementalBundler.js:172:34
+    at IncrementalBundler.initializeGraph (C:\Users\akhil\Desktop\sunyab\frontend\node_modules\metro\src\IncrementalBundler.js:189:24)
+    at MetroBundlerDevServer._bundleDirectAsync (C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\src\start\server\metro\MetroBundlerDevServer.ts:1539:23)
+    at MetroBundlerDevServer.metroLoadModuleContents (C:\Users\akhil\Desktop\sunyab\frontend\node_modules\@expo\cli\src\start\server\metro\MetroBundlerDevServer.ts:528:21)

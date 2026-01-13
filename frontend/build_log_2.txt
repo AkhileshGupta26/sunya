@@ -1,0 +1,34 @@
+env: load .env
+env: export EXPO_TUNNEL_SUBDOMAIN EXPO_PACKAGER_HOSTNAME EXPO_PUBLIC_BACKEND_URL EXPO_USE_FAST_RESOLVER METRO_CACHE_ROOT
+Experimental module resolution is enabled.
+Starting Metro Bundler
+Static rendering is enabled. Learn more: https://docs.expo.dev/router/reference/static-rendering/
+λ Bundled 12847ms node_modules\expo-router\node\render.js (1310 modules)
+Web Bundled 14230ms node_modules\expo-router\entry.js (1365 modules)
+
+› web bundles (1):
+_expo/static/js/web/entry-0f88eec5b354ee9768603ba05755ea15.js (3.28 MB)
+
+› Static routes (19):
+/yoga (28 kB)
+/home (36.8 kB)
+/detox (27.1 kB)
+/ (index) (24.9 kB)
+/circle (32.6 kB)
+/wake-up (25.6 kB)
+/profile (38.6 kB)
+/_sitemap (38.8 kB)
+/progress (32.5 kB)
+/bpm-check (24.4 kB)
+/meditation (30 kB)
+/+not-found (25.6 kB)
+/auth/login (26.2 kB)
+/leaderboard (25.7 kB)
+/(tabs)/home (36.8 kB)
+/(tabs)/circle (32.6 kB)
+/auth/register (27.7 kB)
+/(tabs)/profile (38.6 kB)
+/(tabs)/progress (32.5 kB)
+
+Exported: dist
+Something prevented Expo from exiting, forcefully exiting now.
