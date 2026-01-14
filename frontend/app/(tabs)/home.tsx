@@ -50,27 +50,50 @@ export default function Home() {
     return <HomeSkeleton />;
   }
 
+  // Responsive Layout Logic
+  import { useWindowDimensions, View } from 'react-native';
+
+  const { width } = useWindowDimensions();
+  const isWeb = width > 768;
+
+  // Responsive Styles
+  const contentContainerStyle = isWeb ? styles.webContainer : styles.mobileContainer;
+  const cardWrapperStyle = isWeb ? styles.webCardWrapper : styles.mobileCardWrapper;
+
   return (
     <ScrollView
       style={styles.container}
+      contentContainerStyle={[contentContainerStyle, { paddingBottom: 20 }]}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={THEME_COLOR} />}
     >
-      <HomeHeader themeColor={THEME_COLOR} />
+      <View style={{ width: '100%', marginBottom: 16 }}>
+        <HomeHeader themeColor={THEME_COLOR} />
+      </View>
 
-      <StatsDashboard user={user} themeColor={THEME_COLOR} />
+      <View style={{ width: '100%', marginBottom: 16 }}>
+        <StatsDashboard user={user} themeColor={THEME_COLOR} />
+      </View>
 
-      <YogaCard themeColor={THEME_COLOR} />
+      {/* Row 1: Yoga & Session Status */}
+      <View style={cardWrapperStyle}>
+        <YogaCard themeColor={THEME_COLOR} />
+      </View>
+      <View style={cardWrapperStyle}>
+        <SessionStatus
+          todaySession={todaySession}
+          graceTimeRemaining={graceTimeRemaining}
+          themeColor={THEME_COLOR}
+          formatTime={formatTime}
+        />
+      </View>
 
-      <SessionStatus
-        todaySession={todaySession}
-        graceTimeRemaining={graceTimeRemaining}
-        themeColor={THEME_COLOR}
-        formatTime={formatTime}
-      />
-
-      <QuickDetoxCard themeColor={THEME_COLOR} />
-
-      <DailyFocus themeColor={THEME_COLOR} />
+      {/* Row 2: Detox & Daily Focus */}
+      <View style={cardWrapperStyle}>
+        <QuickDetoxCard themeColor={THEME_COLOR} />
+      </View>
+      <View style={cardWrapperStyle}>
+        <DailyFocus themeColor={THEME_COLOR} />
+      </View>
 
     </ScrollView>
   );
@@ -80,5 +103,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0F0F1E',
+  },
+  mobileContainer: {
+    flexDirection: 'column',
+  },
+  webContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center', // Center the grid
+    maxWidth: 1200, // Max width for web
+    alignSelf: 'center', // Center the container itself
+    width: '100%',
+    paddingHorizontal: 16,
+  },
+  mobileCardWrapper: {
+    width: '100%',
+    marginBottom: 0, // Components already handle margins, but we might want to standardize
+  },
+  webCardWrapper: {
+    width: '48%', // 2 cards per row with some gap
+    marginHorizontal: '1%',
+    marginBottom: 16,
   },
 });
