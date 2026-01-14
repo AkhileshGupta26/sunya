@@ -65,7 +65,29 @@ export default function Circle() {
       setJoinCode(params.code as string);
       setShowJoinModal(true);
     }
-  }, [params.code]);
+    if (params.campus) {
+      setActiveTab('campus');
+      // Small delay to let tab switch happen
+      setTimeout(() => {
+        handleJoinCampus(params.campus as string);
+      }, 500);
+    }
+  }, [params.code, params.campus]);
+
+  // ... (rest of initial implementation)
+
+  const handleShareCampus = async (campusName: string) => {
+    triggerHaptic('selection');
+    // Generate deep link for campus
+    const link = Linking.createURL('/(tabs)/circle', { queryParams: { campus: campusName } });
+
+    try {
+      await Share.share({
+        message: `Come represent ${campusName} on Sunya! 🧘‍♂️\n\nTap to join our campus tribe:\n${link}`,
+        url: link,
+      });
+    } catch (error) { }
+  };
 
   useEffect(() => {
     loadData();
