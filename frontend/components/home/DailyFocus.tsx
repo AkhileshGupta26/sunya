@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import LottieView from 'lottie-react-native';
 
 interface DailyFocusProps {
     themeColor: string;
@@ -10,7 +11,7 @@ interface DailyFocusProps {
 
 export const DailyFocus: React.FC<DailyFocusProps> = ({ themeColor }) => {
     const router = useRouter();
-    const pulseAnim = useRef(new Animated.Value(1)).current;
+    // Pulse ref removed
     const [promptIndex, setPromptIndex] = useState(0);
 
     const PROMPTS = [
@@ -20,22 +21,6 @@ export const DailyFocus: React.FC<DailyFocusProps> = ({ themeColor }) => {
     ];
 
     useEffect(() => {
-        // Breathing Animation
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(pulseAnim, {
-                    toValue: 1.05,
-                    duration: 2000,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(pulseAnim, {
-                    toValue: 1,
-                    duration: 2000,
-                    useNativeDriver: true,
-                }),
-            ])
-        ).start();
-
         // Rotate Prompts
         const interval = setInterval(() => {
             setPromptIndex((prev) => (prev + 1) % PROMPTS.length);
@@ -61,14 +46,14 @@ export const DailyFocus: React.FC<DailyFocusProps> = ({ themeColor }) => {
                     <Text style={styles.promptText}>{PROMPTS[promptIndex]}</Text>
                 </View>
 
-                <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-                    <View style={[styles.iconContainer, { backgroundColor: `${themeColor}20` }]}>
-                        <MaterialCommunityIcons name="weather-sunset" size={32} color={themeColor} />
-                        <View style={[styles.playBadge, { backgroundColor: themeColor }]}>
-                            <MaterialCommunityIcons name="play" size={12} color="#FFF" />
-                        </View>
-                    </View>
-                </Animated.View>
+                <View style={styles.lottieContainer}>
+                    <LottieView
+                        source={{ uri: 'https://lottie.host/48d742d1-109c-46a1-b317-6a7f240ba097/6u1XLWBU0A.lottie' }}
+                        autoPlay
+                        loop
+                        style={styles.lottie}
+                    />
+                </View>
             </View>
 
             <View style={styles.focusContent}>
@@ -113,25 +98,15 @@ const styles = StyleSheet.create({
         marginTop: 4,
         fontWeight: '500',
     },
-    iconContainer: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        alignItems: 'center',
+    lottieContainer: {
+        width: 80,
+        height: 80,
         justifyContent: 'center',
-        position: 'relative',
+        alignItems: 'center',
     },
-    playBadge: {
-        position: 'absolute',
-        bottom: 0,
-        right: 0,
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 2,
-        borderColor: '#1F1F2E',
+    lottie: {
+        width: '100%',
+        height: '100%',
     },
     focusContent: {
         gap: 12,
