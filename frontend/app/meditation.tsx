@@ -14,17 +14,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api } from '../services/api';
 import { Audio } from 'expo-av';
 import { useThemeColor } from '../hooks/useThemeColor';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic } from '../utils/haptics';
 import { Platform } from 'react-native';
-
-const triggerHaptic = (type: 'impact' | 'notification' | 'selection', style?: any) => {
-  if (Platform.OS === 'web') return;
-  try {
-    if (type === 'impact') Haptics.impactAsync(style);
-    else if (type === 'notification') Haptics.notificationAsync(style);
-    else Haptics.selectionAsync();
-  } catch (e) { }
-};
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -158,7 +149,7 @@ export default function Meditation() {
         // Randomly trigger awareness probe (1% chance per second)
         if (!awarenessProbe && Math.random() < 0.01) {
           setAwarenessProbe(true);
-          triggerHaptic('notification', Haptics.NotificationFeedbackType.Warning);
+          triggerHaptic('warning');
         }
       }, 1000);
     }
@@ -208,7 +199,7 @@ export default function Meditation() {
       return;
     }
 
-    triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Medium);
+    triggerHaptic('medium');
 
     const track = MEDITATION_TRACKS.find(t => t.id === selectedTrack);
     if (!track) return;
@@ -241,7 +232,7 @@ export default function Meditation() {
   };
 
   const handlePause = async () => {
-    triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Light);
+    triggerHaptic('light');
     setPaused(true);
     if (sound) {
       await sound.pauseAsync();
@@ -249,7 +240,7 @@ export default function Meditation() {
   };
 
   const handleResume = async () => {
-    triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Light);
+    triggerHaptic('light');
     setPaused(false);
     if (sound) {
       await sound.playAsync();
@@ -257,7 +248,7 @@ export default function Meditation() {
   };
 
   const handleStop = async () => {
-    triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Heavy);
+    triggerHaptic('heavy');
     if (sound) {
       await sound.stopAsync();
       await sound.unloadAsync();
@@ -269,7 +260,7 @@ export default function Meditation() {
   };
 
   const completeSession = async () => {
-    triggerHaptic('notification', Haptics.NotificationFeedbackType.Success);
+    triggerHaptic('success');
     if (sound) {
       await sound.stopAsync();
       await sound.unloadAsync();
@@ -304,6 +295,7 @@ export default function Meditation() {
 
       // Auto-route to Detox with calculated duration
       // data.next_detox_duration is in seconds from backend
+      triggerHaptic('success');
       router.push({
         pathname: '/detox',
         params: {
@@ -321,7 +313,7 @@ export default function Meditation() {
   };
 
   const handleAwarenessResponse = () => {
-    triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Medium);
+    triggerHaptic('medium');
     setAwarenessProbe(false);
   };
 

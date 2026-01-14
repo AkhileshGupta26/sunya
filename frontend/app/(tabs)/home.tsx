@@ -11,6 +11,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import Constants from 'expo-constants';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import { useSession } from '../../hooks/useSession';
+import { triggerHaptic } from '../../utils/haptics';
 
 // Components
 import { HomeHeader } from '../../components/home/HomeHeader';
@@ -36,6 +37,7 @@ export default function Home() {
   } = useSession();
 
   const onRefresh = async () => {
+    triggerHaptic('light');
     setIsRefreshing(true);
     await Promise.all([refreshUser(), refetch()]);
     setIsRefreshing(false);

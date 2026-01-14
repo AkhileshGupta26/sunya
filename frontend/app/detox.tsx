@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useThemeColor } from '../hooks/useThemeColor';
+import { triggerHaptic } from '../utils/haptics';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -162,6 +163,7 @@ export default function Detox() {
             setIsActive(false);
             setTimeLeft(0);
             setPointsEarned(minutes * 10); // Mock points
+            triggerHaptic('success');
             Alert.alert('Digital Detox Complete', `You earned ${minutes * 10} points! (Guest Mode)`);
             return;
         }
@@ -189,6 +191,7 @@ export default function Detox() {
                 startTimeRef.current = null;
                 setIsActive(false);
                 setTimeLeft(0);
+                triggerHaptic('success');
                 Alert.alert('Digital Detox Complete', `You earned ${data.points_earned} points!`);
             }
         } catch (error) {

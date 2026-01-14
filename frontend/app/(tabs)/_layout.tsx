@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useThemeColor } from '../../hooks/useThemeColor';
+import { triggerHaptic } from '../../utils/haptics';
 
 export default function TabLayout() {
   const { user } = useAuth();
@@ -30,6 +31,9 @@ export default function TabLayout() {
             <MaterialCommunityIcons name="home" size={size} color={color} />
           ),
         }}
+        listeners={{
+          tabPress: () => triggerHaptic('selection'),
+        }}
       />
       <Tabs.Screen
         name="progress"
@@ -38,6 +42,9 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="chart-line" size={size} color={color} />
           ),
+        }}
+        listeners={{
+          tabPress: () => triggerHaptic('selection'),
         }}
       />
       <Tabs.Screen
@@ -48,6 +55,9 @@ export default function TabLayout() {
             <MaterialCommunityIcons name="account-group" size={size} color={color} />
           ),
         }}
+        listeners={{
+          tabPress: () => triggerHaptic('selection'),
+        }}
       />
 
       <Tabs.Screen
@@ -57,6 +67,9 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="account" size={size} color={color} />
           ),
+        }}
+        listeners={{
+          tabPress: () => triggerHaptic('selection'),
         }}
       />
     </Tabs>
