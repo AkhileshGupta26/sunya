@@ -1,11 +1,10 @@
 {
     "rewrites": [
         {
-            "source": "/((?!.*\\.(?:js|css|gif|jpg|jpeg|png|svg|ico|json|woff2|woff|ttf|map)$).*)",
+            "source": "/(.*)",
             "destination": "/index.html"
         }
     ],
     "cleanUrls": true,
-    "trailingSlash": false,
     "framework": null
 }
