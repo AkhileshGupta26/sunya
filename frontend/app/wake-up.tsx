@@ -21,7 +21,7 @@ export default function WakeUp() {
 
   return (
     <View style={styles.container}>
-      <View style={{ height: 250, width: 250, marginBottom: 20 }}>
+      <View style={styles.lottieContainer}>
         <DotLottieReact
           src={
             user?.settings_gender?.toLowerCase() === 'female'
@@ -30,6 +30,7 @@ export default function WakeUp() {
           }
           loop
           autoplay
+          style={{ width: '100%', height: '100%' }}
         />
       </View>
 
@@ -69,6 +70,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
+  },
+  lottieContainer: {
+    width: 300,
+    height: 300,
+    marginBottom: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 40,

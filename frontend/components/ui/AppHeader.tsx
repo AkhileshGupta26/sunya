@@ -15,13 +15,13 @@ export default function AppHeader() {
             )}
             <View style={[styles.contentContainer, { paddingTop: insets.top + 8 }]}>
                 <View style={styles.branding}>
-                    <Image
-                        source={require('../../assets/images/female/user.png')}
-                        style={styles.logo}
-                        resizeMode="contain"
-                    />
                     <Text style={styles.appName}>Sunya</Text>
                 </View>
+                <Image
+                    source={require('../../assets/images/female/user.png')}
+                    style={styles.logo}
+                    resizeMode="contain"
+                />
             </View>
         </View>
     );
@@ -38,8 +38,10 @@ const styles = StyleSheet.create({
     },
     webBlur: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(15, 15, 30, 0.7)',
-        backdropFilter: 'blur(12px)',
+        backgroundColor: 'rgba(15, 15, 30, 0.4)', // More transparent for "cool" look
+        backdropFilter: 'blur(20px)', // Stronger blur
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255, 255, 255, 0.1)',
     },
     contentContainer: {
         flexDirection: 'row',
@@ -54,15 +56,20 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     logo: {
-        width: 36,
-        height: 36,
-        borderRadius: 12,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
     },
     appName: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#FFFFFF',
-        letterSpacing: 1,
+        letterSpacing: 1.5,
         fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+        textShadowColor: 'rgba(0, 0, 0, 0.3)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 4,
     },
 });
