@@ -442,15 +442,7 @@ export default function Circle() {
     } catch (e) { console.error(e); }
   };
 
-  const handleShareCampus = async (campusName: string) => {
-    triggerHaptic('selection');
-    // For now simple text share, deep linking requires more setup
-    try {
-      await Share.share({
-        message: `Join me at ${campusName} on Sunya! Iterate towards zero together.`,
-      });
-    } catch (error) { }
-  };
+
 
   const renderCampusView = () => (
     <View style={{ paddingBottom: 40 }}>
