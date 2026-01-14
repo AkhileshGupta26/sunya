@@ -8,7 +8,7 @@ import { Stack } from 'expo-router';
 import { AuthProvider } from '../contexts/AuthContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as Notifications from 'expo-notifications';
-import { registerForPushNotificationsAsync, scheduleDailyReminder } from '../utils/notifications';
+import { registerForPushNotificationsAsync, setupSmartNotifications } from '../utils/notifications';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { queryClient, asyncStoragePersister } from '../utils/queryClient';
 
@@ -26,22 +26,7 @@ export default function RootLayout() {
   const [isSplashFinished, setIsSplashFinished] = useState(Platform.OS === 'web');
 
   useEffect(() => {
-    async function setupNotifications() {
-      if (Platform.OS === 'web') return; // Added web platform check
-
-      await registerForPushNotificationsAsync();
-
-      // Schedule defaults (In a real app, these would be based on user settings)
-      await Notifications.cancelAllScheduledNotificationsAsync(); // Clear old ones for testing simplicity
-
-      // Morning Reminder (7:00 AM)
-      await scheduleDailyReminder(7, 0, "Morning Clarity ☀️", "Start your day with intention. 10 minutes for yourself.");
-
-      // Streak Saver (8:00 PM)
-      await scheduleDailyReminder(20, 0, "Keep Your Streak 🔥", "Don't break the chain! Complete your session today.");
-    }
-
-    setupNotifications();
+    setupSmartNotifications();
   }, []);
 
   if (!isSplashFinished) {
