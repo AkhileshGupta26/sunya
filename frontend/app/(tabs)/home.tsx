@@ -47,11 +47,6 @@ export default function Home() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Show Skeleton if loading session or user data not ready
-  if (isSessionLoading && !isRefreshing) {
-    return <HomeSkeleton />;
-  }
-
   // Responsive Layout Logic
   const { width } = useWindowDimensions();
   const isWeb = width > 768;
@@ -59,6 +54,11 @@ export default function Home() {
   // Responsive Styles
   const contentContainerStyle = isWeb ? styles.webContainer : styles.mobileContainer;
   const cardWrapperStyle = isWeb ? styles.webCardWrapper : styles.mobileCardWrapper;
+
+  // Show Skeleton if loading session or user data not ready
+  if (isSessionLoading && !isRefreshing) {
+    return <HomeSkeleton />;
+  }
 
   return (
     <ScrollView
