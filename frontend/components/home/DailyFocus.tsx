@@ -50,36 +50,38 @@ export const DailyFocus: React.FC<DailyFocusProps> = ({ themeColor }) => {
     };
 
     return (
-        <View style={styles.todayCard}>
+        <TouchableOpacity
+            style={styles.todayCard}
+            onPress={handleStart}
+            activeOpacity={0.9}
+        >
             <View style={styles.headerRow}>
-                <Text style={styles.sectionTitle}>Sacred Morning</Text>
+                <View>
+                    <Text style={styles.sectionTitle}>Sacred Morning</Text>
+                    <Text style={styles.promptText}>{PROMPTS[promptIndex]}</Text>
+                </View>
+
                 <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-                    <MaterialCommunityIcons name="weather-sunset" size={24} color={themeColor} />
+                    <View style={[styles.iconContainer, { backgroundColor: `${themeColor}20` }]}>
+                        <MaterialCommunityIcons name="weather-sunset" size={32} color={themeColor} />
+                        <View style={[styles.playBadge, { backgroundColor: themeColor }]}>
+                            <MaterialCommunityIcons name="play" size={12} color="#FFF" />
+                        </View>
+                    </View>
                 </Animated.View>
             </View>
 
             <View style={styles.focusContent}>
                 <View style={styles.focusItem}>
-                    <MaterialCommunityIcons name="meditation" size={20} color={themeColor} />
+                    <MaterialCommunityIcons name="meditation" size={18} color={themeColor} />
                     <Text style={styles.focusText}>10 min Mindful Breath</Text>
                 </View>
                 <View style={styles.focusItem}>
-                    <MaterialCommunityIcons name="heart-pulse" size={20} color="#EC4899" />
+                    <MaterialCommunityIcons name="heart-pulse" size={18} color="#EC4899" />
                     <Text style={styles.focusText}>HRV Check-in</Text>
                 </View>
             </View>
-
-            <Animated.View style={[styles.mainButtonContainer, { transform: [{ scale: pulseAnim }] }]}>
-                <TouchableOpacity
-                    style={[styles.mainButton, { backgroundColor: themeColor, shadowColor: themeColor }]}
-                    onPress={handleStart}
-                    activeOpacity={0.8}
-                >
-                    <MaterialCommunityIcons name="play-circle-outline" size={24} color="#FFF" />
-                    <Text style={styles.mainButtonText}>{PROMPTS[promptIndex]}</Text>
-                </TouchableOpacity>
-            </Animated.View>
-        </View>
+        </TouchableOpacity>
     );
 };
 
@@ -87,7 +89,7 @@ const styles = StyleSheet.create({
     todayCard: {
         backgroundColor: '#1F1F2E',
         marginHorizontal: 24,
-        borderRadius: 24, // Softer corners
+        borderRadius: 24,
         padding: 24,
         marginBottom: 24,
         borderWidth: 1,
@@ -97,50 +99,55 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 24,
     },
     sectionTitle: {
-        fontSize: 20, // Slightly larger
+        fontSize: 22,
         fontWeight: 'bold',
         color: '#FFFFFF',
         letterSpacing: 0.5,
     },
+    promptText: {
+        fontSize: 14,
+        color: '#9CA3AF',
+        marginTop: 4,
+        fontWeight: '500',
+    },
+    iconContainer: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+    },
+    playBadge: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+        borderColor: '#1F1F2E',
+    },
     focusContent: {
-        marginBottom: 24,
         gap: 12,
     },
     focusItem: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: 'rgba(255,255,255,0.03)',
-        padding: 12,
-        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderRadius: 16,
     },
     focusText: {
         fontSize: 15,
         color: '#E5E7EB',
         marginLeft: 12,
         fontWeight: '500',
-    },
-    mainButtonContainer: {
-        width: '100%',
-    },
-    mainButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 16,
-        borderRadius: 16,
-        gap: 8,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
-    },
-    mainButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: 'bold',
-        letterSpacing: 0.5,
     },
 });
