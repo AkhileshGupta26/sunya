@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { SplashScreen } from '../components/ui/SplashScreen';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
+import AppHeader from '../components/ui/AppHeader';
 import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { AuthProvider } from '../contexts/AuthContext';
@@ -54,18 +56,21 @@ export default function RootLayout() {
           persistOptions={{ persister: asyncStoragePersister }}
         >
           <AuthProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="auth/login" />
-              <Stack.Screen name="auth/register" />
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="meditation" />
-              <Stack.Screen name="yoga" />
-              <Stack.Screen name="wake-up" />
-              <Stack.Screen name="bpm-check" />
-              <Stack.Screen name="detox" />
-              <Stack.Screen name="leaderboard" />
-            </Stack>
+            <View style={{ flex: 1 }}>
+              <AppHeader />
+              <Stack screenOptions={{ headerShown: false, contentStyle: { paddingTop: 60 } }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="auth/login" />
+                <Stack.Screen name="auth/register" />
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="meditation" />
+                <Stack.Screen name="yoga" />
+                <Stack.Screen name="wake-up" />
+                <Stack.Screen name="bpm-check" />
+                <Stack.Screen name="detox" />
+                <Stack.Screen name="leaderboard" />
+              </Stack>
+            </View>
           </AuthProvider>
         </PersistQueryClientProvider>
       </ErrorBoundary>
