@@ -76,25 +76,27 @@ export default function Home() {
         <StatsDashboard user={user} themeColor={THEME_COLOR} />
       </View>
 
-      {/* Row 1: Yoga & Session Status */}
+      {/* Row 1: Yoga & Sacred Morning (Dynamic Slot) */}
       <View style={cardWrapperStyle}>
         <YogaCard themeColor={THEME_COLOR} />
       </View>
       <View style={cardWrapperStyle}>
-        <SessionStatus
-          todaySession={todaySession}
-          graceTimeRemaining={graceTimeRemaining}
-          themeColor={THEME_COLOR}
-          formatTime={formatTime}
-        />
+        {/* Dynamic Slot: Shows SessionStatus (Active/Complete) OR DailyFocus (Start) */}
+        {(todaySession?.completed || (todaySession && graceTimeRemaining !== null && graceTimeRemaining > 0)) ? (
+          <SessionStatus
+            todaySession={todaySession}
+            graceTimeRemaining={graceTimeRemaining}
+            themeColor={THEME_COLOR}
+            formatTime={formatTime}
+          />
+        ) : (
+          <DailyFocus themeColor={THEME_COLOR} />
+        )}
       </View>
 
-      {/* Row 2: Detox & Daily Focus */}
+      {/* Row 2: Detox & Stats (or other content) */}
       <View style={cardWrapperStyle}>
         <QuickDetoxCard themeColor={THEME_COLOR} />
-      </View>
-      <View style={cardWrapperStyle}>
-        <DailyFocus themeColor={THEME_COLOR} />
       </View>
 
     </ScrollView>

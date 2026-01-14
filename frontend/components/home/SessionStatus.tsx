@@ -46,13 +46,7 @@ export const SessionStatus: React.FC<SessionStatusProps> = ({
         );
     }
 
-    return (
-        <TouchableOpacity style={[styles.wakeUpCard, { borderColor: themeColor }]} onPress={handleWakeUp}>
-            <MaterialCommunityIcons name="weather-sunny" size={60} color={themeColor} />
-            <Text style={styles.wakeUpTitle}>Begin Your Sacred Morning</Text>
-            <Text style={styles.wakeUpSubtitle}>Tap to start your 30-minute grace period</Text>
-        </TouchableOpacity>
-    );
+    return null;
 };
 
 const styles = StyleSheet.create({
