@@ -32,7 +32,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, gender: string) => Promise<void>;
   loginAsGuest: () => Promise<void>;
-  logout: () => Promise<void>;
+  logout: (onComplete?: () => void) => Promise<void>;
   refreshUser: () => Promise<void>;
   updateUser: (data: User) => Promise<void>;
   isLoading: boolean;
@@ -157,7 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = async () => {
+  const logout = async (onComplete?: () => void) => {
     setToken(null);
     setUser(null);
     try {
@@ -165,6 +165,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await AsyncStorage.removeItem('user');
     } catch (e) {
       console.error('Logout error:', e);
+    }
+    // Call navigation callback after cleanup
+    if (onComplete) {
+      onComplete();
     }
   };
 

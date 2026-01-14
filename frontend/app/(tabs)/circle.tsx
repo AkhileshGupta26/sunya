@@ -283,8 +283,7 @@ export default function Circle() {
         <TouchableOpacity
           style={{ backgroundColor: THEME_COLOR, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 12, width: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
           onPress={async () => {
-            await logout();
-            router.replace('/auth/login');
+            await logout(() => router.replace('/auth/login'));
           }}
         >
           <MaterialCommunityIcons name="login" size={20} color="#FFF" style={{ marginRight: 8 }} />

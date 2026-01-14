@@ -103,8 +103,7 @@ export default function Profile() {
 
       if (error.status === 401) {
         Alert.alert('Session Expired', 'Please login again.');
-        await logout();
-        router.replace('/auth/login');
+        await logout(() => router.replace('/auth/login'));
         return;
       }
 
@@ -233,8 +232,7 @@ export default function Profile() {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
-            await logout();
-            router.replace('/auth/login');
+            await logout(() => router.replace('/auth/login'));
           },
         },
       ]
@@ -272,8 +270,7 @@ export default function Profile() {
             <Text style={styles.guestBannerDesc}>Sign up to save your stats and join circles.</Text>
           </View>
           <TouchableOpacity style={styles.guestSignUpButton} onPress={async () => {
-            await logout(); // Clear guest state
-            router.replace('/auth/register');
+            await logout(() => router.replace('/auth/register'));
           }}>
             <Text style={styles.guestSignUpText}>Sign Up</Text>
           </TouchableOpacity>
@@ -434,8 +431,7 @@ export default function Profile() {
 
       {user?.isGuest ? (
         <TouchableOpacity style={[styles.logoutButton, { borderColor: THEME_COLOR }]} onPress={async () => {
-          await logout();
-          router.replace('/auth/login');
+          await logout(() => router.replace('/auth/login'));
         }}>
           <MaterialCommunityIcons name="login" size={20} color={THEME_COLOR} />
           <Text style={[styles.logoutText, { color: THEME_COLOR }]}>Log In / Sign Up</Text>
