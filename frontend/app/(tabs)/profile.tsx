@@ -271,8 +271,8 @@ export default function Profile() {
             <Text style={styles.guestBannerTitle}>Guest Mode</Text>
             <Text style={styles.guestBannerDesc}>Sign up to save your stats and join circles.</Text>
           </View>
-          <TouchableOpacity style={styles.guestSignUpButton} onPress={() => {
-            logout(); // Clear guest state
+          <TouchableOpacity style={styles.guestSignUpButton} onPress={async () => {
+            await logout(); // Clear guest state
             router.replace('/auth/register');
           }}>
             <Text style={styles.guestSignUpText}>Sign Up</Text>
@@ -431,8 +431,8 @@ export default function Profile() {
       {/* ... Rest of render ... */}
 
       {user?.isGuest ? (
-        <TouchableOpacity style={[styles.logoutButton, { borderColor: THEME_COLOR }]} onPress={() => {
-          logout();
+        <TouchableOpacity style={[styles.logoutButton, { borderColor: THEME_COLOR }]} onPress={async () => {
+          await logout();
           router.replace('/auth/login');
         }}>
           <MaterialCommunityIcons name="login" size={20} color={THEME_COLOR} />
