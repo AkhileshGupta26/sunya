@@ -60,11 +60,26 @@ export async function scheduleDailyReminder(hour: number, minute: number, title:
     });
 }
 
-export async function scheduleAlarm(hour: number, minute: number, ringtone: string) {
-    // Cancel any existing specific alarm if tracked (for MVP we verify permissions and schedule new)
-    // Note: In a full app, track the ID to cancel only this one.
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-    // Schedule the new alarm
+export async function cancelAlarm() {
+    try {
+        const previousId = await AsyncStorage.getItem('current_alarm_id');
+        if (previousId) {
+            await Notifications.cancelScheduledNotificationAsync(previousId);
+            await AsyncStorage.removeItem('current_alarm_id');
+            console.log('[Notifications] Cancelled alarm:', previousId);
+        }
+    } catch (error) {
+        console.warn('[Notifications] Error cancelling alarm:', error);
+    }
+}
+
+export async function scheduleAlarm(hour: number, minute: number, ringtone: string) {
+    // 1. Cancel existing alarm first to prevent stacking
+    await cancelAlarm();
+
+    // 2. Schedule the new alarm
     const identifier = await Notifications.scheduleNotificationAsync({
         content: {
             title: "Meditation Time 🧘",
@@ -80,13 +95,17 @@ export async function scheduleAlarm(hour: number, minute: number, ringtone: stri
             repeats: true,
         },
     });
+
+    // 3. Save the new ID
+    await AsyncStorage.setItem('current_alarm_id', identifier);
+    console.log('[Notifications] Scheduled new alarm:', identifier);
     return identifier;
 }
 
 export async function setupSmartNotifications() {
     if (Platform.OS === 'web') return;
 
-    const hasSetup = await import('@react-native-async-storage/async-storage').then(m => m.default.getItem('notifications_setup_v1'));
+    const hasSetup = await AsyncStorage.getItem('notifications_setup_v1');
     if (hasSetup === 'true') {
         // Already setup, maybe verify permissions but don't reschedule
         return;
@@ -107,6 +126,6 @@ export async function setupSmartNotifications() {
     // Streak Saver (8:00 PM)
     await scheduleDailyReminder(20, 0, "Keep Your Streak 🔥", "Don't break the chain! Complete your session today.");
 
-    await import('@react-native-async-storage/async-storage').then(m => m.default.setItem('notifications_setup_v1', 'true'));
+    await AsyncStorage.setItem('notifications_setup_v1', 'true');
     console.log('[Notifications] Smart notifications scheduled');
 }

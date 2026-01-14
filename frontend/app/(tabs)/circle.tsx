@@ -39,7 +39,7 @@ const POPULAR_CAMPUSES = [
 ];
 
 export default function Circle() {
-  const { token, user } = useAuth();
+  const { token, user, logout } = useAuth();
   const router = useRouter();
   const THEME_COLOR = useThemeColor();
   const [refreshing, setRefreshing] = useState(false);
@@ -56,6 +56,7 @@ export default function Circle() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [myInstitutionId, setMyInstitutionId] = useState<string | null>(null);
+  const [myInstitution, setMyInstitution] = useState<any>(null);
 
 
   // --- Campus Search State ---
@@ -145,8 +146,17 @@ export default function Circle() {
       // Check if user has an institution (we can check this from user object or profile endpoint if needed, 
       // but for now we assume the user object in context handles it or we re-fetch user profile)
       // Ideally update useAuth to have institution_id, but here is a simple check:
+      // Check if user has an institution
       if (user?.institution_id) {
         setMyInstitutionId(user.institution_id);
+        // Fetch specific institution details
+        const myInstResponse = await fetch(`${API_URL}/api/institutions/my`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (myInstResponse.ok) {
+          const myInstData = await myInstResponse.json();
+          setMyInstitution(myInstData);
+        }
       }
 
     } catch (error) {
@@ -272,34 +282,8 @@ export default function Circle() {
 
         <TouchableOpacity
           style={{ backgroundColor: THEME_COLOR, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 12, width: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
-          onPress={() => {
-            // Clear guest so we can login/signup
-            // We'll reuse the logout behavior from profile which clears everything and goes to login
-            // Actually, just route to login, AuthContext will handle state override if they login
-            // Better to explicitly clear guest status or Use a specialised method?
-            // For now, simple router push to login is safest, user replaces 'guest' data on successful login.
-            const { logout } = useAuth(); // Destructuring inside component body might be issue if hooks specific. 
-            // Actually I can just use router.push('/auth/login')?
-            // But wait, if they login, they get a new token.
-            // If I just push, the AuthContext still thinks they are guest until login success?
-            // Correct.
-            // But wait, profile.tsx does: logout() then router.replace().
-            // Let's do similar trigger.
-            // Wait, I can't call hook conditionally.
-            // useAuth is already called at top level.
-          }}
-          onPressAsync={async () => {
-            // We need to access logout from the hook usage at top
-            // But I can't access it here inside the return block easily without restructuring.
-            // Let's rely on the router to login. 
-            // Actually, if we just go to login page, and they login, the AuthContext will update.
-            // The 'guest' flag will be overwritten by the real user object from backend.
-            // So simple navigation is fine.
-            // However, the Login page "Continue as Guest" might be weird if we are already guest.
-            // But if they Log In, it's fine.
-            // Let's just navigate to login.
-            // Use router.replace to avoid back-stack weirdness?
-            const router = require('expo-router').router; // Dynamic require or use top level router
+          onPress={async () => {
+            await logout();
             router.replace('/auth/login');
           }}
         >
@@ -478,20 +462,13 @@ export default function Circle() {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text style={styles.myCampusLabel}>My Campus</Text>
             <TouchableOpacity onPress={() => {
-              // Find name from leaderboard or user data? 
-              // Ideally we store name in user or separate state. 
-              // For now, we search leaderboard for ID.
-              const myInst = leaderboard.find(l => true); // logic gap, user object needs inst name
-              handleShareCampus('My College');
+              handleShareCampus(myInstitution?.name || 'My College');
             }}>
               <MaterialCommunityIcons name="share-variant" size={20} color={THEME_COLOR} />
             </TouchableOpacity>
           </View>
           <Text style={styles.myCampusName}>
-            {leaderboard.find(inst => {
-              // We don't have ID in leaderboard response type locally yet, need to verify
-              return false;
-            })?.name || "Your Campus"}
+            {myInstitution?.name || "Your Campus"}
           </Text>
         </View>
       )}

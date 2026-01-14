@@ -22,7 +22,7 @@ import { useThemeColor } from '../../hooks/useThemeColor';
 import * as Haptics from 'expo-haptics';
 import { StreakFlame } from '../../components/ui/StreakFlame';
 import { api } from '../../services/api';
-import { scheduleAlarm } from '../../utils/notifications';
+import { scheduleAlarm, cancelAlarm } from '../../utils/notifications';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -378,12 +378,14 @@ export default function Profile() {
           <Text style={styles.menuText}>Set Alarm</Text>
           <Switch
             value={alarmEnabled}
-            onValueChange={(val) => {
+            onValueChange={async (val) => {
               setAlarmEnabled(val);
               updateSettings({ alarm_enabled: val });
               if (val) {
                 const [h, m] = alarmTime.split(':').map(Number);
-                scheduleAlarm(h, m, alarmRingtone);
+                await scheduleAlarm(h, m, alarmRingtone);
+              } else {
+                await cancelAlarm();
               }
             }}
             trackColor={{ false: "#767577", true: THEME_COLOR }}
@@ -686,7 +688,7 @@ export default function Profile() {
               <TouchableOpacity onPress={() => Linking.openURL('https://github.com/AkhileshGupta26')}>
                 <MaterialCommunityIcons name="github" size={32} color="#FFFFFF" />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => Linking.openURL('https://linkedin.com/in/akhileshgupta26')}>
+              <TouchableOpacity onPress={() => Linking.openURL('https://linkedin.com/in/akhilesh-gupta26')}>
                 <MaterialCommunityIcons name="linkedin" size={32} color="#0077B5" />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => Linking.openURL('mailto:akhilesh@example.com')}>

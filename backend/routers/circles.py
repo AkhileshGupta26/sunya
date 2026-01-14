@@ -214,6 +214,28 @@ async def get_institution_leaderboard():
         ]
     }
 
+@router.get("/api/institutions/my", response_model=InstitutionResponse)
+async def get_my_institution(user_id: str = Depends(get_current_user)):
+    user_doc = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user_doc.get("institution_id"):
+         # Return empty/null response or 404. 
+         # Based on frontend logic, let's return null equivalent or handle 404.
+         # The InstitutionResponse model fields are required? Let's check models.py if needed.
+         # For safety, let's just return None and handle on frontend or return 404.
+         # Returning 404 is cleaner.
+         raise HTTPException(status_code=404, detail="No institution joined")
+
+    institution = await db.institutions.find_one({"_id": ObjectId(user_doc["institution_id"])})
+    if not institution:
+        raise HTTPException(status_code=404, detail="Institution not found")
+
+    return InstitutionResponse(
+        id=str(institution["_id"]),
+        name=institution["name"],
+        member_count=institution.get("member_count", 0),
+        total_minutes=institution.get("total_minutes", 0)
+    )
+
 @router.get("/api/institutions/search")
 async def search_institutions(query: str):
     if not query or len(query) < 2:
