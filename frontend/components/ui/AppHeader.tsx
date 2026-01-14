@@ -38,8 +38,7 @@ const styles = StyleSheet.create({
     },
     webBlur: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(15, 15, 30, 0.4)', // More transparent for "cool" look
-        backdropFilter: 'blur(20px)', // Stronger blur
+        backgroundColor: '#0F0F1E', // Original website color
         borderBottomWidth: 1,
         borderBottomColor: 'rgba(255, 255, 255, 0.1)',
     },
