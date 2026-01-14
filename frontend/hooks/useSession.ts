@@ -60,7 +60,7 @@ export const useSession = () => {
 
     return {
         todaySession: session?.session,
-        isLoading,
+        isLoading: isLoading && !!token, // Ensure isLoading is false if we are not fetching (guest)
         refetch,
         graceTimeRemaining,
         error

@@ -16,7 +16,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import Modal from 'react-native-modal';
 import * as Linking from 'expo-linking';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
@@ -40,6 +40,7 @@ const POPULAR_CAMPUSES = [
 
 export default function Circle() {
   const { token, user } = useAuth();
+  const router = useRouter();
   const THEME_COLOR = useThemeColor();
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'family' | 'campus'>('family');
@@ -218,6 +219,90 @@ export default function Circle() {
   };
 
   const filteredCampuses = POPULAR_CAMPUSES.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  // Guest Handling
+  if (user?.isGuest) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0F0F1E', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <MaterialCommunityIcons name="account-group" size={80} color={THEME_COLOR} style={{ opacity: 0.8, marginBottom: 24 }} />
+        <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#FFF', textAlign: 'center', marginBottom: 12 }}>
+          Join the Community
+        </Text>
+        <Text style={{ fontSize: 16, color: '#9CA3AF', textAlign: 'center', marginBottom: 32, lineHeight: 24 }}>
+          Create an account to join specific circles, compete in campus leaderboards, and meditate with friends.
+        </Text>
+
+        <TouchableOpacity
+          style={{ backgroundColor: THEME_COLOR, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 12, width: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
+          onPress={() => {
+            // Clear guest so we can login/signup
+            // We'll reuse the logout behavior from profile which clears everything and goes to login
+            // Actually, just route to login, AuthContext will handle state override if they login
+            // Better to explicitly clear guest status or Use a specialised method?
+            // For now, simple router push to login is safest, user replaces 'guest' data on successful login.
+            const { logout } = useAuth(); // Destructuring inside component body might be issue if hooks specific. 
+            // Actually I can just use router.push('/auth/login')?
+            // But wait, if they login, they get a new token.
+            // If I just push, the AuthContext still thinks they are guest until login success?
+            // Correct.
+            // But wait, profile.tsx does: logout() then router.replace().
+            // Let's do similar trigger.
+            // Wait, I can't call hook conditionally.
+            // useAuth is already called at top level.
+          }}
+          onPressAsync={async () => {
+            // We need to access logout from the hook usage at top
+            // But I can't access it here inside the return block easily without restructuring.
+            // Let's rely on the router to login. 
+            // Actually, if we just go to login page, and they login, the AuthContext will update.
+            // The 'guest' flag will be overwritten by the real user object from backend.
+            // So simple navigation is fine.
+            // However, the Login page "Continue as Guest" might be weird if we are already guest.
+            // But if they Log In, it's fine.
+            // Let's just navigate to login.
+            // Use router.replace to avoid back-stack weirdness?
+            const router = require('expo-router').router; // Dynamic require or use top level router
+            router.replace('/auth/login');
+          }}
+        >
+          <MaterialCommunityIcons name="login" size={20} color="#FFF" style={{ marginRight: 8 }} />
+          <Text style={{ color: '#FFF', fontSize: 16, fontWeight: 'bold' }}>Log In / Sign Up</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Guest Handling
+  if (user?.isGuest) {
+    const handleGuestLogin = async () => {
+      // We can just navigate to login. 
+      // If they successfully login, AuthContext updates user/token.
+      // If they cancel, they stay guest.
+      // We use replace to ensure they can't easy-back needed? 
+      // Actually push is fine, but login typically replaces.
+      router.replace('/auth/login');
+    };
+
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0F0F1E', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <MaterialCommunityIcons name="account-group" size={80} color={THEME_COLOR} style={{ opacity: 0.8, marginBottom: 24 }} />
+        <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#FFF', textAlign: 'center', marginBottom: 12 }}>
+          Join the Community
+        </Text>
+        <Text style={{ fontSize: 16, color: '#9CA3AF', textAlign: 'center', marginBottom: 32, lineHeight: 24 }}>
+          Create an account to join specific circles, compete in campus leaderboards, and meditate with friends.
+        </Text>
+
+        <TouchableOpacity
+          style={{ backgroundColor: THEME_COLOR, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 12, width: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
+          onPress={handleGuestLogin}
+        >
+          <MaterialCommunityIcons name="login" size={20} color="#FFF" style={{ marginRight: 8 }} />
+          <Text style={{ color: '#FFF', fontSize: 16, fontWeight: 'bold' }}>Log In / Sign Up</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   // --- Renders ---
 
