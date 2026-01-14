@@ -3,6 +3,8 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
+  useWindowDimensions,
+  View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
@@ -51,8 +53,6 @@ export default function Home() {
   }
 
   // Responsive Layout Logic
-  import { useWindowDimensions, View } from 'react-native';
-
   const { width } = useWindowDimensions();
   const isWeb = width > 768;
 
