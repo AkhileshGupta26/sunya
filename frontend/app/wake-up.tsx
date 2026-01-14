@@ -3,10 +3,13 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Speech from 'expo-speech';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { useAuth } from '../contexts/AuthContext';
 import { useThemeColor } from '../hooks/useThemeColor';
 
 export default function WakeUp() {
   const router = useRouter();
+  const { user } = useAuth();
   const THEME_COLOR = useThemeColor();
 
   const handleContinue = () => {
@@ -18,7 +21,17 @@ export default function WakeUp() {
 
   return (
     <View style={styles.container}>
-      <MaterialCommunityIcons name="weather-sunny" size={100} color="#F59E0B" />
+      <View style={{ height: 250, width: 250, marginBottom: 20 }}>
+        <DotLottieReact
+          src={
+            user?.settings_gender?.toLowerCase() === 'female'
+              ? "https://lottie.host/d66e81d2-5fe5-4cc8-abb4-5283462ee3c6/2FiRCfnpgp.lottie"
+              : "https://lottie.host/fdf7a741-0f0d-40cd-bdf0-63330dfe4a17/lNe0vk8p4k.lottie"
+          }
+          loop
+          autoplay
+        />
+      </View>
 
       <Text style={styles.title}>Good Morning!</Text>
       <Text style={styles.message}>
