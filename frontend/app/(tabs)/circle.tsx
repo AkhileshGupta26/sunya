@@ -57,6 +57,23 @@ export default function Circle() {
   const [searchQuery, setSearchQuery] = useState('');
   const [myInstitutionId, setMyInstitutionId] = useState<string | null>(null);
 
+
+  // --- Campus Search State ---
+  const [searchResults, setSearchResults] = useState([]);
+
+  // Debounced Search Hook
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery.length >= 2) {
+        searchInstitutions();
+      } else {
+        setSearchResults([]);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
   // Deep Link Handling
   const params = useLocalSearchParams();
 
@@ -73,7 +90,6 @@ export default function Circle() {
       }, 500);
     }
   }, [params.code, params.campus]);
-
   // ... (rest of initial implementation)
 
   const handleShareCampus = async (campusName: string) => {
@@ -294,37 +310,7 @@ export default function Circle() {
     );
   }
 
-  // Guest Handling
-  if (user?.isGuest) {
-    const handleGuestLogin = async () => {
-      // We can just navigate to login. 
-      // If they successfully login, AuthContext updates user/token.
-      // If they cancel, they stay guest.
-      // We use replace to ensure they can't easy-back needed? 
-      // Actually push is fine, but login typically replaces.
-      router.replace('/auth/login');
-    };
 
-    return (
-      <View style={{ flex: 1, backgroundColor: '#0F0F1E', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <MaterialCommunityIcons name="account-group" size={80} color={THEME_COLOR} style={{ opacity: 0.8, marginBottom: 24 }} />
-        <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#FFF', textAlign: 'center', marginBottom: 12 }}>
-          Join the Community
-        </Text>
-        <Text style={{ fontSize: 16, color: '#9CA3AF', textAlign: 'center', marginBottom: 32, lineHeight: 24 }}>
-          Create an account to join specific circles, compete in campus leaderboards, and meditate with friends.
-        </Text>
-
-        <TouchableOpacity
-          style={{ backgroundColor: THEME_COLOR, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 12, width: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
-          onPress={handleGuestLogin}
-        >
-          <MaterialCommunityIcons name="login" size={20} color="#FFF" style={{ marginRight: 8 }} />
-          <Text style={{ color: '#FFF', fontSize: 16, fontWeight: 'bold' }}>Log In / Sign Up</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
 
   // --- Renders ---
 
@@ -416,19 +402,7 @@ export default function Circle() {
   };
 
   // --- Campus Search & Share ---
-  const [searchResults, setSearchResults] = useState([]);
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchQuery.length >= 2) {
-        searchInstitutions();
-      } else {
-        setSearchResults([]);
-      }
-    }, 500);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
 
   const searchInstitutions = async () => {
     try {
