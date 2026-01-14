@@ -325,6 +325,23 @@ export default function Meditation() {
   if (meditating) {
     return (
       <View style={styles.meditatingContainer}>
+        <TouchableOpacity
+          style={styles.closeButtonAbsolute}
+          onPress={() => {
+            handlePause();
+            Alert.alert(
+              'Exit Session?',
+              'Exiting now will end your session.',
+              [
+                { text: 'Resume', style: 'cancel', onPress: handleResume },
+                { text: 'Exit', style: 'destructive', onPress: () => { handleStop(); router.back(); } }
+              ]
+            );
+          }}
+        >
+          <MaterialCommunityIcons name="close" size={28} color="#FFFFFF" opacity={0.7} />
+        </TouchableOpacity>
+
         {awarenessProbe && (
           <View style={styles.probeOverlay}>
             <MaterialCommunityIcons name="bell-ring" size={60} color="#F59E0B" />
@@ -697,5 +714,14 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontWeight: '600',
     fontSize: 16,
+  },
+  closeButtonAbsolute: {
+    position: 'absolute',
+    top: 50,
+    left: 24,
+    zIndex: 50,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
 });
