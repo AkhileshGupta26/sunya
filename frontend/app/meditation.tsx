@@ -230,7 +230,9 @@ export default function Meditation() {
       setTimeRemaining(10 * 60);
       setBreakTimeRemaining(2 * 60);
 
-      await api.post('/api/sessions/start', {});
+      if (!user?.isGuest) {
+        await api.post('/api/sessions/start', {});
+      }
 
     } catch (error) {
       console.error('Failed to start session/audio', error);
@@ -288,12 +290,17 @@ export default function Meditation() {
     }
 
     try {
-      const data: any = await api.post('/api/sessions/complete', {
-        track_type: selectedTrack,
-        completed: true,
-        bpm_verified: true,
-        awareness_probe_passed: true
-      });
+      let data = { next_detox_duration: 1800 }; // Default for guest
+
+      if (!user?.isGuest) {
+        const res: any = await api.post('/api/sessions/complete', {
+          track_type: selectedTrack,
+          completed: true,
+          bpm_verified: true,
+          awareness_probe_passed: true
+        });
+        data = res;
+      }
 
       // Auto-route to Detox with calculated duration
       // data.next_detox_duration is in seconds from backend
@@ -308,6 +315,8 @@ export default function Meditation() {
 
     } catch (error) {
       console.error('Completion error', error);
+      // Fallback for error to still allow progress if offline?
+      // For now just log.
     }
   };
 

@@ -154,6 +154,18 @@ export default function Detox() {
         const durationSecs = storedDuration ? parseInt(storedDuration) : 1800;
         const minutes = Math.floor(durationSecs / 60);
 
+        if (user?.isGuest) {
+            // Mock success for guest
+            await AsyncStorage.removeItem('detox_start_time');
+            await AsyncStorage.removeItem('detox_duration');
+            startTimeRef.current = null;
+            setIsActive(false);
+            setTimeLeft(0);
+            setPointsEarned(minutes * 10); // Mock points
+            Alert.alert('Digital Detox Complete', `You earned ${minutes * 10} points! (Guest Mode)`);
+            return;
+        }
+
         try {
             const response = await fetch(`${API_URL}/api/detox/complete`, {
                 method: 'POST',

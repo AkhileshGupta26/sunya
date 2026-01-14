@@ -20,6 +20,7 @@ interface User {
   settings_timer_check?: boolean;
   settings_gender?: string;
   profile_picture?: string;
+  isGuest?: boolean;
 }
 
 interface AuthContextType {
@@ -27,6 +28,7 @@ interface AuthContextType {
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, gender: string) => Promise<void>;
+  loginAsGuest: () => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   updateUser: (data: User) => Promise<void>;
@@ -69,27 +71,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storedToken = await AsyncStorage.getItem('auth_token');
       const storedUser = await AsyncStorage.getItem('user');
 
-      if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
 
-        // Background sync
-        api.get('/api/auth/me')
-          .then((userData: any) => {
-            console.log('[Auth] Synced user data');
-            setUser(userData);
-            AsyncStorage.setItem('user', JSON.stringify(userData));
-          })
-          .catch(async (err: any) => {
-            console.log('[Auth] Background sync failed:', err);
-            if (err.status === 401) {
-              console.log('Token expired on startup, logging out logic...');
-              await AsyncStorage.removeItem('auth_token');
-              await AsyncStorage.removeItem('user');
-              setToken(null);
-              setUser(null);
-            }
-          });
+        if (storedToken && storedToken !== 'GUEST') {
+          setToken(storedToken);
+          // Background sync only for real users
+          api.get('/api/auth/me')
+            .then((userData: any) => {
+              console.log('[Auth] Synced user data');
+              setUser(userData);
+              AsyncStorage.setItem('user', JSON.stringify(userData));
+            })
+            .catch(async (err: any) => {
+              console.log('[Auth] Background sync failed:', err);
+              if (err.status === 401) {
+                console.log('Token expired on startup, logging out logic...');
+                await logout();
+              }
+            });
+        } else if (parsedUser.isGuest) {
+          // Guest mode: no token, no sync
+          console.log('[Auth] Loaded Guest User');
+        }
       }
     } catch (error) {
       console.error('Failed to load auth:', error);
@@ -109,6 +114,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Login error:', error);
       throw error;
+    }
+  };
+
+  const loginAsGuest = async () => {
+    const guestUser: User = {
+      id: 'guest_' + Date.now(),
+      name: 'Guest',
+      email: '',
+      current_streak: 0,
+      detox_streak: 0,
+      total_days: 0,
+      zen_passes: 0,
+      isGuest: true,
+      settings_gender: 'female', // Default
+    };
+    try {
+      await AsyncStorage.setItem('user', JSON.stringify(guestUser));
+      // We do NOT set a token for guests to avoid api calls
+      setUser(guestUser);
+    } catch (e) {
+      console.error('Guest login error:', e);
     }
   };
 
@@ -157,7 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, refreshUser, updateUser, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, loginAsGuest, register, logout, refreshUser, updateUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

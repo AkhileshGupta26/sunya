@@ -21,7 +21,7 @@ export const useSession = () => {
             return data; // assumes data is { session: ... } or similar structure? API returns object directly or {session: object}?
             // Checking backend response in sessions.py: {"session": session_doc} or {"session": None}
         },
-        enabled: !!token,
+        enabled: !!token, // Guests (no token) will skip this
     });
 
     // Derived state: grace timer logic

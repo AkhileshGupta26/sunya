@@ -211,8 +211,24 @@ export default function Profile() {
           </View>
         </TouchableOpacity>
         <Text style={styles.name}>{user?.name}</Text>
-        <Text style={styles.email}>{user?.email}</Text>
+        <Text style={styles.email}>{user?.email || 'No Account Linked'}</Text>
       </View>
+
+      {user?.isGuest && (
+        <View style={styles.guestBanner}>
+          <MaterialCommunityIcons name="cloud-off-outline" size={24} color="#F59E0B" />
+          <View style={styles.guestBannerText}>
+            <Text style={styles.guestBannerTitle}>Guest Mode</Text>
+            <Text style={styles.guestBannerDesc}>Sign up to save your stats and join circles.</Text>
+          </View>
+          <TouchableOpacity style={styles.guestSignUpButton} onPress={() => {
+            logout(); // Clear guest state
+            router.replace('/auth/register');
+          }}>
+            <Text style={styles.guestSignUpText}>Sign Up</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.statsCard}>
         <View style={styles.statRow}>
@@ -321,10 +337,20 @@ export default function Profile() {
 
       {/* ... Rest of render ... */}
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <MaterialCommunityIcons name="logout" size={20} color="#EF4444" />
-        <Text style={styles.logoutText}>Logout</Text>
-      </TouchableOpacity>
+      {user?.isGuest ? (
+        <TouchableOpacity style={[styles.logoutButton, { borderColor: THEME_COLOR }]} onPress={() => {
+          logout();
+          router.replace('/auth/login');
+        }}>
+          <MaterialCommunityIcons name="login" size={20} color={THEME_COLOR} />
+          <Text style={[styles.logoutText, { color: THEME_COLOR }]}>Log In / Sign Up</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <MaterialCommunityIcons name="logout" size={20} color="#EF4444" />
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      )}
 
       <Text style={styles.version}>Version 1.0.0</Text>
 
@@ -704,5 +730,41 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontSize: 14,
     marginLeft: 4,
-  }
+  },
+  guestBanner: {
+    backgroundColor: 'rgba(245, 158, 11, 0.15)', // Amber low opacity
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+    marginHorizontal: 24,
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+    gap: 12,
+  },
+  guestBannerText: {
+    flex: 1,
+  },
+  guestBannerTitle: {
+    color: '#F59E0B',
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 2,
+  },
+  guestBannerDesc: {
+    color: '#D1D5DB',
+    fontSize: 12,
+  },
+  guestSignUpButton: {
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  guestSignUpText: {
+    color: '#000',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
 });

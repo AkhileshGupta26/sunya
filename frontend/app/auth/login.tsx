@@ -16,7 +16,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function Login() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, loginAsGuest } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -91,6 +91,18 @@ export default function Login() {
             onPress={() => router.push('/auth/register')}
           >
             <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.guestButton}
+            onPress={async () => {
+              setLoading(true);
+              await loginAsGuest(); // Auth context handles nav? No, we need to nav here.
+              router.replace('/(tabs)/home');
+              setLoading(false);
+            }}
+            disabled={loading}
+          >
+            <Text style={styles.guestButtonText}>Continue as Guest</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -167,5 +179,19 @@ const styles = StyleSheet.create({
   linkText: {
     color: '#7C3AED',
     fontSize: 14,
+  },
+  guestButton: {
+    marginTop: 24,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#7C3AED',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  guestButtonText: {
+    color: '#7C3AED',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
