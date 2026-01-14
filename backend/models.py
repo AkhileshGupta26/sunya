@@ -30,12 +30,18 @@ class UserResponse(BaseModel):
     settings_bpm_check: bool = False
     settings_timer_check: bool = False
     settings_gender: str = "male" # "male" (teal) or "female" (rose)
+    settings_alarm_enabled: bool = False
+    settings_alarm_time: Optional[str] = "06:00"
+    settings_alarm_ringtone: str = "meditation_flute"
 
 # --- Settings & Profile Updates ---
 class UserSettingsUpdate(BaseModel):
     camera_enabled: Optional[bool] = None
     bpm_check: Optional[bool] = None
     timer_check: Optional[bool] = None
+    alarm_enabled: Optional[bool] = None
+    alarm_time: Optional[str] = None
+    alarm_ringtone: Optional[str] = None
 
 class WakeTimeUpdate(BaseModel):
     wake_time: str  # Format: "HH:MM"

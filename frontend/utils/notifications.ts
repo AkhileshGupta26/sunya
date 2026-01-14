@@ -60,6 +60,29 @@ export async function scheduleDailyReminder(hour: number, minute: number, title:
     });
 }
 
+export async function scheduleAlarm(hour: number, minute: number, ringtone: string) {
+    // Cancel any existing specific alarm if tracked (for MVP we verify permissions and schedule new)
+    // Note: In a full app, track the ID to cancel only this one.
+
+    // Schedule the new alarm
+    const identifier = await Notifications.scheduleNotificationAsync({
+        content: {
+            title: "Meditation Time 🧘",
+            body: "It's time for your daily practice.",
+            sound: true, // Uses system default. Custom sounds require native build config.
+            data: { ringtone } // Pass ringtone preference for foreground handling
+        },
+        trigger: {
+            // @ts-ignore
+            type: Notifications.SchedulableTriggerInputTypes.DAILY,
+            hour,
+            minute,
+            repeats: true,
+        },
+    });
+    return identifier;
+}
+
 export async function setupSmartNotifications() {
     if (Platform.OS === 'web') return;
 

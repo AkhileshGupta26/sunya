@@ -50,7 +50,10 @@ async def update_user_profile(profile_data: UserProfileUpdate, user_id: str = De
         settings_camera_enabled=updated_user.get("settings_camera_enabled", False),
         settings_bpm_check=updated_user.get("settings_bpm_check", False),
         settings_timer_check=updated_user.get("settings_timer_check", False),
-        settings_gender=updated_user.get("settings_gender", "male")
+        settings_gender=updated_user.get("settings_gender", "male"),
+        settings_alarm_enabled=updated_user.get("settings_alarm_enabled", False),
+        settings_alarm_time=updated_user.get("settings_alarm_time", "06:00"),
+        settings_alarm_ringtone=updated_user.get("settings_alarm_ringtone", "meditation_flute")
     )
 
 @router.put("/api/user/settings")
@@ -62,6 +65,12 @@ async def update_settings(settings: UserSettingsUpdate, user_id: str = Depends(g
         update_data["settings_bpm_check"] = settings.bpm_check
     if settings.timer_check is not None:
         update_data["settings_timer_check"] = settings.timer_check
+    if settings.alarm_enabled is not None:
+        update_data["settings_alarm_enabled"] = settings.alarm_enabled
+    if settings.alarm_time is not None:
+        update_data["settings_alarm_time"] = settings.alarm_time
+    if settings.alarm_ringtone is not None:
+        update_data["settings_alarm_ringtone"] = settings.alarm_ringtone
     
     if update_data:
         await db.users.update_one(

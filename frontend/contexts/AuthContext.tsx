@@ -19,6 +19,9 @@ interface User {
   settings_bpm_check?: boolean;
   settings_timer_check?: boolean;
   settings_gender?: string;
+  settings_alarm_enabled?: boolean;
+  settings_alarm_time?: string;
+  settings_alarm_ringtone?: string;
   profile_picture?: string;
   isGuest?: boolean;
 }
