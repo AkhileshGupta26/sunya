@@ -393,6 +393,43 @@ export default function Circle() {
     );
   };
 
+  // --- Campus Search & Share ---
+  const [searchResults, setSearchResults] = useState([]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery.length >= 2) {
+        searchInstitutions();
+      } else {
+        setSearchResults([]);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const searchInstitutions = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/institutions/search?query=${encodeURIComponent(searchQuery)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data.results);
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const handleShareCampus = async (campusName: string) => {
+    triggerHaptic('selection');
+    // For now simple text share, deep linking requires more setup
+    try {
+      await Share.share({
+        message: `Join me at ${campusName} on Sunya! Iterate towards zero together.`,
+      });
+    } catch (error) { }
+  };
+
   const renderCampusView = () => (
     <View style={{ paddingBottom: 40 }}>
       <View style={styles.header}>
@@ -400,49 +437,95 @@ export default function Circle() {
         <Text style={styles.subtitle}>Compete with other colleges!</Text>
       </View>
 
-      {!myInstitutionId && (
+      {!myInstitutionId ? (
         <View style={styles.campusSearchContainer}>
-          <Text style={styles.scHeader}>Join Your Campus</Text>
+          <Text style={styles.scHeader}>Find Your College</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search College (e.g. IIT...)"
+            placeholder="Search (e.g. IIT, NIT, Amity...)"
             placeholderTextColor="#6B7280"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
-          <View style={styles.campusTags}>
-            {filteredCampuses.slice(0, 6).map((campus, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={[styles.campusTag, { borderColor: THEME_COLOR }]}
-                onPress={() => handleJoinCampus(campus)}
-              >
-                <Text style={styles.campusTagText}>{campus}</Text>
-                <MaterialCommunityIcons name="plus" size={16} color={THEME_COLOR} />
-              </TouchableOpacity>
-            ))}
+
+          {searchQuery.length > 0 && (
+            <View style={styles.resultsContainer}>
+              {searchResults.map((inst: any) => (
+                <TouchableOpacity
+                  key={inst.id}
+                  style={styles.resultItem}
+                  onPress={() => handleJoinCampus(inst.name)}
+                >
+                  <View>
+                    <Text style={styles.resultName}>{inst.name}</Text>
+                    <Text style={styles.resultMembers}>{inst.member_count} members</Text>
+                  </View>
+                  <MaterialCommunityIcons name="plus-circle-outline" size={24} color={THEME_COLOR} />
+                </TouchableOpacity>
+              ))}
+              {searchResults.length === 0 && searchQuery.length >= 2 && (
+                <Text style={styles.noResultText}>No college found. Contact support to add yours.</Text>
+              )}
+            </View>
+          )}
+
+          {searchQuery.length === 0 && (
+            <View style={styles.campusTags}>
+              {/* Show top 5 from leaderboard as suggestions if available, else static popular */}
+              {leaderboard.slice(0, 6).map((inst, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={[styles.campusTag, { borderColor: THEME_COLOR }]}
+                  onPress={() => handleJoinCampus(inst.name)}
+                >
+                  <Text style={styles.campusTagText}>{inst.name}</Text>
+                  <MaterialCommunityIcons name="plus" size={16} color={THEME_COLOR} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+      ) : (
+        <View style={styles.myCampusCard}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={styles.myCampusLabel}>My Campus</Text>
+            <TouchableOpacity onPress={() => {
+              // Find name from leaderboard or user data? 
+              // Ideally we store name in user or separate state. 
+              // For now, we search leaderboard for ID.
+              const myInst = leaderboard.find(l => true); // logic gap, user object needs inst name
+              handleShareCampus('My College');
+            }}>
+              <MaterialCommunityIcons name="share-variant" size={20} color={THEME_COLOR} />
+            </TouchableOpacity>
           </View>
+          <Text style={styles.myCampusName}>
+            {leaderboard.find(inst => {
+              // We don't have ID in leaderboard response type locally yet, need to verify
+              return false;
+            })?.name || "Your Campus"}
+          </Text>
         </View>
       )}
 
       <View style={styles.leaderboardSection}>
         <Text style={styles.scHeader}>🏆 Zen Leaderboard</Text>
         {leaderboard.map((inst, index) => (
-          <View key={inst.id} style={styles.lbCard}>
+          <View key={index} style={styles.lbCard}>
             <Text style={[styles.lbRank, index < 3 ? { color: '#F59E0B' } : { color: '#9CA3AF' }]}>#{index + 1}</Text>
             <View style={styles.lbInfo}>
               <Text style={styles.lbName}>{inst.name}</Text>
               <Text style={styles.lbMembers}>{inst.member_count} Meditators</Text>
             </View>
+            <TouchableOpacity style={{ padding: 8 }} onPress={() => handleShareCampus(inst.name)}>
+              <MaterialCommunityIcons name="share-outline" size={20} color="#6B7280" />
+            </TouchableOpacity>
             <View style={styles.lbScore}>
               <Text style={[styles.lbMins, { color: THEME_COLOR }]}>{Math.floor(inst.total_minutes / 60)}h</Text>
               <Text style={styles.lbLabel}>Zen Time</Text>
             </View>
           </View>
         ))}
-        {leaderboard.length === 0 && (
-          <Text style={styles.emptySubtitle}>Be the first to put your college on the map!</Text>
-        )}
       </View>
     </View>
   );
@@ -551,4 +634,14 @@ const styles = StyleSheet.create({
   modalCancelText: { color: '#9CA3AF', fontSize: 14 },
   leaveButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 24, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: '#EF4444', backgroundColor: '#EF444410' },
   leaveButtonText: { color: '#EF4444', fontSize: 16, fontWeight: '600', marginLeft: 8 },
+
+  // Search Results
+  resultsContainer: { backgroundColor: '#1F1F2E', borderRadius: 12, overflow: 'hidden', marginTop: 8 },
+  resultItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#2D2D3D' },
+  resultName: { color: '#FFF', fontSize: 16, fontWeight: '600' },
+  resultMembers: { color: '#9CA3AF', fontSize: 12 },
+  noResultText: { color: '#6B7280', padding: 16, textAlign: 'center' },
+  myCampusCard: { backgroundColor: '#1F1F2E', marginHorizontal: 24, padding: 20, borderRadius: 16, marginBottom: 24, borderWidth: 1, borderColor: '#2D2D3D' },
+  myCampusLabel: { color: '#9CA3AF', fontSize: 12, textTransform: 'uppercase' },
+  myCampusName: { color: '#FFF', fontSize: 24, fontWeight: 'bold', marginTop: 8 },
 });

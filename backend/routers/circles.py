@@ -213,3 +213,23 @@ async def get_institution_leaderboard():
             for idx, inst in enumerate(institutions)
         ]
     }
+
+@router.get("/api/institutions/search")
+async def search_institutions(query: str):
+    if not query or len(query) < 2:
+        return {"results": []}
+        
+    # Case-insensitive fuzzy search
+    regex = {"$regex": query, "$options": "i"}
+    institutions = await db.institutions.find({"name": regex}).limit(20).to_list(20)
+    
+    return {
+        "results": [
+            {
+                "id": str(inst["_id"]),
+                "name": inst["name"],
+                "member_count": inst.get("member_count", 0)
+            }
+            for inst in institutions
+        ]
+    }
