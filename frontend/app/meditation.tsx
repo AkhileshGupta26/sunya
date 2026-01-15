@@ -16,6 +16,7 @@ import { Audio } from 'expo-av';
 import { useThemeColor } from '../hooks/useThemeColor';
 import { triggerHaptic } from '../utils/haptics';
 import { Platform } from 'react-native';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -392,10 +393,17 @@ export default function Meditation() {
           <Text style={styles.timerLabel}>Remaining</Text>
         </View>
 
-        <Animated.Image
-          source={user?.settings_gender === 'female' ? require('../assets/images/female/user.png') : require('../assets/images/male/user.png')}
-          style={[styles.meditationImage, animatedStyle]}
-        />
+        <View style={[styles.meditationImageContainer, animatedStyle]}>
+          <DotLottieReact
+            src={user?.settings_gender === 'female'
+              ? "https://lottie.host/d66e81d2-5fe5-4cc8-abb4-5283462ee3c6/2FiRCfnpgp.lottie"
+              : "https://lottie.host/fdf7a741-0f0d-40cd-bdf0-63330dfe4a17/lNe0vk8p4k.lottie"
+            }
+            loop
+            autoplay
+            style={{ width: '100%', height: 250 }}
+          />
+        </View>
 
         <Text style={styles.breatheText}>{paused ? 'Paused' : 'Breathe...'}</Text>
 
@@ -714,6 +722,13 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 250,
     resizeMode: 'contain',
+    marginVertical: 20,
+  },
+  meditationImageContainer: {
+    width: '100%',
+    height: 250,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginVertical: 20,
   },
   durationSelector: {
