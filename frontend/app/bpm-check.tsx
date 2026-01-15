@@ -10,6 +10,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { api } from '../services/api';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 export default function BPMCheck() {
   const router = useRouter();
@@ -265,7 +266,16 @@ export default function BPMCheck() {
         {checking ? (
           <View style={styles.checkingContainer}>
             <View style={[styles.pulse, { opacity: fingerDetected ? 1 : 0.3 }]}>
-              <MaterialCommunityIcons name="heart-pulse" size={48} color="#EC4899" />
+              {fingerDetected ? (
+                <DotLottieReact
+                  src="https://lottie.host/e634416d-beea-4c5d-9c8f-9187e946f9f3/awatDNs66j.lottie"
+                  loop
+                  autoplay
+                  style={{ width: 100, height: 100 }}
+                />
+              ) : (
+                <MaterialCommunityIcons name="heart-pulse" size={48} color="#EC4899" />
+              )}
             </View>
 
             {fingerDetected && (
