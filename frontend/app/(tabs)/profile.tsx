@@ -206,7 +206,6 @@ export default function Profile() {
 
       setAlarmTimeModalVisible(false);
       Alert.alert('Success', 'Alarm time updated');
-      Alert.alert('Success', 'Alarm time updated');
     } catch (error) {
       Alert.alert('Error', 'Failed to update alarm');
     }

@@ -51,11 +51,10 @@ export async function scheduleDailyReminder(hour: number, minute: number, title:
             sound: true,
         },
         trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.DAILY,
             hour,
             minute,
-            // @ts-ignore
             repeats: true,
+            channelId: 'default',
         },
     });
 }
@@ -84,15 +83,14 @@ export async function scheduleAlarm(hour: number, minute: number, ringtone: stri
         content: {
             title: "Meditation Time 🧘",
             body: "It's time for your daily practice.",
-            sound: true, // Uses system default. Custom sounds require native build config.
-            data: { ringtone } // Pass ringtone preference for foreground handling
+            sound: true,
+            data: { ringtone }
         },
         trigger: {
-            // @ts-ignore
-            type: Notifications.SchedulableTriggerInputTypes.DAILY,
             hour,
             minute,
             repeats: true,
+            channelId: 'default',
         },
     });
 
