@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { SplashScreen } from '../components/ui/SplashScreen';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
-import AppHeader from '../components/ui/AppHeader';
 import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { AuthProvider } from '../contexts/AuthContext';
@@ -42,8 +41,7 @@ export default function RootLayout() {
         >
           <AuthProvider>
             <View style={{ flex: 1 }}>
-              <AppHeader />
-              <Stack screenOptions={{ headerShown: false, contentStyle: { paddingTop: 60 } }}>
+              <Stack screenOptions={{ headerShown: false, contentStyle: { paddingTop: 0 } }}>
                 <Stack.Screen name="index" />
                 <Stack.Screen name="auth/login" />
                 <Stack.Screen name="auth/register" />

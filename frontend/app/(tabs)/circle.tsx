@@ -309,7 +309,7 @@ export default function Circle() {
         style={[styles.tabButton, activeTab === 'campus' && { backgroundColor: THEME_COLOR }]}
         onPress={() => { triggerHaptic('selection'); setActiveTab('campus'); }}
       >
-        <Text style={[styles.tabText, activeTab === 'campus' ? { color: '#FFF' } : { color: '#9CA3AF' }]}>Campus Tribe</Text>
+        <Text style={[styles.tabText, activeTab === 'campus' ? { color: '#FFF' } : { color: '#9CA3AF' }]}>Create Friends Circle</Text>
       </TouchableOpacity>
     </View>
   );
