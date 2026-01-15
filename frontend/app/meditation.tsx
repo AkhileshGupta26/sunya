@@ -218,7 +218,7 @@ export default function Meditation() {
       setMeditating(true);
       setPaused(false);
       setStartTime(new Date());
-      setTimeRemaining(10 * 60);
+      // timeRemaining is already set by duration selector, don't reset it
       setBreakTimeRemaining(2 * 60);
 
       if (!user?.isGuest) {
