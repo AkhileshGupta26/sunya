@@ -248,6 +248,7 @@ export default function Meditation() {
     }
   };
 
+
   const handleStop = async () => {
     triggerHaptic('heavy');
     if (sound) {
@@ -258,6 +259,7 @@ export default function Meditation() {
     setMeditating(false);
     setPaused(false);
     setAwarenessProbe(false);
+    // Don't reset timeRemaining here - let the calling code decide
   };
 
   const completeSession = async () => {
@@ -374,8 +376,8 @@ export default function Meditation() {
                     {
                       text: 'Exit',
                       style: 'destructive',
-                      onPress: () => {
-                        handleStop();
+                      onPress: async () => {
+                        await handleStop();
                         router.back();
                       }
                     }
@@ -430,8 +432,9 @@ export default function Meditation() {
                   {
                     text: 'End Session',
                     style: 'destructive',
-                    onPress: () => {
-                      handleStop();
+                    onPress: async () => {
+                      await handleStop();
+                      router.back();
                     },
                   },
                 ]
