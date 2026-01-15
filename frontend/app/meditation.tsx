@@ -362,6 +362,28 @@ export default function Meditation() {
               <MaterialCommunityIcons name="play" size={32} color="white" />
               <Text style={styles.resumeText}>Resume</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.exitSessionButton}
+              onPress={() => {
+                Alert.alert(
+                  'Exit Session?',
+                  'Exiting now will end your meditation session without saving progress.',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Exit',
+                      style: 'destructive',
+                      onPress: () => {
+                        handleStop();
+                        router.back();
+                      }
+                    }
+                  ]
+                );
+              }}
+            >
+              <Text style={styles.exitSessionText}>Exit Session</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -724,5 +746,18 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  exitSessionButton: {
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#EF4444',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+  },
+  exitSessionText: {
+    color: '#EF4444',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
