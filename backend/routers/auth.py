@@ -119,7 +119,6 @@ async def get_me(user_id: str = Depends(get_current_user)):
         settings_camera_enabled=user_doc.get("settings_camera_enabled", False),
         settings_bpm_check=user_doc.get("settings_bpm_check", False),
         settings_timer_check=user_doc.get("settings_timer_check", False),
-        settings_timer_check=user_doc.get("settings_timer_check", False),
         settings_gender=user_doc.get("settings_gender", "male"),
         active_contest=user_doc.get("active_contest", "none"),
         contest_joined_at=user_doc.get("contest_joined_at"),
