@@ -7,19 +7,29 @@ import { useThemeColor } from '../hooks/useThemeColor';
 import { api } from '../services/api';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import { useLocalSearchParams } from 'expo-router';
+
 export default function Leaderboard() {
     const router = useRouter();
     const { user } = useAuth();
+    const { type } = useLocalSearchParams(); // Get type param
+    const contestType = (type as string) || 'global';
+
     const THEME_COLOR = useThemeColor();
     const [leaderboard, setLeaderboard] = useState([]);
-    const [activeContest, setActiveContest] = useState('none');
+    const [activeContest, setActiveContest] = useState('none'); // Keep for UI info if needed
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
     const fetchLeaderboard = async () => {
         try {
-            const res: any = await api.get('/api/contests/leaderboard');
-            setActiveContest(res.active_contest || 'none');
+            // Fallback to global if undefined, or specific type
+            const endpoint = `/api/contests/leaderboard?contest_type=${contestType}`;
+            const res: any = await api.get(endpoint);
+
+            // Backend returns { contest_type: "weekly", leaderboard: [] }
+            // We use this to set title or state
+            setActiveContest(res.contest_type || 'none');
             setLeaderboard(res.leaderboard || []);
         } catch (error) {
             console.error(error);
@@ -31,7 +41,7 @@ export default function Leaderboard() {
 
     useEffect(() => {
         fetchLeaderboard();
-    }, []);
+    }, [contestType]); // Re-fetch if type changes
 
     const onRefresh = () => {
         setRefreshing(true);

@@ -33,8 +33,11 @@ class UserResponse(BaseModel):
     settings_alarm_enabled: bool = False
     settings_alarm_time: Optional[str] = "06:00"
     settings_alarm_ringtone: str = "meditation_flute"
-    active_contest: str = "none"
-    contest_joined_at: Optional[str] = None
+    active_contests: List[str] = [] # Replaces active_contest
+    contest_joined_weekly_at: Optional[str] = None
+    contest_joined_monthly_at: Optional[str] = None
+    weekly_points: int = 0
+    monthly_points: int = 0
     badges: List[str] = []
 
 # --- Settings & Profile Updates ---

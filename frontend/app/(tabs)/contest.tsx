@@ -204,7 +204,7 @@ export default function Contest() {
   const { token, user } = useAuth();
   const router = useRouter();
   const THEME_COLOR = useThemeColor();
-  const [activeContest, setActiveContest] = useState<string>('none');
+  const [activeContests, setActiveContests] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -212,26 +212,34 @@ export default function Contest() {
   }, []);
 
   const loadContestStatus = async () => {
-    if (!user) return; // Should allow loading even if user object isn't full, but token needed
+    if (!user) return;
     try {
       const response = await fetch(`${API_URL}/api/user/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
         const data = await response.json();
-        setActiveContest(data.active_contest || 'none');
+        // Handle migration fallback: if backend hasn't migrated yet (it handles in-memory), use returned value
+        setActiveContests(data.active_contests || []);
       }
     } catch (e) { console.error(e); }
   };
 
   const handleJoinContest = async (type: 'weekly' | 'monthly') => {
+    if (type === 'weekly') {
+      const day = new Date().getDay();
+      if (day === 0 || day === 6) {
+        Alert.alert("Weekly Contest", "The Weekly Contest is in cooldown (Results Phase). \n\nJoin us on Monday!");
+        return;
+      }
+    }
+
     Alert.alert('Join Contest', `Join the ${type} contest?`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Join', onPress: async () => {
           setLoading(true);
           try {
-            console.log(`Joining contest: ${type}`);
             const res = await fetch(`${API_URL}/api/contests/join`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -240,90 +248,78 @@ export default function Contest() {
 
             if (res.ok) {
               const data = await res.json();
-              setActiveContest(data.active_contest);
-              // Also trigger Haptic
+              setActiveContests(data.active_contests); // Update list
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               Alert.alert('Success', `You joined the ${type} contest!`);
-              router.push('/leaderboard'); // Or maybe just refresh UI? User asked for leaderboard on progress.
             } else {
               const err = await res.json();
-              console.error("Join Error:", err);
-              if (res.status === 400 && err.detail.includes("already in")) {
-                Alert.alert("Notice", "You are already in this contest. Refreshing...");
-                loadContestStatus(); // Auto-fix state
-              } else {
-                Alert.alert('Error', err.detail || "Failed to join. Please try again.");
-              }
+              Alert.alert('Error', err.detail || "Failed to join.");
+              // If already in, maybe refresh to confirm
+              if (res.status === 400 && err.detail.includes("already in")) loadContestStatus();
             }
-          } catch (e) {
-            console.error("Join Exception:", e);
-            Alert.alert('Error', 'Failed to join contest');
-          }
+          } catch (e) { Alert.alert('Error', 'Failed to join contest'); }
           finally { setLoading(false); }
         }
       }
     ]);
   };
 
-  const handleLeaveContest = async () => {
-    Alert.alert('Leave Contest?', 'You will lose your progress.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Leave', style: 'destructive', onPress: async () => {
-          // Not implemented in backend yet, but UI placeholder
-          Alert.alert("Info", "Leaving contest feature coming soon.");
-        }
-      }
-    ])
-  }
+  const openLeaderboard = (type: string) => {
+    // Navigate to leaderboard with type param
+    router.push({ pathname: '/leaderboard', params: { type } });
+  };
 
-  // Pure Contest UI - No Circle clutter unless hidden
+  const renderCard = (type: 'weekly' | 'monthly', title: string, subtitle: string, icon: any, colors: string[]) => {
+    const isActive = activeContests.includes(type);
+    const isWeeklyResults = type === 'weekly' && !isActive && (new Date().getDay() === 0 || new Date().getDay() === 6);
+
+    return (
+      <TouchableOpacity
+        style={styles.contestCard}
+        onPress={() => isActive ? openLeaderboard(type) : handleJoinContest(type)}
+        disabled={loading}
+      >
+        <LinearGradient colors={colors as any} style={styles.contestGradient}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <View>
+              <Text style={styles.contestTitle}>{title}</Text>
+              <Text style={styles.contestSubtitle}>{isActive ? "You are participating!" : isWeeklyResults ? "Results Period" : subtitle}</Text>
+              {isActive && (
+                <View style={{ marginTop: 8, backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start' }}>
+                  <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>ACTIVE • TAP TO VIEW</Text>
+                </View>
+              )}
+              {isWeeklyResults && (
+                <View style={{ marginTop: 8, backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start' }}>
+                  <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>STARTS MONDAY</Text>
+                </View>
+              )}
+            </View>
+            <MaterialCommunityIcons name={isActive ? "check-circle" : icon} size={48} color="white" style={{ opacity: 0.9 }} />
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Contest Arena</Text>
         <Text style={styles.subtitle}>Compete with others globally</Text>
       </View>
 
-      {activeContest === 'none' ? (
-        <View style={styles.contestRow}>
-          <TouchableOpacity style={styles.contestCard} onPress={() => handleJoinContest('weekly')} disabled={loading}>
-            <LinearGradient colors={['#F59E0B', '#D97706']} style={styles.contestGradient}>
-              <MaterialCommunityIcons name="trophy" size={40} color="white" />
-              <Text style={styles.contestTitle}>Weekly</Text>
-              <Text style={styles.contestSubtitle}>Top the charts</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+      {/* Contest Cards */}
+      <View style={styles.activeContainer}>
+        {renderCard('weekly', 'Weekly Contest', 'Top the charts this week', 'trophy', ['#F59E0B', '#D97706'])}
+        {renderCard('monthly', 'Monthly Marathon', 'Consistency is key', 'crown', ['#8B5CF6', '#6D28D9'])}
+      </View>
 
-          <TouchableOpacity style={styles.contestCard} onPress={() => handleJoinContest('monthly')} disabled={loading}>
-            <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.contestGradient}>
-              <MaterialCommunityIcons name="crown" size={40} color="white" />
-              <Text style={styles.contestTitle}>Monthly</Text>
-              <Text style={styles.contestSubtitle}>Prove yourself</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.activeContainer}>
-          <LinearGradient colors={activeContest === 'weekly' ? ['#F59E0B', '#D97706'] : ['#8B5CF6', '#6D28D9']} style={styles.activeCard}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <View>
-                <Text style={styles.activeLabel}>CURRENT STATUS</Text>
-                <Text style={styles.activeTitle}>{activeContest.toUpperCase()} WARRIOR</Text>
-              </View>
-              <MaterialCommunityIcons name="sword-cross" size={48} color="white" style={{ opacity: 0.8 }} />
-            </View>
-            <Text style={styles.activeDesc}>
-              Check your ranking on the Progress tab!
-            </Text>
-          </LinearGradient>
-
-          {/* Minimal Circle/Social Entry */}
-          <TouchableOpacity style={styles.socialLink} onPress={() => Alert.alert("Coming Soon", "Social features are being revamped.")}>
-            <Text style={{ color: '#6B7280' }}>Looking for Family Circles?</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      {/* Social Link */}
+      <TouchableOpacity style={styles.socialLink} onPress={() => Alert.alert("Coming Soon", "Social features are being revamped.")}>
+        <Text style={{ color: '#6B7280' }}>Looking for Family Circles?</Text>
+      </TouchableOpacity>
 
       {/* Social Circle Section */}
       <View style={styles.sectionHeader}>

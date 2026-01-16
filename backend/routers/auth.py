@@ -102,39 +102,56 @@ async def get_me(user_id: str = Depends(get_current_user)):
     if not user_doc:
         raise HTTPException(status_code=404, detail="User not found")
     
-    active_contest = user_doc.get("active_contest", "none")
-    joined_at_iso = user_doc.get("contest_joined_at")
+    # --- Migration Logic (Old -> New) ---
+    active_contests = user_doc.get("active_contests", [])
+    joined_weekly = user_doc.get("contest_joined_weekly_at")
+    joined_monthly = user_doc.get("contest_joined_monthly_at")
     
-    # Lazy Expiry Check
-    if active_contest != "none" and joined_at_iso:
-        try:
-            if isinstance(joined_at_iso, str):
-                joined_at = datetime.fromisoformat(joined_at_iso)
-            elif isinstance(joined_at_iso, datetime):
-                joined_at = joined_at_iso
-            else:
-                raise ValueError("Unknown date format")
+    old_active = user_doc.get("active_contest", "none")
+    old_joined = user_doc.get("contest_joined_at")
+    
+    # If using old schema, migrate in memory (and optionally DB, but lazy is fine)
+    if not active_contests and old_active != "none":
+        if old_active == "weekly":
+            active_contests.append("weekly")
+            joined_weekly = old_joined
+        elif old_active == "monthly":
+            active_contests.append("monthly")
+            joined_monthly = old_joined
 
-            now = datetime.utcnow()
-            delta = now - joined_at
-            
-            should_reset = False
-            if active_contest == "weekly" and delta.days >= 7:
-                should_reset = True
-            elif active_contest == "monthly" and delta.days >= 30:
-                should_reset = True
-            
-            if should_reset:
-                 # Update DB
-                 await db.users.update_one(
-                     {"_id": user_doc["_id"]},
-                     {"$set": {"active_contest": "none", "contest_joined_at": None}}
-                 )
-                 # Update local var for response
-                 active_contest = "none"
-                 joined_at_iso = None
+    # --- Lazy Expiry Checks (Independent) ---
+    updates = {}
+    
+    # Weekly Check
+    if "weekly" in active_contests and joined_weekly:
+        try:
+            start_date = joined_weekly if isinstance(joined_weekly, datetime) else datetime.fromisoformat(joined_weekly)
+            if (datetime.utcnow() - start_date).days >= 7:
+                 active_contests.remove("weekly")
+                 joined_weekly = None
+                 updates["contest_joined_weekly_at"] = None
         except (ValueError, TypeError):
-             pass # Ignore bad dates
+            pass
+
+    # Monthly Check
+    if "monthly" in active_contests and joined_monthly:
+        try:
+            start_date = joined_monthly if isinstance(joined_monthly, datetime) else datetime.fromisoformat(joined_monthly)
+            if (datetime.utcnow() - start_date).days >= 30:
+                 active_contests.remove("monthly")
+                 joined_monthly = None
+                 updates["contest_joined_monthly_at"] = None
+        except (ValueError, TypeError):
+             pass
+             
+    # Persist updates if any expiration happened
+    if updates or ("active_contests" not in user_doc and old_active != "none"):
+        # We also save the migrated list to DB to finalize migration
+        updates["active_contests"] = active_contests
+        if joined_weekly: updates["contest_joined_weekly_at"] = joined_weekly
+        if joined_monthly: updates["contest_joined_monthly_at"] = joined_monthly
+        
+        await db.users.update_one({"_id": user_doc["_id"]}, {"$set": updates})
 
     return UserResponse(
         id=str(user_doc["_id"]),
@@ -154,7 +171,10 @@ async def get_me(user_id: str = Depends(get_current_user)):
         settings_bpm_check=user_doc.get("settings_bpm_check", False),
         settings_timer_check=user_doc.get("settings_timer_check", False),
         settings_gender=user_doc.get("settings_gender", "male"),
-        active_contest=active_contest,
-        contest_joined_at=joined_at_iso,
+        active_contests=active_contests,
+        contest_joined_weekly_at=joined_weekly if isinstance(joined_weekly, str) else (joined_weekly.isoformat() if joined_weekly else None),
+        contest_joined_monthly_at=joined_monthly if isinstance(joined_monthly, str) else (joined_monthly.isoformat() if joined_monthly else None),
+        weekly_points=user_doc.get("weekly_points", 0),
+        monthly_points=user_doc.get("monthly_points", 0),
         badges=user_doc.get("badges", [])
     )
