@@ -48,11 +48,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="circle"
+        name="contest"
         options={{
-          title: 'Circle',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account-group" size={size} color={color} />
+          title: 'Contest',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="trophy-outline" size={24} color={color} />
           ),
         }}
         listeners={{

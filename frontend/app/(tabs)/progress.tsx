@@ -6,6 +6,7 @@ import {
   ScrollView,
   RefreshControl,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -102,6 +103,60 @@ const GlobalStandingGraph = ({ token, refresh }: { token: string | null, refresh
   );
 };
 
+const LeaderboardSection = ({ token }: { token: string | null }) => {
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [activeContest, setActiveContest] = useState('none');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
+
+  const fetchLeaderboard = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/contests/leaderboard`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setActiveContest(data.active_contest || 'none');
+        setLeaderboard(data.leaderboard || []);
+      }
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  if (activeContest === 'none') return null;
+
+  return (
+    <View style={styles.sectionContainer}>
+      <Text style={styles.sectionTitle}>{activeContest.charAt(0).toUpperCase() + activeContest.slice(1)} Leaderboard</Text>
+      <View style={styles.leaderboardCard}>
+        {loading ? (
+          <Text style={{ color: '#9CA3AF', textAlign: 'center', padding: 20 }}>Loading rankings...</Text>
+        ) : leaderboard.length === 0 ? (
+          <Text style={{ color: '#9CA3AF', textAlign: 'center', padding: 20 }}>No participants yet.</Text>
+        ) : (
+          leaderboard.slice(0, 5).map((item, index) => (
+            <View key={index} style={[styles.rankItem, item.is_me && styles.myRankItem]}>
+              <View style={styles.rankBadge}>
+                <Text style={[styles.rankText, item.rank <= 3 && { color: '#F59E0B' }]}>#{item.rank}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.rankName, item.is_me && { color: '#7C3AED', fontWeight: 'bold' }]}>{item.name} {item.is_me && '(You)'}</Text>
+              </View>
+              <Text style={styles.rankPoints}>{item.total_points} pts</Text>
+            </View>
+          ))
+        )}
+        <TouchableOpacity style={{ marginTop: 12, alignItems: 'center' }} onPress={() => { /* Navigate to full leaderboard maybe? */ }}>
+          <Text style={{ color: '#6B7280', fontSize: 12 }}>Top 5 shown</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 
 export default function Progress() {
   const { token, user } = useAuth();
@@ -165,6 +220,7 @@ export default function Progress() {
       </View>
 
       <GlobalStandingGraph token={token} refresh={refreshing} />
+      <LeaderboardSection token={token} />
 
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
@@ -372,5 +428,50 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginTop: 4,
+  },
+  sectionContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  leaderboardCard: {
+    backgroundColor: '#1F1F2E',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#2D2D3D',
+  },
+  rankItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2D2D3D',
+  },
+  myRankItem: {
+    backgroundColor: '#7C3AED10',
+    borderRadius: 8,
+    marginHorizontal: -8,
+    paddingHorizontal: 8,
+    borderBottomWidth: 0
+  },
+  rankBadge: {
+    width: 30,
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  rankText: {
+    color: '#9CA3AF',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  rankName: {
+    color: '#FFFFFF',
+    fontSize: 14,
+  },
+  rankPoints: {
+    color: '#F59E0B',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
