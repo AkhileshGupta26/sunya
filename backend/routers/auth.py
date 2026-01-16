@@ -102,24 +102,6 @@ async def get_me(user_id: str = Depends(get_current_user)):
     if not user_doc:
         raise HTTPException(status_code=404, detail="User not found")
     
-    return UserResponse(
-        id=str(user_doc["_id"]),
-        name=user_doc["name"],
-        email=user_doc["email"],
-        current_streak=user_doc["current_streak"],
-        detox_streak=user_doc.get("detox_streak", 0),
-        last_detox_date=user_doc.get("last_detox_date"),
-        total_days=user_doc["total_days"],
-        zen_passes=user_doc["zen_passes"],
-        total_points=user_doc.get("total_points", 0),
-        wake_time=user_doc.get("wake_time"),
-        profile_picture=user_doc.get("profile_picture"),
-        circle_id=user_doc.get("circle_id"),
-        institution_id=user_doc.get("institution_id"),
-        settings_camera_enabled=user_doc.get("settings_camera_enabled", False),
-        settings_bpm_check=user_doc.get("settings_bpm_check", False),
-        settings_timer_check=user_doc.get("settings_timer_check", False),
-        settings_gender=user_doc.get("settings_gender", "male"),
     active_contest = user_doc.get("active_contest", "none")
     joined_at_iso = user_doc.get("contest_joined_at")
     
