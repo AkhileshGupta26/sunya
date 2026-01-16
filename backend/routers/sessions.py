@@ -46,52 +46,105 @@ async def complete_session(session_data: MeditationSession, user_id: str = Depen
     today = datetime.utcnow().strftime("%Y-%m-%d")
     
     # Update session
+    session_update = {
+        "track_type": session_data.track_type,
+        "completed": session_data.completed,
+        "bpm_verified": session_data.bpm_verified,
+        "awareness_probe_passed": session_data.awareness_probe_passed,
+        "meditation_started": datetime.utcnow(),
+        "duration_seconds": session_data.duration_seconds
+    }
+    
     result = await db.sessions.update_one(
         {"user_id": user_id, "date": today},
         {
-            "$set": {
-                "track_type": session_data.track_type,
-                "completed": session_data.completed,
-                "bpm_verified": session_data.bpm_verified,
-                "awareness_probe_passed": session_data.awareness_probe_passed,
-                "meditation_started": datetime.utcnow()
-            }
+            "$set": session_update
         }
     )
     
+    # If no session existed for today (e.g. direct completion without start), insert it
+    if result.matched_count == 0:
+        session_update["user_id"] = user_id
+        session_update["date"] = today
+        session_update["grace_timer_started"] = datetime.utcnow()
+        await db.sessions.insert_one(session_update)
+    
     if session_data.completed:
-        # Update user streak and stats
         user_doc = await db.users.find_one({"_id": ObjectId(user_id)})
         
-        # Check if yesterday had a session to maintain streak
-        yesterday = (datetime.utcnow() - timedelta(days=1)).strftime("%Y-%m-%d")
-        yesterday_session = await db.sessions.find_one({
-            "user_id": user_id,
-            "date": yesterday,
-            "completed": True
+        # 1. Calculate and Award Points
+        # 10 points per minute
+        minutes = session_data.duration_seconds // 60
+        points_earned = minutes * 10
+        if points_earned > 0:
+             await db.users.update_one(
+                {"_id": ObjectId(user_id)},
+                {"$inc": {"total_points": points_earned}}
+            )
+
+        # 2. Handle Streak (Only for Meditation, NOT Yoga)
+        # Yoga ids: nadi_shodhana, hatha, vinyasa, yin
+        YOGA_IDS = ['nadi_shodhana', 'hatha', 'vinyasa', 'yin']
+        is_yoga = session_data.track_type in YOGA_IDS
+        
+        # Check if we already credited streak for today
+        # We check by looking for ANY completed meditation session for today (excluding this one if we just saved it? No, just check if user field updated?)
+        # Actually simplest is: Did we already increment streak today? 
+        # We don't store "last_streak_date", but we can infer.
+        # Better: Check existing sessions for today. If there was ALREADY a completed session (before this call), then we don't increment.
+        # But we just updated/inserted. 
+        # Let's check if there are MULTIPLE completed sessions today.
+        
+        count_completed_today = await db.sessions.count_documents({
+            "user_id": user_id, 
+            "date": today, 
+            "completed": True,
+            "track_type": {"$nin": YOGA_IDS} # Count only meditation sessions
         })
-        
-        new_streak = user_doc["current_streak"] + 1 if yesterday_session or user_doc["current_streak"] == 0 else 1
-        new_total_days = user_doc["total_days"] + 1
-        
-        # Award zen pass every 10 days
+
+        new_streak = user_doc["current_streak"]
+        new_total_days = user_doc["total_days"]
         zen_passes = user_doc["zen_passes"]
-        if new_streak % 10 == 0:
-            zen_passes += 1
-        
-        await db.users.update_one(
-            {"_id": ObjectId(user_id)},
-            {
-                "$set": {
-                    "current_streak": new_streak,
-                    "total_days": new_total_days,
-                    "zen_passes": zen_passes
+
+        # If this is the FIRST valid meditation completion of the day, increment streak
+        if not is_yoga and count_completed_today == 1:
+            yesterday = (datetime.utcnow() - timedelta(days=1)).strftime("%Y-%m-%d")
+            yesterday_session = await db.sessions.find_one({
+                "user_id": user_id,
+                "date": yesterday,
+                "completed": True,
+                "track_type": {"$nin": YOGA_IDS}
+            })
+            
+            # Logic: If streak > 0, we check yesterday. If streak is 0, start new.
+            # If yesterday missing but have Zen Pass? (Simplification: Auto-use pass not requested here, just standard logic)
+            
+            if yesterday_session or user_doc["current_streak"] == 0:
+                new_streak += 1
+            else:
+                # Streak broken? Or maybe they used a pass? 
+                # For now assume reset if broken, unless we want to handle grace logic here.
+                # Use existing logic:
+                new_streak = 1 
+
+            new_total_days += 1
+            
+            # Award zen pass every 10 days
+            if new_streak % 10 == 0:
+                zen_passes += 1
+            
+            await db.users.update_one(
+                {"_id": ObjectId(user_id)},
+                {
+                    "$set": {
+                        "current_streak": new_streak,
+                        "total_days": new_total_days,
+                        "zen_passes": zen_passes
+                    }
                 }
-            }
-        )
-        
+            )
+
         # Calculate Next Auto-Detox Duration based on Streak
-        # Base: 30 mins. Increase: 10 mins per streak day. Max: 130 mins (2hr 10min)
         detox_streak = user_doc.get("detox_streak", 0)
         base_minutes = 30
         increment = 10 * detox_streak
@@ -100,9 +153,12 @@ async def complete_session(session_data: MeditationSession, user_id: str = Depen
         return {
             "success": True,
             "new_streak": new_streak,
+            "points_earned": points_earned,
             "total_days": new_total_days,
             "zen_passes": zen_passes,
-            "next_detox_duration": next_detox_duration
+            "next_detox_duration": next_detox_duration,
+            "is_yoga": is_yoga,
+            "streak_updated": (not is_yoga and count_completed_today == 1)
         }
     
     return {"success": True}

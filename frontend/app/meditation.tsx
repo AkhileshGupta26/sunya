@@ -97,6 +97,7 @@ export default function Meditation() {
   const [meditating, setMeditating] = useState(false);
   const [paused, setPaused] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(10 * 60); // 10 minutes default
+  const [selectedDuration, setSelectedDuration] = useState(10 * 60);
   const [breakTimeRemaining, setBreakTimeRemaining] = useState(2 * 60); // 2 min break limit
   const [awarenessProbe, setAwarenessProbe] = useState(false);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
@@ -291,7 +292,8 @@ export default function Meditation() {
           track_type: selectedTrack,
           completed: true,
           bpm_verified: true,
-          awareness_probe_passed: true
+          awareness_probe_passed: true,
+          duration_seconds: selectedDuration
         });
         data = res;
       }
@@ -306,7 +308,7 @@ export default function Meditation() {
           duration: data.next_detox_duration || 1800 // Default to 30m if missing
         }
       });
-      Alert.alert('Namaste', 'Session completed. Starting Digital Detox...');
+      Alert.alert('Namaste', 'Today’s meditation completed. Do extra activities to gain more points.');
 
     } catch (error) {
       console.error('Completion error', error);
@@ -502,6 +504,7 @@ export default function Meditation() {
             onPress={() => {
               triggerHaptic('selection');
               setTimeRemaining(min * 60);
+              setSelectedDuration(min * 60);
             }}
           >
             <Text style={[styles.durationText, timeRemaining === min * 60 && { color: '#FFF' }]}>{min}m</Text>

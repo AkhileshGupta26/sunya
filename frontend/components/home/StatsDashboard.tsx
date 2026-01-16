@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 
 interface StatsDashboardProps {
@@ -9,6 +10,8 @@ interface StatsDashboardProps {
 }
 
 export const StatsDashboard: React.FC<StatsDashboardProps> = ({ user, themeColor }) => {
+    const router = useRouter();
+
     return (
         <View style={styles.streakCard}>
             <View style={styles.statsContainer}>
@@ -47,6 +50,15 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ user, themeColor
                     <Text style={styles.statLabel}>Zen Passes</Text>
                 </View>
             </View>
+
+            {/* Leaderboard Button */}
+            <TouchableOpacity
+                style={[styles.leaderboardButton, { backgroundColor: themeColor + '20', borderColor: themeColor }]}
+                onPress={() => router.push('/leaderboard')}
+            >
+                <MaterialCommunityIcons name="trophy-outline" size={20} color={themeColor} />
+                <Text style={[styles.leaderboardText, { color: themeColor }]}>View Leaderboard</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -86,5 +98,19 @@ const styles = StyleSheet.create({
         color: '#9CA3AF',
         marginTop: 2,
         textAlign: 'center',
+    },
+    leaderboardButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 12,
+        marginTop: 16,
+        borderRadius: 12,
+        borderWidth: 1,
+        gap: 8,
+    },
+    leaderboardText: {
+        fontSize: 14,
+        fontWeight: '600',
     },
 });

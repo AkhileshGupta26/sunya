@@ -57,6 +57,7 @@ class MeditationSession(BaseModel):
     completed: bool
     bpm_verified: bool
     awareness_probe_passed: bool
+    duration_seconds: int = 0
 
 class SessionResponse(BaseModel):
     id: str

@@ -1,163 +1,81 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import Constants from 'expo-constants';
 import { useThemeColor } from '../hooks/useThemeColor';
-import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
-
-const triggerHaptic = (type: 'impact' | 'notification' | 'selection', style?: any) => {
-    if (Platform.OS === 'web') return;
-    try {
-        if (type === 'impact') Haptics.impactAsync(style);
-        else if (type === 'notification') Haptics.notificationAsync(style);
-        else Haptics.selectionAsync();
-    } catch (e) { }
-};
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-
-const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL;
-const { width } = Dimensions.get('window');
-
-type LeaderboardUser = {
-    rank: number;
-    id: string;
-    name: string;
-    total_points: number;
-    is_me: boolean;
-};
+import { api } from '../services/api';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Leaderboard() {
-    const { token, user } = useAuth();
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<'global' | 'circle'>('global');
-    const [users, setUsers] = useState<LeaderboardUser[]>([]);
-
-    // Theme
+    const { user } = useAuth();
     const THEME_COLOR = useThemeColor();
+    const [leaderboard, setLeaderboard] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [filter, setFilter] = useState('global'); // 'global' or 'circle'
+
+    const fetchLeaderboard = async () => {
+        try {
+            const res: any = await api.get(`/api/leaderboard?type=${filter}`);
+            setLeaderboard(res.leaderboard || []);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
 
     useEffect(() => {
         fetchLeaderboard();
-    }, [activeTab]);
+    }, [filter]);
 
-    const handleTabSwitch = (tab: 'global' | 'circle') => {
-        if (activeTab !== tab) {
-            triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Light);
-            setActiveTab(tab);
-        }
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchLeaderboard();
     };
 
-    const fetchLeaderboard = async () => {
-        setLoading(true);
-        try {
-            const response = await fetch(`${API_URL}/api/leaderboard?type=${activeTab}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const data = await response.json();
-            setUsers(data.leaderboard || []);
-        } catch (e) {
-            console.error(e);
-            setUsers([]);
-        } finally {
-            setLoading(false);
+    const renderItem = ({ item, index }: { item: any; index: number }) => {
+        const isMe = item.is_me;
+        let rankColor = '#6B7280';
+        let rankIcon = null;
+
+        if (item.rank === 1) {
+            rankColor = '#F59E0B'; // Gold
+            rankIcon = "crown";
+        } else if (item.rank === 2) {
+            rankColor = '#9CA3AF'; // Silver
+            rankIcon = "medal";
+        } else if (item.rank === 3) {
+            rankColor = '#B45309'; // Bronze
+            rankIcon = "medal-outline";
         }
-    };
-
-    const renderItem = ({ item, index }: { item: LeaderboardUser, index: number }) => (
-        <Animated.View
-            entering={FadeInDown.delay(index * 60).springify()}
-            style={[styles.card, item.is_me && [styles.myCard, { borderColor: THEME_COLOR, backgroundColor: `${THEME_COLOR}10` }]]}
-        >
-            <Text style={[styles.rank, item.rank <= 3 && { color: getRankColor(item.rank) }]}>#{item.rank}</Text>
-            <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{item.name.charAt(0).toUpperCase()}</Text>
-            </View>
-            <View style={styles.userInfo}>
-                <Text style={[styles.userName, item.is_me && { color: THEME_COLOR, fontWeight: 'bold' }]}>
-                    {item.name} {item.is_me && '(You)'}
-                </Text>
-                <Text style={styles.userPoints}>{item.total_points} Zen Pts</Text>
-            </View>
-            {item.rank <= 3 && (
-                <MaterialCommunityIcons name="crown" size={24} color={getRankColor(item.rank)} />
-            )}
-        </Animated.View>
-    );
-
-    const getRankColor = (rank: number) => {
-        switch (rank) {
-            case 1: return '#F59E0B'; // Gold
-            case 2: return '#9CA3AF'; // Silver
-            case 3: return '#B45309'; // Bronze
-            default: return '#6B7280';
-        }
-    };
-
-    const topThree = users.filter(u => u.rank <= 3);
-    const rest = users.filter(u => u.rank > 3);
-
-    const Podium = () => {
-        if (topThree.length === 0) return null;
-
-        const first = topThree.find(u => u.rank === 1);
-        const second = topThree.find(u => u.rank === 2);
-        const third = topThree.find(u => u.rank === 3);
 
         return (
-            <View style={styles.podiumContainer}>
-                {/* Second Place */}
-                <Animated.View entering={FadeInUp.delay(200).springify()} style={[styles.podiumPlace, { marginTop: 40 }]}>
-                    {second && (
-                        <>
-                            <MaterialCommunityIcons name="crown" size={24} color="#C0C0C0" style={{ marginBottom: -10, zIndex: 10 }} />
-                            <View style={[styles.podiumAvatar, { borderColor: '#C0C0C0' }]}>
-                                <Text style={styles.podiumAvatarText}>{second.name.charAt(0)}</Text>
-                            </View>
-                            <Text style={styles.podiumName} numberOfLines={1}>{second.name}</Text>
-                            <Text style={styles.podiumPoints}>{second.total_points}</Text>
-                            <View style={[styles.podiumBar, { height: 80, backgroundColor: '#C0C0C0' }]}>
-                                <Text style={styles.podiumRank}>2</Text>
-                            </View>
-                        </>
+            <View style={[
+                styles.rankItem,
+                isMe && { backgroundColor: THEME_COLOR + '20', borderColor: THEME_COLOR, borderWidth: 1 }
+            ]}>
+                <View style={[styles.rankBadge, { borderColor: rankColor }]}>
+                    {rankIcon ? (
+                        <MaterialCommunityIcons name={rankIcon as any} size={20} color={rankColor} />
+                    ) : (
+                        <Text style={styles.rankText}>{item.rank}</Text>
                     )}
-                </Animated.View>
+                </View>
 
-                {/* First Place */}
-                <Animated.View entering={FadeInUp.delay(100).springify()} style={[styles.podiumPlace, { zIndex: 10 }]}>
-                    {first && (
-                        <>
-                            <MaterialCommunityIcons name="crown" size={32} color="#F59E0B" style={{ marginBottom: -12, zIndex: 10 }} />
-                            <View style={[styles.podiumAvatar, { borderColor: '#F59E0B', width: 64, height: 64, borderRadius: 32 }]}>
-                                <Text style={[styles.podiumAvatarText, { fontSize: 24 }]}>{first.name.charAt(0)}</Text>
-                            </View>
-                            <Text style={[styles.podiumName, { fontWeight: 'bold', fontSize: 16 }]}>{first.name}</Text>
-                            <Text style={[styles.podiumPoints, { color: '#F59E0B' }]}>{first.total_points}</Text>
-                            <View style={[styles.podiumBar, { height: 110, backgroundColor: '#F59E0B', shadowColor: '#F59E0B', shadowOpacity: 0.5, shadowRadius: 10, elevation: 5 }]}>
-                                <Text style={styles.podiumRank}>1</Text>
-                            </View>
-                        </>
-                    )}
-                </Animated.View>
+                <View style={styles.userInfo}>
+                    <Text style={[styles.userName, isMe && { color: THEME_COLOR, fontWeight: 'bold' }]}>
+                        {item.name} {isMe && '(You)'}
+                    </Text>
+                    <Text style={styles.userPoints}>{item.total_points} pts</Text>
+                </View>
 
-                {/* Third Place */}
-                <Animated.View entering={FadeInUp.delay(300).springify()} style={[styles.podiumPlace, { marginTop: 60 }]}>
-                    {third && (
-                        <>
-                            <MaterialCommunityIcons name="crown" size={20} color="#CD7F32" style={{ marginBottom: -8, zIndex: 10 }} />
-                            <View style={[styles.podiumAvatar, { borderColor: '#CD7F32' }]}>
-                                <Text style={styles.podiumAvatarText}>{third.name.charAt(0)}</Text>
-                            </View>
-                            <Text style={styles.podiumName} numberOfLines={1}>{third.name}</Text>
-                            <Text style={styles.podiumPoints}>{third.total_points}</Text>
-                            <View style={[styles.podiumBar, { height: 60, backgroundColor: '#CD7F32' }]}>
-                                <Text style={styles.podiumRank}>3</Text>
-                            </View>
-                        </>
-                    )}
-                </Animated.View>
+                {item.rank <= 3 && (
+                    <MaterialCommunityIcons name="fire" size={20} color="#F59E0B" />
+                )}
             </View>
         );
     };
@@ -165,51 +83,49 @@ export default function Leaderboard() {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 16 }}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <MaterialCommunityIcons name="arrow-left" size={24} color="#FFFFFF" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Leaderboard</Text>
+                <Text style={styles.title}>Leaderboard</Text>
+                <View style={{ width: 24 }} />
             </View>
 
-            <View style={styles.tabs}>
+            <View style={styles.filterContainer}>
                 <TouchableOpacity
-                    style={[styles.tab, activeTab === 'global' && { backgroundColor: THEME_COLOR }]}
-                    onPress={() => handleTabSwitch('global')}
+                    style={[styles.filterButton, filter === 'global' && { backgroundColor: THEME_COLOR }]}
+                    onPress={() => setFilter('global')}
                 >
-                    <Text style={[styles.tabText, activeTab === 'global' && styles.activeTabText]}>Global</Text>
+                    <Text style={[styles.filterText, filter === 'global' && { color: 'white' }]}>Global</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.tab, activeTab === 'circle' && { backgroundColor: THEME_COLOR }]}
-                    onPress={() => handleTabSwitch('circle')}
+                    style={[styles.filterButton, filter === 'circle' && { backgroundColor: THEME_COLOR }]}
+                    onPress={() => setFilter('circle')}
                 >
-                    <Text style={[styles.tabText, activeTab === 'circle' && styles.activeTabText]}>My Circle</Text>
+                    <Text style={[styles.filterText, filter === 'circle' && { color: 'white' }]}>My Circle</Text>
                 </TouchableOpacity>
             </View>
 
-            <FlatList
-                data={rest}
-                renderItem={renderItem}
-                keyExtractor={item => item.id}
-                contentContainerStyle={styles.list}
-                ListHeaderComponent={Podium}
-                refreshing={loading}
-                onRefresh={fetchLeaderboard}
-                ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <MaterialCommunityIcons name="trophy-outline" size={64} color="#374151" />
-                        <Text style={styles.emptyText}>
-                            {activeTab === 'circle'
-                                ? (!user?.circle_id ? "Join a Circle to compete!" : "No members found.")
-                                : "No players yet."}
-                        </Text>
-                        {activeTab === 'circle' && !user?.circle_id && (
-                            <TouchableOpacity style={[styles.joinButton, { backgroundColor: THEME_COLOR }]} onPress={() => router.push('/(tabs)/circle')}>
-                                <Text style={styles.joinButtonText}>Find a Circle</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                }
-            />
+            {loading ? (
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" color={THEME_COLOR} />
+                </View>
+            ) : (
+                <FlatList
+                    data={leaderboard}
+                    renderItem={renderItem}
+                    keyExtractor={(item: any) => item.id}
+                    contentContainerStyle={styles.listContent}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={THEME_COLOR} />
+                    }
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <MaterialCommunityIcons name="trophy-broken" size={64} color="#4B5563" />
+                            <Text style={styles.emptyText}>No rankings yet.</Text>
+                        </View>
+                    }
+                />
+            )}
         </View>
     );
 }
@@ -222,149 +138,90 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
+        padding: 24,
         paddingTop: 60,
-        paddingBottom: 20,
-        paddingHorizontal: 24,
-        backgroundColor: '#1F1F2E',
+        justifyContent: 'space-between',
     },
-    headerTitle: {
+    backButton: {
+    },
+    title: {
         fontSize: 24,
         fontWeight: 'bold',
         color: '#FFFFFF',
     },
-    tabs: {
+    filterContainer: {
         flexDirection: 'row',
-        padding: 16,
+        paddingHorizontal: 24,
+        marginBottom: 16,
         gap: 12,
     },
-    tab: {
+    filterButton: {
         flex: 1,
-        paddingVertical: 12,
-        alignItems: 'center',
-        borderRadius: 8,
-        backgroundColor: '#1F1F2E',
-    },
-    tabText: {
-        color: '#9CA3AF',
-        fontWeight: '600',
-    },
-    activeTabText: {
-        color: '#FFFFFF',
-    },
-    podiumContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'flex-end',
-        height: 250,
-        marginBottom: 24,
-        gap: 16,
-    },
-    podiumPlace: {
-        alignItems: 'center',
-        width: width * 0.25,
-    },
-    podiumAvatar: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: '#1F1F2E',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 2,
-        marginBottom: 8,
-    },
-    podiumAvatarText: {
-        color: '#FFFFFF',
-        fontWeight: 'bold',
-        fontSize: 20,
-    },
-    podiumName: {
-        color: '#FFFFFF',
-        fontSize: 12,
-        fontWeight: '600',
-        marginBottom: 2,
-    },
-    podiumPoints: {
-        color: '#9CA3AF',
-        fontSize: 10,
-        marginBottom: 8,
-    },
-    podiumBar: {
-        width: '100%',
-        borderTopLeftRadius: 8,
-        borderTopRightRadius: 8,
-        alignItems: 'center',
-        paddingTop: 8,
-    },
-    podiumRank: {
-        color: '#FFFFFF',
-        fontWeight: 'bold',
-        fontSize: 24,
-        opacity: 0.8,
-    },
-    list: {
-        padding: 16,
-        paddingBottom: 40,
-    },
-    card: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#1F1F2E',
-        padding: 16,
+        paddingVertical: 10,
         borderRadius: 12,
-        marginBottom: 12,
-    },
-    myCard: {
+        backgroundColor: '#1F1F2E',
+        alignItems: 'center',
         borderWidth: 1,
+        borderColor: '#2D2D3D',
     },
-    rank: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#6B7280',
-        width: 30,
+    filterText: {
+        color: '#9CA3AF',
+        fontWeight: '600',
     },
-    avatar: {
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    listContent: {
+        padding: 24,
+    },
+    rankItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#1F1F2E',
+        padding: 16,
+        borderRadius: 16,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: '#2D2D3D',
+    },
+    rankBadge: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#2D2D3D',
+        borderWidth: 2,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 16,
+        backgroundColor: '#0F0F1E',
     },
-    avatarText: {
+    rankText: {
         color: '#FFFFFF',
         fontWeight: 'bold',
+        fontSize: 16,
     },
     userInfo: {
         flex: 1,
     },
     userName: {
-        fontSize: 16,
         color: '#FFFFFF',
-        fontWeight: '500',
+        fontWeight: '600',
+        fontSize: 16,
+        marginBottom: 4,
     },
     userPoints: {
-        fontSize: 14,
         color: '#9CA3AF',
+        fontSize: 12,
     },
     emptyContainer: {
         alignItems: 'center',
-        marginTop: 40,
+        justifyContent: 'center',
+        paddingTop: 60,
     },
     emptyText: {
         color: '#6B7280',
-        fontSize: 16,
         marginTop: 16,
-        marginBottom: 24,
+        fontSize: 16,
     },
-    joinButton: {
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 8,
-    },
-    joinButtonText: {
-        color: '#FFFFFF',
-        fontWeight: '600',
-    }
 });

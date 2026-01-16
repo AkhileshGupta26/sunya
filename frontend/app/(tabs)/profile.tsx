@@ -136,23 +136,30 @@ export default function Profile() {
 
   const toggleCamera = async (value: boolean) => {
     if (value) {
-      if (!permission?.granted) {
+      // If permission is loading or unknown, wait or request
+      if (!permission || permission.status === 'undetermined') {
         const result = await requestPermission();
         if (!result.granted) {
-          Alert.alert(
-            "Permission Required",
-            "Camera access is needed for verification. Please enable it in system settings.",
-            [
-              { text: "Cancel", style: "cancel" },
-              { text: "Open Settings", onPress: () => Linking.openSettings() }
-            ]
-          );
-          return; // Don't enable if permission denied
+          Alert.alert("Permission Required", "Camera access is needed.");
+          return;
         }
+      } else if (!permission.granted) {
+        // If explicitly denied previously
+        Alert.alert(
+          "Permission Required",
+          "Camera access is denied. Please enable it in system settings.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Open Settings", onPress: () => Linking.openSettings() }
+          ]
+        );
+        return;
       }
     }
+
+    // Permission granted or not required (turning off)
     setCameraEnabled(value);
-    updateSettings({ camera_enabled: value });
+    await updateSettings({ camera_enabled: value });
   };
 
   const toggleBpm = (value: boolean) => {
