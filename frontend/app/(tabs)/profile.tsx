@@ -137,26 +137,28 @@ export default function Profile() {
   };
 
   const toggleCamera = async (value: boolean) => {
+    // 1. Safety check
     if (typeof value !== 'boolean') {
       console.warn('toggleCamera received non-boolean value');
       return;
     }
+
     if (value) {
       try {
         let isGranted = permission?.granted;
         let canAskAgain = permission?.canAskAgain;
 
-        // 1. If permission is not loaded yet or undetermined, request it
+        // 2. If permission is undetermined, request it
         if (!permission || permission.status === 'undetermined') {
           const result = await requestPermission();
           isGranted = result.granted;
           canAskAgain = result.canAskAgain;
         }
 
-        // 2. If still not granted, handle denial
+        // 3. If NOT granted after request, handle denial
         if (!isGranted) {
           if (canAskAgain === false) {
-            // Explicitly denied and cannot ask again -> Settings
+            // Explicitly denied -> Settings
             Alert.alert(
               "Permission Required",
               "Camera access is currently denied. Please enable it in system settings.",
@@ -166,7 +168,7 @@ export default function Profile() {
               ]
             );
           } else {
-            // Just denied or first time denied -> Generic alert
+            // First time denied or dismissible -> Generic alert
             Alert.alert("Permission Required", "Camera access is needed to enable this feature.");
           }
           return;
@@ -178,14 +180,12 @@ export default function Profile() {
       }
     }
 
-    // Permission granted or not required (turning off)
+    // 4. Update UI and Backend (Optimistic)
     setCameraEnabled(value);
 
-    // Optimistic update - save to backend
     const success = await updateSettings({ camera_enabled: value });
     if (!success) {
-      // Revert UI if backend update failed
-      setCameraEnabled(!value);
+      setCameraEnabled(!value); // Revert on failure
     }
   };
 
