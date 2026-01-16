@@ -248,7 +248,12 @@ export default function Contest() {
             } else {
               const err = await res.json();
               console.error("Join Error:", err);
-              Alert.alert('Error', err.detail || "Failed to join. Please try again.");
+              if (res.status === 400 && err.detail.includes("already in")) {
+                Alert.alert("Notice", "You are already in this contest. Refreshing...");
+                loadContestStatus(); // Auto-fix state
+              } else {
+                Alert.alert('Error', err.detail || "Failed to join. Please try again.");
+              }
             }
           } catch (e) {
             console.error("Join Exception:", e);
@@ -354,8 +359,8 @@ const styles = StyleSheet.create({
   title: { fontSize: 32, fontWeight: 'bold', color: '#FFFFFF' },
   subtitle: { fontSize: 16, color: '#9CA3AF', marginTop: 4 },
 
-  contestRow: { paddingHorizontal: 24, gap: 16, marginTop: 24 },
-  contestCard: { borderRadius: 20, overflow: 'hidden', height: 160, marginBottom: 16 },
+  contestRow: { paddingHorizontal: 24, gap: 16, marginTop: 24, flexDirection: 'row' },
+  contestCard: { flex: 1, borderRadius: 20, overflow: 'hidden', height: 160, marginBottom: 16 },
   contestGradient: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   contestTitle: { color: 'white', fontWeight: 'bold', fontSize: 24, marginTop: 12 },
   contestSubtitle: { color: 'white', fontSize: 14, opacity: 0.9 },

@@ -56,29 +56,37 @@ const GlobalStandingGraph = ({ token, refresh }: { token: string | null, refresh
 
   return (
     <View style={styles.graphContainer}>
-      <Text style={styles.graphTitle}>Global Standing</Text>
-      <Text style={styles.graphSubtitle}>You are in the <Text style={{ color: '#F59E0B', fontWeight: 'bold' }}>Top {percentile}%</Text></Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View>
+          <Text style={styles.graphTitle}>Global Standing</Text>
+          <Text style={styles.graphSubtitle}>You are in the <Text style={{ color: '#F59E0B', fontWeight: 'bold' }}>Top {percentile}%</Text></Text>
+        </View>
+        <MaterialCommunityIcons name="chart-bar" size={24} color="#7C3AED" />
+      </View>
 
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', height: 120, paddingVertical: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', height: 140, paddingVertical: 15, marginTop: 10 }}>
         {/* Top 1% Bar */}
-        <View style={{ alignItems: 'center' }}>
-          <View style={{ width: barWidth, height: 100, backgroundColor: '#374151', borderRadius: 8, opacity: 0.3 }} />
-          <Text style={{ color: '#9CA3AF', fontSize: 10, marginTop: 8 }}>Top 1%</Text>
+        <View style={{ alignItems: 'center', width: barWidth }}>
+          <Text style={{ color: 'white', fontSize: 10, marginBottom: 4, fontWeight: 'bold' }}>Top 1%</Text>
+          <View style={{ width: '100%', height: 100, backgroundColor: '#374151', borderRadius: 6, opacity: 0.5, borderWidth: 1, borderColor: '#4B5563' }} />
+          <Text style={{ color: '#9CA3AF', fontSize: 10, marginTop: 6 }}>Elite</Text>
         </View>
 
         {/* Your Bar */}
-        <View style={{ alignItems: 'center' }}>
+        <View style={{ alignItems: 'center', width: barWidth }}>
+          <Text style={{ color: '#F59E0B', fontSize: 12, marginBottom: 4, fontWeight: 'bold' }}>You</Text>
           <LinearGradient
             colors={['#F59E0B', '#D97706']}
-            style={{ width: barWidth, height: Math.max(20, 100 - percentile), borderRadius: 8 }}
+            style={{ width: '100%', height: Math.max(20, 100 - percentile), borderRadius: 6, shadowColor: '#F59E0B', shadowOpacity: 0.3, shadowRadius: 4 }}
           />
-          <Text style={{ color: '#F59E0B', fontSize: 10, marginTop: 8, fontWeight: 'bold' }}>You</Text>
+          <Text style={{ color: '#F59E0B', fontSize: 10, marginTop: 6, fontWeight: 'bold' }}>{Math.round(standing.my_points)} pts</Text>
         </View>
 
         {/* Average Bar */}
-        <View style={{ alignItems: 'center' }}>
-          <View style={{ width: barWidth, height: 50, backgroundColor: '#374151', borderRadius: 8, opacity: 0.5 }} />
-          <Text style={{ color: '#9CA3AF', fontSize: 10, marginTop: 8 }}>Avg</Text>
+        <View style={{ alignItems: 'center', width: barWidth }}>
+          <Text style={{ color: '#9CA3AF', fontSize: 10, marginBottom: 4 }}>Avg</Text>
+          <View style={{ width: '100%', height: 50, backgroundColor: '#374151', borderRadius: 6, opacity: 0.3 }} />
+          <Text style={{ color: '#9CA3AF', fontSize: 10, marginTop: 6 }}>Norm</Text>
         </View>
       </View>
 
