@@ -137,26 +137,38 @@ export default function Profile() {
   };
 
   const toggleCamera = async (value: boolean) => {
+    if (typeof value !== 'boolean') {
+      console.warn('toggleCamera received non-boolean value');
+      return;
+    }
     if (value) {
       try {
+        let isGranted = permission?.granted;
+        let canAskAgain = permission?.canAskAgain;
+
         // 1. If permission is not loaded yet or undetermined, request it
         if (!permission || permission.status === 'undetermined') {
           const result = await requestPermission();
-          if (!result.granted) {
-            Alert.alert("Permission Required", "Camera access is needed to enable this feature.");
-            return;
-          }
+          isGranted = result.granted;
+          canAskAgain = result.canAskAgain;
         }
-        // 2. If explicitly denied (and not undetermined), guide to settings
-        else if (permission.status === 'denied' || permission.granted === false) {
-          Alert.alert(
-            "Permission Required",
-            "Camera access is currently denied. Please enable it in system settings.",
-            [
-              { text: "Cancel", style: "cancel" },
-              { text: "Open Settings", onPress: () => Linking.openSettings() }
-            ]
-          );
+
+        // 2. If still not granted, handle denial
+        if (!isGranted) {
+          if (canAskAgain === false) {
+            // Explicitly denied and cannot ask again -> Settings
+            Alert.alert(
+              "Permission Required",
+              "Camera access is currently denied. Please enable it in system settings.",
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "Open Settings", onPress: () => Linking.openSettings() }
+              ]
+            );
+          } else {
+            // Just denied or first time denied -> Generic alert
+            Alert.alert("Permission Required", "Camera access is needed to enable this feature.");
+          }
           return;
         }
       } catch (error) {
