@@ -39,50 +39,47 @@ const GlobalStandingGraph = ({ token, refresh }: { token: string | null, refresh
 
   if (loading || !standing) return null;
 
-  // Bell Curve Logic
-  // A simple bell curve path: M 0,100 Q 50,0 100,100 (Simplified Bezier)
-  // Scaled to width
-  const graphWidth = width - 48;
-  const graphHeight = 120;
-
-  // Calculate X position based on percentile (0 to 100) -> (0 to width)
   const percentile = standing.percentile || 0;
-  // Invert percentile for X axis? "Top 5%" is usually at the RIGHT end (High score).
-  // If 5% are ABOVE me, then I am at the 95th percentile.
-  // My API returns "Top X%" which is (Rank/Total)*100. Small is Better.
-  // So Top 1% -> Right Side? Or Left Side?
-  // Usually High Score -> Right Side.
-  // Percentile = 100 - Top%
-  const xPos = ((100 - percentile) / 100) * graphWidth;
+
+  // Bar Graph Logic (Minimal)
+  // We will show 5 bars: Top 10%, Top 20%, Top 50%, Top 80%, You
+  // Or just a visual representation of "You vs Average vs Top"
+
+  // Let's do a simple single horizontal bar with markers
+  // Or 3 vertical bars: "Top 1%", "Average", "You"
+
+  const graphHeight = 100;
+  const barWidth = 40;
+
+  // Mock data for graph context
+  // If user is top 5%, their bar is high. Average is 50%. Top is 100%.
 
   return (
     <View style={styles.graphContainer}>
       <Text style={styles.graphTitle}>Global Standing</Text>
       <Text style={styles.graphSubtitle}>You are in the <Text style={{ color: '#F59E0B', fontWeight: 'bold' }}>Top {percentile}%</Text></Text>
 
-      <View style={{ marginTop: 20, alignItems: 'center' }}>
-        <Svg width={graphWidth} height={graphHeight}>
-          <Defs>
-            <SvgLinearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor="#7C3AED" stopOpacity="0.8" />
-              <Stop offset="1" stopColor="#7C3AED" stopOpacity="0.1" />
-            </SvgLinearGradient>
-          </Defs>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', height: 120, paddingVertical: 10 }}>
+        {/* Top 1% Bar */}
+        <View style={{ alignItems: 'center' }}>
+          <View style={{ width: barWidth, height: 100, backgroundColor: '#374151', borderRadius: 8, opacity: 0.3 }} />
+          <Text style={{ color: '#9CA3AF', fontSize: 10, marginTop: 8 }}>Top 1%</Text>
+        </View>
 
-          {/* Bell Curve Shape */}
-          <Path
-            d={`M0,${graphHeight} C${graphWidth * 0.2},${graphHeight} ${graphWidth * 0.4},0 ${graphWidth / 2},0 C${graphWidth * 0.6},0 ${graphWidth * 0.8},${graphHeight} ${graphWidth},${graphHeight} Z`}
-            fill="url(#grad)"
+        {/* Your Bar */}
+        <View style={{ alignItems: 'center' }}>
+          <LinearGradient
+            colors={['#F59E0B', '#D97706']}
+            style={{ width: barWidth, height: Math.max(20, 100 - percentile), borderRadius: 8 }}
           />
+          <Text style={{ color: '#F59E0B', fontSize: 10, marginTop: 8, fontWeight: 'bold' }}>You</Text>
+        </View>
 
-          {/* User Position Marker */}
-          <Line x1={xPos} y1={0} x2={xPos} y2={graphHeight} stroke="#F59E0B" strokeWidth="2" strokeDasharray="5,5" />
-          <Circle cx={xPos} cy={graphHeight} r="6" fill="#F59E0B" />
-
-          {/* Labels */}
-          <SvgText x="10" y={graphHeight - 10} fill="#9CA3AF" fontSize="10">Low</SvgText>
-          <SvgText x={graphWidth - 30} y={graphHeight - 10} fill="#9CA3AF" fontSize="10">High</SvgText>
-        </Svg>
+        {/* Average Bar */}
+        <View style={{ alignItems: 'center' }}>
+          <View style={{ width: barWidth, height: 50, backgroundColor: '#374151', borderRadius: 8, opacity: 0.5 }} />
+          <Text style={{ color: '#9CA3AF', fontSize: 10, marginTop: 8 }}>Avg</Text>
+        </View>
       </View>
 
       <View style={styles.statRow}>
@@ -436,15 +433,15 @@ const styles = StyleSheet.create({
   leaderboardCard: {
     backgroundColor: '#1F1F2E',
     borderRadius: 16,
-    padding: 16,
-    marginTop: 12,
+    padding: 12, // Reduced from 16
+    marginTop: 8, // Reduced from 12
     borderWidth: 1,
     borderColor: '#2D2D3D',
   },
   rankItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 10, // Reduced from 12
     borderBottomWidth: 1,
     borderBottomColor: '#2D2D3D',
   },
@@ -456,22 +453,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0
   },
   rankBadge: {
-    width: 30,
+    width: 24, // Reduced from 30
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 8, // Reduced from 12
   },
   rankText: {
     color: '#9CA3AF',
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 12, // Reduced from 14
   },
   rankName: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 12, // Reduced from 14
   },
   rankPoints: {
     color: '#F59E0B',
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: 12, // Reduced from 14
   },
 });

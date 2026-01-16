@@ -7,6 +7,7 @@ import {
   Alert,
   ScrollView,
   Share,
+  TextInput,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -17,6 +18,187 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL;
+
+const CircleManager = ({ token, API_URL }: { token: string | null, API_URL: string }) => {
+  const [myCircle, setMyCircle] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [joinCode, setJoinCode] = useState('');
+  const [createName, setCreateName] = useState('');
+  const [viewMode, setViewMode] = useState<'main' | 'join' | 'create'>('main'); // Simple local nav
+
+  useEffect(() => {
+    fetchMyCircle();
+  }, []);
+
+  const fetchMyCircle = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/circles/my-circle`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMyCircle(data.circle);
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const handleCreate = async () => {
+    if (!createName.trim()) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/circles/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: createName })
+      });
+      if (res.ok) {
+        Alert.alert("Success", "Circle created!");
+        setCreateName('');
+        setViewMode('main');
+        fetchMyCircle();
+      } else {
+        const err = await res.json();
+        Alert.alert("Error", err.detail);
+      }
+    } catch (e) { Alert.alert("Error", "Failed to create circle"); }
+    finally { setLoading(false); }
+  };
+
+  const handleJoin = async () => {
+    if (!joinCode.trim()) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/circles/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ code: joinCode })
+      });
+      if (res.ok) {
+        Alert.alert("Success", "Joined circle!");
+        setJoinCode('');
+        setViewMode('main');
+        fetchMyCircle();
+      } else {
+        const err = await res.json();
+        Alert.alert("Error", err.detail);
+      }
+    } catch (e) { Alert.alert("Error", "Failed to join circle"); }
+    finally { setLoading(false); }
+  };
+
+  const handleLeave = async () => {
+    Alert.alert("Leave Circle", "Are you sure?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Leave", style: "destructive", onPress: async () => {
+          try {
+            await fetch(`${API_URL}/api/circles/leave`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            setMyCircle(null);
+            Alert.alert("Left", "You have left the circle.");
+          } catch (e) { console.error(e); }
+        }
+      }
+    ]);
+  };
+
+  if (myCircle) {
+    return (
+      <View style={styles.circleCard}>
+        <View style={styles.circleHeader}>
+          <View>
+            <Text style={styles.circleName}>{myCircle.name}</Text>
+            <Text style={styles.circleCode}>Code: {myCircle.code}</Text>
+          </View>
+          <MaterialCommunityIcons name="account-group" size={32} color="#7C3AED" />
+        </View>
+        <View style={styles.harmonyContainer}>
+          <Text style={styles.harmonyLabel}>Harmony Score</Text>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: `${myCircle.harmony_score}%` }]} />
+          </View>
+          <Text style={styles.harmonyValue}>{Math.round(myCircle.harmony_score)}%</Text>
+        </View>
+        <Text style={styles.membersLabel}>Members ({myCircle.members.length})</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.membersRow}>
+          {myCircle.members.map((m: any, i: number) => (
+            <View key={i} style={styles.memberChip}>
+              <Text style={styles.memberText}>{m.name.split(' ')[0]}</Text>
+            </View>
+          ))}
+        </ScrollView>
+        <TouchableOpacity onPress={onShare => Share.share({ message: `Join my Meditation Circle on Shunya! Code: ${myCircle.code}` })} style={styles.actionButton}>
+          <Text style={styles.actionButtonText}>Invite Friends</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleLeave} style={{ marginTop: 12, alignItems: 'center' }}>
+          <Text style={{ color: '#EF4444', fontSize: 12 }}>Leave Circle</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (viewMode === 'create') {
+    return (
+      <View style={styles.circleCard}>
+        <Text style={styles.inputLabel}>Circle Name</Text>
+        <TextInput
+          style={styles.input}
+          value={createName}
+          onChangeText={setCreateName}
+          placeholder="e.g. Zen Masters"
+          placeholderTextColor="#6B7280"
+        />
+        <View style={styles.buttonRow}>
+          <TouchableOpacity onPress={() => setViewMode('main')} style={styles.cancelButton}>
+            <Text style={styles.cancelText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleCreate} style={styles.confirmButton} disabled={loading}>
+            <Text style={styles.confirmText}>{loading ? 'Creating...' : 'Create'}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  if (viewMode === 'join') {
+    return (
+      <View style={styles.circleCard}>
+        <Text style={styles.inputLabel}>Enter Circle Code</Text>
+        <TextInput
+          style={styles.input}
+          value={joinCode}
+          onChangeText={setJoinCode}
+          placeholder="e.g. 123456"
+          keyboardType="numeric"
+          placeholderTextColor="#6B7280"
+        />
+        <View style={styles.buttonRow}>
+          <TouchableOpacity onPress={() => setViewMode('main')} style={styles.cancelButton}>
+            <Text style={styles.cancelText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleJoin} style={styles.confirmButton} disabled={loading}>
+            <Text style={styles.confirmText}>{loading ? 'Joining...' : 'Join'}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.circleOptions}>
+      <TouchableOpacity style={styles.optionButton} onPress={() => setViewMode('create')}>
+        <MaterialCommunityIcons name="plus-circle" size={24} color="white" />
+        <Text style={styles.optionText}>Create Circle</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.optionButton} onPress={() => setViewMode('join')}>
+        <MaterialCommunityIcons name="login" size={24} color="white" />
+        <Text style={styles.optionText}>Join Circle</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 export default function Contest() {
   const { token, user } = useAuth();
@@ -138,6 +320,14 @@ export default function Contest() {
         </View>
       )}
 
+      {/* Social Circle Section */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Social Circle</Text>
+      </View>
+
+      <CircleManager token={token} API_URL={API_URL} />
+
+
       <View style={styles.infoSection}>
         <Text style={styles.infoTitle}>How it works</Text>
         <View style={styles.infoItem}>
@@ -181,5 +371,36 @@ const styles = StyleSheet.create({
   infoSection: { marginTop: 40, paddingHorizontal: 32 },
   infoTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 16 },
   infoItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 12 },
-  infoText: { color: '#9CA3AF', fontSize: 14 }
+  infoText: { color: '#9CA3AF', fontSize: 14 },
+
+  // Circle Manager Styles
+  sectionHeader: { paddingHorizontal: 24, marginTop: 32, marginBottom: 12 },
+  sectionTitle: { color: 'white', fontSize: 20, fontWeight: 'bold' },
+  circleCard: { marginHorizontal: 24, backgroundColor: '#1F1F2E', padding: 20, borderRadius: 16, borderWidth: 1, borderColor: '#2F2F3D' },
+  circleHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  circleName: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+  circleCode: { color: '#9CA3AF', fontSize: 14, fontFamily: 'monospace' },
+  harmonyContainer: { marginBottom: 16 },
+  harmonyLabel: { color: '#9CA3AF', fontSize: 12, marginBottom: 6 },
+  progressBar: { height: 8, backgroundColor: '#374151', borderRadius: 4, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: '#10B981' },
+  harmonyValue: { color: '#10B981', fontSize: 12, marginTop: 4, textAlign: 'right' },
+  membersLabel: { color: 'white', fontSize: 14, fontWeight: 'bold', marginBottom: 8 },
+  membersRow: { flexDirection: 'row', marginBottom: 16 },
+  memberChip: { backgroundColor: '#374151', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginRight: 8 },
+  memberText: { color: 'white', fontSize: 12 },
+  actionButton: { backgroundColor: '#7C3AED', padding: 12, borderRadius: 12, alignItems: 'center' },
+  actionButtonText: { color: 'white', fontWeight: 'bold' },
+
+  circleOptions: { flexDirection: 'row', paddingHorizontal: 24, gap: 12 },
+  optionButton: { flex: 1, backgroundColor: '#1F1F2E', padding: 16, borderRadius: 16, alignItems: 'center', borderWidth: 1, borderColor: '#2D2D3D' },
+  optionText: { color: 'white', marginTop: 8, fontWeight: 'bold' },
+
+  inputLabel: { color: '#9CA3AF', marginBottom: 8 },
+  input: { backgroundColor: '#0F0F1E', color: 'white', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#374151', marginBottom: 16 },
+  buttonRow: { flexDirection: 'row', gap: 12 },
+  cancelButton: { flex: 1, padding: 12, alignItems: 'center' },
+  cancelText: { color: '#9CA3AF' },
+  confirmButton: { flex: 1, backgroundColor: '#7C3AED', padding: 12, borderRadius: 8, alignItems: 'center' },
+  confirmText: { color: 'white', fontWeight: 'bold' }
 });
