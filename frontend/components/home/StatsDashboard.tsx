@@ -50,15 +50,6 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ user, themeColor
                     <Text style={styles.statLabel}>Zen Passes</Text>
                 </View>
             </View>
-
-            {/* Leaderboard Button */}
-            <TouchableOpacity
-                style={[styles.leaderboardButton, { backgroundColor: themeColor + '20', borderColor: themeColor }]}
-                onPress={() => router.push('/leaderboard')}
-            >
-                <MaterialCommunityIcons name="trophy-outline" size={20} color={themeColor} />
-                <Text style={[styles.leaderboardText, { color: themeColor }]}>View Leaderboard</Text>
-            </TouchableOpacity>
         </View>
     );
 };

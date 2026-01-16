@@ -21,14 +21,44 @@ async def join_contest(data: JoinContestRequest, user_id: str = Depends(get_curr
         raise HTTPException(status_code=404, detail="User not found")
         
     current_contest = user.get("active_contest", "none")
+    joined_at_iso = user.get("contest_joined_at")
+    
+    should_reset = False
+    
     if current_contest != "none":
-        raise HTTPException(status_code=400, detail=f"You are already in a {current_contest} contest")
+        # Check if expired
+        if joined_at_iso:
+            try:
+                joined_at = datetime.fromisoformat(joined_at_iso)
+                now = datetime.utcnow()
+                delta = now - joined_at
+                
+                # Logic: Weekly lasts 7 days, Monthly lasts 30 days
+                if current_contest == "weekly" and delta.days >= 7:
+                    should_reset = True
+                elif current_contest == "monthly" and delta.days >= 30:
+                    should_reset = True
+            except ValueError:
+                should_reset = True # Bad date format, reset
+        else:
+            should_reset = True # No date, reset
 
+        if not should_reset:
+             # If user tries to join the SAME contest that is still active, just return success
+             if current_contest == data.contest_type:
+                 return {"success": True, "active_contest": current_contest}
+             
+             raise HTTPException(status_code=400, detail=f"You are already in a {current_contest} contest")
+
+    # Proceed to join/reset
     await db.users.update_one(
         {"_id": ObjectId(user_id)},
         {"$set": {
             "active_contest": data.contest_type,
-            "contest_joined_at": datetime.utcnow().isoformat()
+            "contest_joined_at": datetime.utcnow().isoformat(),
+            # Optional: Reset points for new contest? For now, keep cumulative or reset. 
+            # User probably expects points to count for the new contest.
+            # "contest_points": 0 
         }}
     )
 

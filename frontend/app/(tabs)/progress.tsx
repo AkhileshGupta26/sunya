@@ -13,11 +13,12 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import Svg, { Path, Circle, Line, Text as SvgText, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useThemeColor } from '../../hooks/useThemeColor';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL;
 const { width } = Dimensions.get('window');
 
-const GlobalStandingGraph = ({ token, refresh }: { token: string | null, refresh: boolean }) => {
+const GlobalStandingGraph = ({ token, refresh, themeColor }: { token: string | null, refresh: boolean, themeColor: string }) => {
   const [standing, setStanding] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -59,9 +60,9 @@ const GlobalStandingGraph = ({ token, refresh }: { token: string | null, refresh
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <View>
           <Text style={styles.graphTitle}>Global Standing</Text>
-          <Text style={styles.graphSubtitle}>You are in the <Text style={{ color: '#F59E0B', fontWeight: 'bold' }}>Top {percentile}%</Text></Text>
+          <Text style={styles.graphSubtitle}>You are in the <Text style={{ color: themeColor, fontWeight: 'bold' }}>Top {percentile}%</Text></Text>
         </View>
-        <MaterialCommunityIcons name="chart-bar" size={24} color="#7C3AED" />
+        <MaterialCommunityIcons name="chart-bar" size={24} color={themeColor} />
       </View>
 
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', height: 140, paddingVertical: 15, marginTop: 10 }}>
@@ -74,12 +75,12 @@ const GlobalStandingGraph = ({ token, refresh }: { token: string | null, refresh
 
         {/* Your Bar */}
         <View style={{ alignItems: 'center', width: barWidth }}>
-          <Text style={{ color: '#F59E0B', fontSize: 12, marginBottom: 4, fontWeight: 'bold' }}>You</Text>
+          <Text style={{ color: themeColor, fontSize: 12, marginBottom: 4, fontWeight: 'bold' }}>You</Text>
           <LinearGradient
-            colors={['#F59E0B', '#D97706']}
-            style={{ width: '100%', height: Math.max(20, 100 - percentile), borderRadius: 6, shadowColor: '#F59E0B', shadowOpacity: 0.3, shadowRadius: 4 }}
+            colors={[themeColor, '#D97706']}
+            style={{ width: '100%', height: Math.max(20, 100 - percentile), borderRadius: 6, shadowColor: themeColor, shadowOpacity: 0.3, shadowRadius: 4 }}
           />
-          <Text style={{ color: '#F59E0B', fontSize: 10, marginTop: 6, fontWeight: 'bold' }}>{Math.round(standing.my_points)} pts</Text>
+          <Text style={{ color: themeColor, fontSize: 10, marginTop: 6, fontWeight: 'bold' }}>{Math.round(standing.my_points)} pts</Text>
         </View>
 
         {/* Average Bar */}
@@ -165,6 +166,7 @@ const LeaderboardSection = ({ token }: { token: string | null }) => {
 
 export default function Progress() {
   const { token, user } = useAuth();
+  const themeColor = useThemeColor();
   const [refreshing, setRefreshing] = useState(false);
   const [sessions, setSessions] = useState<any[]>([]);
 
@@ -224,7 +226,7 @@ export default function Progress() {
         <Text style={styles.title}>Your Progress</Text>
       </View>
 
-      <GlobalStandingGraph token={token} refresh={refreshing} />
+      <GlobalStandingGraph token={token} refresh={refreshing} themeColor={themeColor} />
       <LeaderboardSection token={token} />
 
       <View style={styles.statsGrid}>
