@@ -10,9 +10,98 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
+import Svg, { Path, Circle, Line, Text as SvgText, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL;
 const { width } = Dimensions.get('window');
+
+const GlobalStandingGraph = ({ token, refresh }: { token: string | null, refresh: boolean }) => {
+  const [standing, setStanding] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStanding();
+  }, [refresh]);
+
+  const fetchStanding = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/contests/standing`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setStanding(await res.json());
+      }
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  if (loading || !standing) return null;
+
+  // Bell Curve Logic
+  // A simple bell curve path: M 0,100 Q 50,0 100,100 (Simplified Bezier)
+  // Scaled to width
+  const graphWidth = width - 48;
+  const graphHeight = 120;
+
+  // Calculate X position based on percentile (0 to 100) -> (0 to width)
+  const percentile = standing.percentile || 0;
+  // Invert percentile for X axis? "Top 5%" is usually at the RIGHT end (High score).
+  // If 5% are ABOVE me, then I am at the 95th percentile.
+  // My API returns "Top X%" which is (Rank/Total)*100. Small is Better.
+  // So Top 1% -> Right Side? Or Left Side?
+  // Usually High Score -> Right Side.
+  // Percentile = 100 - Top%
+  const xPos = ((100 - percentile) / 100) * graphWidth;
+
+  return (
+    <View style={styles.graphContainer}>
+      <Text style={styles.graphTitle}>Global Standing</Text>
+      <Text style={styles.graphSubtitle}>You are in the <Text style={{ color: '#F59E0B', fontWeight: 'bold' }}>Top {percentile}%</Text></Text>
+
+      <View style={{ marginTop: 20, alignItems: 'center' }}>
+        <Svg width={graphWidth} height={graphHeight}>
+          <Defs>
+            <SvgLinearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor="#7C3AED" stopOpacity="0.8" />
+              <Stop offset="1" stopColor="#7C3AED" stopOpacity="0.1" />
+            </SvgLinearGradient>
+          </Defs>
+
+          {/* Bell Curve Shape */}
+          <Path
+            d={`M0,${graphHeight} C${graphWidth * 0.2},${graphHeight} ${graphWidth * 0.4},0 ${graphWidth / 2},0 C${graphWidth * 0.6},0 ${graphWidth * 0.8},${graphHeight} ${graphWidth},${graphHeight} Z`}
+            fill="url(#grad)"
+          />
+
+          {/* User Position Marker */}
+          <Line x1={xPos} y1={0} x2={xPos} y2={graphHeight} stroke="#F59E0B" strokeWidth="2" strokeDasharray="5,5" />
+          <Circle cx={xPos} cy={graphHeight} r="6" fill="#F59E0B" />
+
+          {/* Labels */}
+          <SvgText x="10" y={graphHeight - 10} fill="#9CA3AF" fontSize="10">Low</SvgText>
+          <SvgText x={graphWidth - 30} y={graphHeight - 10} fill="#9CA3AF" fontSize="10">High</SvgText>
+        </Svg>
+      </View>
+
+      <View style={styles.statRow}>
+        <View style={styles.miniStat}>
+          <Text style={styles.miniLabel}>Rank</Text>
+          <Text style={styles.miniValue}>#{standing.rank}</Text>
+        </View>
+        <View style={styles.miniStat}>
+          <Text style={styles.miniLabel}>Total Users</Text>
+          <Text style={styles.miniValue}>{standing.total_users}</Text>
+        </View>
+        <View style={styles.miniStat}>
+          <Text style={styles.miniLabel}>Points</Text>
+          <Text style={styles.miniValue}>{standing.my_points}</Text>
+        </View>
+      </View>
+    </View>
+  );
+};
+
 
 export default function Progress() {
   const { token, user } = useAuth();
@@ -74,6 +163,8 @@ export default function Progress() {
       <View style={styles.header}>
         <Text style={styles.title}>Your Progress</Text>
       </View>
+
+      <GlobalStandingGraph token={token} refresh={refreshing} />
 
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
@@ -240,6 +331,46 @@ const styles = StyleSheet.create({
   emptySubtext: {
     fontSize: 14,
     color: '#6B7280',
+    marginTop: 4,
+  },
+  graphContainer: {
+    marginHorizontal: 24,
+    backgroundColor: '#1F1F2E',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#2D2D3D',
+  },
+  graphTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  graphSubtitle: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    marginTop: 4,
+  },
+  statRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#2D2D3D',
+  },
+  miniStat: {
+    alignItems: 'center',
+  },
+  miniLabel: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  miniValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
     marginTop: 4,
   },
 });

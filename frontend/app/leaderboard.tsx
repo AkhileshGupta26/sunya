@@ -12,13 +12,14 @@ export default function Leaderboard() {
     const { user } = useAuth();
     const THEME_COLOR = useThemeColor();
     const [leaderboard, setLeaderboard] = useState([]);
+    const [activeContest, setActiveContest] = useState('none');
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [filter, setFilter] = useState('global'); // 'global' or 'circle'
 
     const fetchLeaderboard = async () => {
         try {
-            const res: any = await api.get(`/api/leaderboard?type=${filter}`);
+            const res: any = await api.get('/api/contests/leaderboard');
+            setActiveContest(res.active_contest || 'none');
             setLeaderboard(res.leaderboard || []);
         } catch (error) {
             console.error(error);
@@ -30,7 +31,7 @@ export default function Leaderboard() {
 
     useEffect(() => {
         fetchLeaderboard();
-    }, [filter]);
+    }, []);
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -70,7 +71,16 @@ export default function Leaderboard() {
                     <Text style={[styles.userName, isMe && { color: THEME_COLOR, fontWeight: 'bold' }]}>
                         {item.name} {isMe && '(You)'}
                     </Text>
-                    <Text style={styles.userPoints}>{item.total_points} pts</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={styles.userPoints}>{item.total_points} pts</Text>
+                        {item.badges && item.badges.length > 0 && (
+                            <View style={{ flexDirection: 'row', marginLeft: 8 }}>
+                                {item.badges.slice(0, 3).map((b: string, i: number) => (
+                                    <Text key={i} style={{ fontSize: 10, marginLeft: 2 }}>🏆</Text>
+                                ))}
+                            </View>
+                        )}
+                    </View>
                 </View>
 
                 {item.rank <= 3 && (
@@ -80,52 +90,74 @@ export default function Leaderboard() {
         );
     };
 
+    if (loading) {
+        return (
+            <View style={styles.container}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                        <MaterialCommunityIcons name="arrow-left" size={24} color="#FFFFFF" />
+                    </TouchableOpacity>
+                    <Text style={styles.title}>Leaderboard</Text>
+                    <View style={{ width: 24 }} />
+                </View>
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" color={THEME_COLOR} />
+                </View>
+            </View>
+        );
+    }
+
+    // No Active Contest View
+    if (activeContest === 'none' && !loading) {
+        return (
+            <View style={styles.container}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                        <MaterialCommunityIcons name="arrow-left" size={24} color="#FFFFFF" />
+                    </TouchableOpacity>
+                    <Text style={styles.title}>Leaderboard</Text>
+                    <View style={{ width: 24 }} />
+                </View>
+                <View style={styles.emptyContainer}>
+                    <MaterialCommunityIcons name="trophy-variant-outline" size={80} color="#4B5563" />
+                    <Text style={styles.emptyTitle}>No Active Contest</Text>
+                    <Text style={styles.emptyText}>Join a Weekly or Monthly contest to see rankings!</Text>
+
+                    <TouchableOpacity style={[styles.joinButton, { backgroundColor: THEME_COLOR }]} onPress={() => router.push('/(tabs)/circle')}>
+                        <Text style={styles.joinButtonText}>Go to Contest Arena</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <MaterialCommunityIcons name="arrow-left" size={24} color="#FFFFFF" />
                 </TouchableOpacity>
-                <Text style={styles.title}>Leaderboard</Text>
+                <Text style={styles.title}>
+                    {activeContest.charAt(0).toUpperCase() + activeContest.slice(1)} Leaderboard
+                </Text>
                 <View style={{ width: 24 }} />
             </View>
 
-            <View style={styles.filterContainer}>
-                <TouchableOpacity
-                    style={[styles.filterButton, filter === 'global' && { backgroundColor: THEME_COLOR }]}
-                    onPress={() => setFilter('global')}
-                >
-                    <Text style={[styles.filterText, filter === 'global' && { color: 'white' }]}>Global</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.filterButton, filter === 'circle' && { backgroundColor: THEME_COLOR }]}
-                    onPress={() => setFilter('circle')}
-                >
-                    <Text style={[styles.filterText, filter === 'circle' && { color: 'white' }]}>My Circle</Text>
-                </TouchableOpacity>
-            </View>
-
-            {loading ? (
-                <View style={styles.center}>
-                    <ActivityIndicator size="large" color={THEME_COLOR} />
-                </View>
-            ) : (
-                <FlatList
-                    data={leaderboard}
-                    renderItem={renderItem}
-                    keyExtractor={(item: any) => item.id}
-                    contentContainerStyle={styles.listContent}
-                    refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={THEME_COLOR} />
-                    }
-                    ListEmptyComponent={
-                        <View style={styles.emptyContainer}>
-                            <MaterialCommunityIcons name="trophy-broken" size={64} color="#4B5563" />
-                            <Text style={styles.emptyText}>No rankings yet.</Text>
-                        </View>
-                    }
-                />
-            )}
+            <FlatList
+                data={leaderboard}
+                renderItem={renderItem}
+                keyExtractor={(item: any) => item.id || Math.random().toString()}
+                contentContainerStyle={styles.listContent}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={THEME_COLOR} />
+                }
+                ListEmptyComponent={
+                    <View style={styles.emptyContainer}>
+                        <MaterialCommunityIcons name="trophy-broken" size={64} color="#4B5563" />
+                        <Text style={styles.emptyText}>No rankings yet.</Text>
+                    </View>
+                }
+            />
         </View>
     );
 }
@@ -145,28 +177,11 @@ const styles = StyleSheet.create({
     backButton: {
     },
     title: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: 'bold',
         color: '#FFFFFF',
-    },
-    filterContainer: {
-        flexDirection: 'row',
-        paddingHorizontal: 24,
-        marginBottom: 16,
-        gap: 12,
-    },
-    filterButton: {
         flex: 1,
-        paddingVertical: 10,
-        borderRadius: 12,
-        backgroundColor: '#1F1F2E',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#2D2D3D',
-    },
-    filterText: {
-        color: '#9CA3AF',
-        fontWeight: '600',
+        textAlign: 'center'
     },
     center: {
         flex: 1,
@@ -218,10 +233,29 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingTop: 60,
+        paddingHorizontal: 32
+    },
+    emptyTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#ffffff',
+        marginTop: 16
     },
     emptyText: {
         color: '#6B7280',
-        marginTop: 16,
+        marginTop: 8,
         fontSize: 16,
+        textAlign: 'center'
     },
+    joinButton: {
+        marginTop: 24,
+        paddingHorizontal: 32,
+        paddingVertical: 16,
+        borderRadius: 12
+    },
+    joinButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 16
+    }
 });

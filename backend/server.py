@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 import logging
 from backend.database import client, db_name
-from backend.routers import auth, sessions, circles, users
+from backend.routers import auth, sessions, circles, users, contests
 
 # Create the main app
 app = FastAPI()
@@ -12,6 +12,7 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(users.router) 
 app.include_router(sessions.router) 
 app.include_router(circles.router) 
+app.include_router(contests.router) 
 
 # Configure CORS
 app.add_middleware(

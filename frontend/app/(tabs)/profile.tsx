@@ -83,6 +83,24 @@ export default function Profile() {
 
   // ... (previous useEffects)
 
+  useEffect(() => {
+    checkRewards();
+  }, []);
+
+  const checkRewards = async () => {
+    try {
+      const res = await api.post('/api/contests/claim-rewards', {});
+      // @ts-ignore
+      if (res.new_badges && res.new_badges.length > 0) {
+        Alert.alert('Congratulations! 🏆', `You earned new badges:\n${res.new_badges.join('\n')}`);
+        refreshUser();
+      }
+    } catch (e) {
+      // Silent fail
+      console.log('Reward check failed', e);
+    }
+  };
+
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleUpdateProfile = async () => {
@@ -328,6 +346,23 @@ export default function Profile() {
             <Text style={styles.statLabel}>Zen Passes</Text>
           </View>
         </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Achievements</Text>
+        {/* @ts-ignore */}
+        {user?.badges && user.badges.length > 0 ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
+            {/* @ts-ignore */}
+            {user.badges.map((b: string, i: number) => (
+              <View key={i} style={{ backgroundColor: '#1F1F2E', borderWidth: 1, borderColor: '#7C3AED', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: 'bold' }}>{b}</Text>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <Text style={{ color: '#6B7280', fontStyle: 'italic', marginTop: 8 }}>No badges yet. Join a contest to win!</Text>
+        )}
       </View>
 
       {/* Removed standalone Appearance section as requested, moved to Account Settings logic or Edit Profile Modal */}

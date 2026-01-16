@@ -9,6 +9,7 @@ import {
   Alert,
   RefreshControl,
   Share,
+  Platform,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -18,7 +19,7 @@ import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const triggerHaptic = (type: 'impact' | 'notification' | 'selection', style?: any) => {
   if (Platform.OS === 'web') return;
@@ -44,6 +45,10 @@ export default function Circle() {
   const [circleName, setCircleName] = useState('');
   const [joinCode, setJoinCode] = useState('');
 
+  // Contest State
+  const [activeContest, setActiveContest] = useState<string>('none');
+  const [contestLoading, setContestLoading] = useState(false);
+
   // Deep Link Handling
   const params = useLocalSearchParams();
 
@@ -56,7 +61,20 @@ export default function Circle() {
 
   useEffect(() => {
     loadCircle();
+    loadContestStatus();
   }, []);
+
+  const loadContestStatus = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/user/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setActiveContest(data.active_contest || 'none');
+      }
+    } catch (e) { console.error(e); }
+  };
 
   const loadCircle = async () => {
     try {
@@ -76,6 +94,7 @@ export default function Circle() {
     triggerHaptic('impact', Haptics.ImpactFeedbackStyle.Light);
     setRefreshing(true);
     await loadCircle();
+    await loadContestStatus();
     setRefreshing(false);
   };
 
@@ -147,6 +166,72 @@ export default function Circle() {
     ]);
   };
 
+  const handleJoinContest = async (type: 'weekly' | 'monthly') => {
+    Alert.alert('Join Contest', `Join the ${type} contest?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Join', onPress: async () => {
+          setContestLoading(true);
+          try {
+            const res = await fetch(`${API_URL}/api/contests/join`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+              body: JSON.stringify({ contest_type: type })
+            });
+            if (res.ok) {
+              const data = await res.json();
+              setActiveContest(data.active_contest);
+              Alert.alert('Success', `You joined the ${type} contest!`);
+              router.push('/leaderboard');
+            } else {
+              const err = await res.json();
+              Alert.alert('Error', err.detail);
+            }
+          } catch (e) { Alert.alert('Error', 'Failed to join contest'); }
+          finally { setContestLoading(false); }
+        }
+      }
+    ]);
+  };
+
+  const renderContestSection = () => (
+    <View style={styles.sectionContainer}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Zen Contests</Text>
+      </View>
+
+      {activeContest === 'none' ? (
+        <View style={styles.contestRow}>
+          <TouchableOpacity style={styles.contestCard} onPress={() => handleJoinContest('weekly')}>
+            <LinearGradient colors={['#F59E0B', '#D97706']} style={styles.contestGradient}>
+              <MaterialCommunityIcons name="trophy" size={32} color="white" />
+              <Text style={styles.contestTitle}>Weekly</Text>
+              <Text style={styles.contestSubtitle}>Top the charts</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.contestCard} onPress={() => handleJoinContest('monthly')}>
+            <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.contestGradient}>
+              <MaterialCommunityIcons name="crown" size={32} color="white" />
+              <Text style={styles.contestTitle}>Monthly</Text>
+              <Text style={styles.contestSubtitle}>Prove yourself</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <TouchableOpacity style={styles.activeContestCard} onPress={() => router.push('/leaderboard')}>
+          <LinearGradient colors={activeContest === 'weekly' ? ['#F59E0B', '#D97706'] : ['#8B5CF6', '#6D28D9']} style={styles.activeContestGradient}>
+            <View>
+              <Text style={styles.activeContestLabel}>Active Contest</Text>
+              <Text style={styles.activeContestTitle}>{activeContest.charAt(0).toUpperCase() + activeContest.slice(1)} Challenge</Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={30} color="white" />
+          </LinearGradient>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
   // Guest Handling
   if (user?.isGuest) {
     return (
@@ -183,6 +268,9 @@ export default function Circle() {
           <Text style={styles.title}>Family Circle</Text>
           <Text style={styles.subtitle}>Meditate together, stay connected</Text>
         </View>
+
+        {/* Contest Section is visible even without a circle */}
+        {renderContestSection()}
 
         <View style={styles.emptyState}>
           <MaterialCommunityIcons name="account-group-outline" size={80} color="#4B5563" />
@@ -243,6 +331,8 @@ export default function Circle() {
       <View style={styles.header}>
         <Text style={styles.title}>{circle.name}</Text>
       </View>
+
+      {renderContestSection()}
 
       <View style={[styles.codeCard, { borderColor: THEME_COLOR }]}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
@@ -337,4 +427,16 @@ const styles = StyleSheet.create({
 
   leaveButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 24, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: '#EF4444', backgroundColor: '#EF444410' },
   leaveButtonText: { color: '#EF4444', fontSize: 16, fontWeight: '600', marginLeft: 8 },
+
+  sectionContainer: { marginBottom: 24 },
+  contestRow: { flexDirection: 'row', paddingHorizontal: 24, gap: 12 },
+  contestCard: { flex: 1, borderRadius: 16, overflow: 'hidden', height: 120 },
+  contestGradient: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 12 },
+  contestTitle: { color: 'white', fontWeight: 'bold', fontSize: 16, marginTop: 8 },
+  contestSubtitle: { color: 'white', fontSize: 12, opacity: 0.9 },
+
+  activeContestCard: { marginHorizontal: 24, borderRadius: 16, overflow: 'hidden', height: 80 },
+  activeContestGradient: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
+  activeContestLabel: { color: 'white', fontSize: 12, opacity: 0.9 },
+  activeContestTitle: { color: 'white', fontSize: 20, fontWeight: 'bold' },
 });

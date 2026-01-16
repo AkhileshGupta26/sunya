@@ -1,0 +1,15 @@
+npm warn config ignoring workspace config at C:\Users\akhil\Desktop\sunyab\frontend/.npmrc
+env: load .env
+env: export EXPO_TUNNEL_SUBDOMAIN EXPO_PACKAGER_HOSTNAME EXPO_PUBLIC_BACKEND_URL EXPO_USE_FAST_RESOLVER METRO_CACHE_ROOT
+PluginError: Failed to resolve plugin for module "expo-router" relative to "C:\Users\akhil\Desktop\sunyab\frontend"
+PluginError: Failed to resolve plugin for module "expo-router" relative to "C:\Users\akhil\Desktop\sunyab\frontend"
+    at resolvePluginForModule (C:\Users\akhil\Desktop\sunyab\node_modules\@expo\config-plugins\src\utils\plugin-resolver.ts:52:9)
+    at resolveConfigPluginFunctionWithInfo (C:\Users\akhil\Desktop\sunyab\node_modules\@expo\config-plugins\src\utils\plugin-resolver.ts:110:50)
+    at resolveConfigPluginFunction (C:\Users\akhil\Desktop\sunyab\node_modules\@expo\config-plugins\src\utils\plugin-resolver.ts:104:22)
+    at withStaticPlugin (C:\Users\akhil\Desktop\sunyab\node_modules\@expo\config-plugins\src\plugins\withStaticPlugin.ts:79:47)
+    at reduce (C:\Users\akhil\Desktop\sunyab\node_modules\@expo\config-plugins\src\plugins\withPlugins.ts:20:59)
+    at Array.reduce (<anonymous>)
+    at withPlugins (C:\Users\akhil\Desktop\sunyab\node_modules\@expo\config-plugins\src\plugins\withPlugins.ts:20:18)
+    at withConfigPlugins (C:\Users\akhil\Desktop\sunyab\node_modules\@expo\config\src\plugins\withConfigPlugins.ts:19:25)
+    at fillAndReturnConfig (C:\Users\akhil\Desktop\sunyab\node_modules\@expo\config\src\Config.ts:152:52)
+    at getConfig (C:\Users\akhil\Desktop\sunyab\node_modules\@expo\config\src\Config.ts:217:10)

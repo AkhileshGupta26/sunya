@@ -1,0 +1,33 @@
+[33mExperimental module resolution is enabled.[39m
+[31mError: Unable to resolve module decode-uri-component from C:\Users\akhil\Desktop\sunyab\frontend\node_modules\query-string\index.js: decode-uri-component could not be found within the project or in these directories:[39m
+[31m  node_modules[39m
+[31m  ..\node_modules[39m
+[31m  ..\..\..\node_modules[39m
+[31m[0m [90m 1 |[39m[31m [32m'use strict'[39m[31m[33m;[39m[31m[39m
+[31m [90m 2 |[39m[31m [36mconst[39m[31m strictUriEncode [33m=[39m[31m require([32m'strict-uri-encode'[39m[31m)[33m;[39m[31m[39m
+[31m[31m[1m>[22m[39m[31m[90m 3 |[39m[31m [36mconst[39m[31m decodeComponent [33m=[39m[31m require([32m'decode-uri-component'[39m[31m)[33m;[39m[31m[39m
+[31m [90m   |[39m[31m                                  [31m[1m^[22m[39m[31m[39m
+[31m [90m 4 |[39m[31m [36mconst[39m[31m splitOnFirst [33m=[39m[31m require([32m'split-on-first'[39m[31m)[33m;[39m[31m[39m
+[31m [90m 5 |[39m[31m [36mconst[39m[31m filterObject [33m=[39m[31m require([32m'filter-obj'[39m[31m)[33m;[39m[31m[39m
+[31m [90m 6 |[39m[31m[0m[39m
+[90mError: Unable to resolve module decode-uri-component from C:\Users\akhil\Desktop\sunyab\frontend\node_modules\query-string\index.js: decode-uri-component could not be found within the project or in these directories:[39m
+[90m  node_modules[39m
+[90m  ..\node_modules[39m
+[90m  ..\..\..\node_modules[39m
+[90m[0m [90m 1 |[39m[90m [32m'use strict'[39m[90m[33m;[39m[90m[39m
+[90m [90m 2 |[39m[90m [36mconst[39m[90m strictUriEncode [33m=[39m[90m require([32m'strict-uri-encode'[39m[90m)[33m;[39m[90m[39m
+[90m[31m[1m>[22m[39m[90m[90m 3 |[39m[90m [36mconst[39m[90m decodeComponent [33m=[39m[90m require([32m'decode-uri-component'[39m[90m)[33m;[39m[90m[39m
+[90m [90m   |[39m[90m                                  [31m[1m^[22m[39m[90m[39m
+[90m [90m 4 |[39m[90m [36mconst[39m[90m splitOnFirst [33m=[39m[90m require([32m'split-on-first'[39m[90m)[33m;[39m[90m[39m
+[90m [90m 5 |[39m[90m [36mconst[39m[90m filterObject [33m=[39m[90m require([32m'filter-obj'[39m[90m)[33m;[39m[90m[39m
+[90m [90m 6 |[39m[90m[0m[39m
+[90m    at ModuleResolver.resolveDependency (C:\Users\akhil\Desktop\sunyab\frontend\node_modules\metro\src\node-haste\DependencyGraph\ModuleResolution.js:150:15)[39m
+[90m    at DependencyGraph.resolveDependency (C:\Users\akhil\Desktop\sunyab\frontend\node_modules\metro\src\node-haste\DependencyGraph.js:248:43)[39m
+[90m    at C:\Users\akhil\Desktop\sunyab\frontend\node_modules\metro\src\lib\transformHelpers.js:165:21[39m
+[90m    at resolveDependencies (C:\Users\akhil\Desktop\sunyab\frontend\node_modules\metro\src\DeltaBundler\buildSubgraph.js:42:25)[39m
+[90m    at visit (C:\Users\akhil\Desktop\sunyab\frontend\node_modules\metro\src\DeltaBundler\buildSubgraph.js:83:30)[39m
+[90m    at async Promise.all (index 0)[39m
+[90m    at visit (C:\Users\akhil\Desktop\sunyab\frontend\node_modules\metro\src\DeltaBundler\buildSubgraph.js:92:5)[39m
+[90m    at async Promise.all (index 8)[39m
+[90m    at visit (C:\Users\akhil\Desktop\sunyab\frontend\node_modules\metro\src\DeltaBundler\buildSubgraph.js:92:5)[39m
+[90m    at async Promise.all (index 6)[39m

@@ -32,6 +32,9 @@ async def register(user: UserRegister):
         "settings_bpm_check": False,
         "settings_timer_check": False,
         "settings_gender": user.settings_gender,
+        "active_contest": "none",
+        "contest_joined_at": None,
+        "badges": [],
         "created_at": datetime.utcnow()
     }
     result = await db.users.insert_one(user_doc)
@@ -50,6 +53,8 @@ async def register(user: UserRegister):
             "total_days": 0,
             "zen_passes": 0,
             "settings_gender": user.settings_gender,
+            "active_contest": "none",
+            "badges": [],
             "profile_picture": None
         }
     }
@@ -84,6 +89,9 @@ async def login(user: UserLogin):
             "settings_bpm_check": user_doc.get("settings_bpm_check", False),
             "settings_timer_check": user_doc.get("settings_timer_check", False),
             "settings_gender": user_doc.get("settings_gender", "male"),
+            "active_contest": user_doc.get("active_contest", "none"),
+            "contest_joined_at": user_doc.get("contest_joined_at"),
+            "badges": user_doc.get("badges", []),
             "profile_picture": user_doc.get("profile_picture")
         }
     }
@@ -111,5 +119,9 @@ async def get_me(user_id: str = Depends(get_current_user)):
         settings_camera_enabled=user_doc.get("settings_camera_enabled", False),
         settings_bpm_check=user_doc.get("settings_bpm_check", False),
         settings_timer_check=user_doc.get("settings_timer_check", False),
-        settings_gender=user_doc.get("settings_gender", "male")
+        settings_timer_check=user_doc.get("settings_timer_check", False),
+        settings_gender=user_doc.get("settings_gender", "male"),
+        active_contest=user_doc.get("active_contest", "none"),
+        contest_joined_at=user_doc.get("contest_joined_at"),
+        badges=user_doc.get("badges", [])
     )
