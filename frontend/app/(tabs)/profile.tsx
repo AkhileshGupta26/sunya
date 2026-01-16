@@ -128,38 +128,53 @@ export default function Profile() {
     try {
       await api.put('/api/user/settings', updates);
       refreshUser();
+      return true;
     } catch (error) {
       console.error('Settings update error:', error);
       Alert.alert('Error', 'Failed to update settings');
+      return false;
     }
   };
 
   const toggleCamera = async (value: boolean) => {
     if (value) {
-      // If permission is loading or unknown, wait or request
-      if (!permission || permission.status === 'undetermined') {
-        const result = await requestPermission();
-        if (!result.granted) {
-          Alert.alert("Permission Required", "Camera access is needed.");
+      try {
+        // 1. If permission is not loaded yet or undetermined, request it
+        if (!permission || permission.status === 'undetermined') {
+          const result = await requestPermission();
+          if (!result.granted) {
+            Alert.alert("Permission Required", "Camera access is needed to enable this feature.");
+            return;
+          }
+        }
+        // 2. If explicitly denied (and not undetermined), guide to settings
+        else if (permission.status === 'denied' || permission.granted === false) {
+          Alert.alert(
+            "Permission Required",
+            "Camera access is currently denied. Please enable it in system settings.",
+            [
+              { text: "Cancel", style: "cancel" },
+              { text: "Open Settings", onPress: () => Linking.openSettings() }
+            ]
+          );
           return;
         }
-      } else if (!permission.granted) {
-        // If explicitly denied previously
-        Alert.alert(
-          "Permission Required",
-          "Camera access is denied. Please enable it in system settings.",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "Open Settings", onPress: () => Linking.openSettings() }
-          ]
-        );
+      } catch (error) {
+        console.error('Camera permission request error:', error);
+        Alert.alert("Error", "Failed to request camera permissions.");
         return;
       }
     }
 
     // Permission granted or not required (turning off)
     setCameraEnabled(value);
-    await updateSettings({ camera_enabled: value });
+
+    // Optimistic update - save to backend
+    const success = await updateSettings({ camera_enabled: value });
+    if (!success) {
+      // Revert UI if backend update failed
+      setCameraEnabled(!value);
+    }
   };
 
   const toggleBpm = (value: boolean) => {
