@@ -53,7 +53,6 @@ async def update_user_profile(profile_data: UserProfileUpdate, user_id: str = De
         settings_gender=updated_user.get("settings_gender", "male"),
         settings_alarm_enabled=updated_user.get("settings_alarm_enabled", False),
         settings_alarm_time=updated_user.get("settings_alarm_time", "06:00"),
-        settings_alarm_time=updated_user.get("settings_alarm_time", "06:00"),
         settings_alarm_ringtone=updated_user.get("settings_alarm_ringtone", "meditation_flute"),
         active_contest=updated_user.get("active_contest", "none"),
         contest_joined_at=updated_user.get("contest_joined_at"),
