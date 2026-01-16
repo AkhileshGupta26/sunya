@@ -126,7 +126,13 @@ async def get_me(user_id: str = Depends(get_current_user)):
     # Lazy Expiry Check
     if active_contest != "none" and joined_at_iso:
         try:
-            joined_at = datetime.fromisoformat(joined_at_iso)
+            if isinstance(joined_at_iso, str):
+                joined_at = datetime.fromisoformat(joined_at_iso)
+            elif isinstance(joined_at_iso, datetime):
+                joined_at = joined_at_iso
+            else:
+                raise ValueError("Unknown date format")
+
             now = datetime.utcnow()
             delta = now - joined_at
             
@@ -145,8 +151,8 @@ async def get_me(user_id: str = Depends(get_current_user)):
                  # Update local var for response
                  active_contest = "none"
                  joined_at_iso = None
-        except ValueError:
-            pass # Ignore bad dates
+        except (ValueError, TypeError):
+             pass # Ignore bad dates
 
     return UserResponse(
         id=str(user_doc["_id"]),

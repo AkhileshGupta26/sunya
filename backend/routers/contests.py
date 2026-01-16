@@ -29,7 +29,13 @@ async def join_contest(data: JoinContestRequest, user_id: str = Depends(get_curr
         # Check if expired
         if joined_at_iso:
             try:
-                joined_at = datetime.fromisoformat(joined_at_iso)
+                if isinstance(joined_at_iso, str):
+                    joined_at = datetime.fromisoformat(joined_at_iso)
+                elif isinstance(joined_at_iso, datetime):
+                    joined_at = joined_at_iso
+                else:
+                    raise ValueError("Unknown date format")
+
                 now = datetime.utcnow()
                 delta = now - joined_at
                 
@@ -38,7 +44,7 @@ async def join_contest(data: JoinContestRequest, user_id: str = Depends(get_curr
                     should_reset = True
                 elif current_contest == "monthly" and delta.days >= 30:
                     should_reset = True
-            except ValueError:
+            except (ValueError, TypeError):
                 should_reset = True # Bad date format, reset
         else:
             should_reset = True # No date, reset
