@@ -19,7 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL;
 
-const CircleManager = ({ token, API_URL }: { token: string | null, API_URL: string }) => {
+const CircleManager = ({ token, API_URL, themeColor }: { token: string | null, API_URL: string, themeColor: string }) => {
   const [myCircle, setMyCircle] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [joinCode, setJoinCode] = useState('');
@@ -112,7 +112,7 @@ const CircleManager = ({ token, API_URL }: { token: string | null, API_URL: stri
             <Text style={styles.circleName}>{myCircle.name}</Text>
             <Text style={styles.circleCode}>Code: {myCircle.code}</Text>
           </View>
-          <MaterialCommunityIcons name="account-group" size={32} color="#7C3AED" />
+          <MaterialCommunityIcons name="account-group" size={32} color={themeColor} />
         </View>
         <View style={styles.harmonyContainer}>
           <Text style={styles.harmonyLabel}>Harmony Score</Text>
@@ -129,7 +129,7 @@ const CircleManager = ({ token, API_URL }: { token: string | null, API_URL: stri
             </View>
           ))}
         </ScrollView>
-        <TouchableOpacity onPress={onShare => Share.share({ message: `Join my Meditation Circle on Shunya! Code: ${myCircle.code}` })} style={styles.actionButton}>
+        <TouchableOpacity onPress={onShare => Share.share({ message: `Join my Meditation Circle on Shunya! Code: ${myCircle.code}` })} style={[styles.actionButton, { backgroundColor: themeColor }]}>
           <Text style={styles.actionButtonText}>Invite Friends</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleLeave} style={{ marginTop: 12, alignItems: 'center' }}>
@@ -154,7 +154,7 @@ const CircleManager = ({ token, API_URL }: { token: string | null, API_URL: stri
           <TouchableOpacity onPress={() => setViewMode('main')} style={styles.cancelButton}>
             <Text style={styles.cancelText}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleCreate} style={styles.confirmButton} disabled={loading}>
+          <TouchableOpacity onPress={handleCreate} style={[styles.confirmButton, { backgroundColor: themeColor }]} disabled={loading}>
             <Text style={styles.confirmText}>{loading ? 'Creating...' : 'Create'}</Text>
           </TouchableOpacity>
         </View>
@@ -178,7 +178,7 @@ const CircleManager = ({ token, API_URL }: { token: string | null, API_URL: stri
           <TouchableOpacity onPress={() => setViewMode('main')} style={styles.cancelButton}>
             <Text style={styles.cancelText}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleJoin} style={styles.confirmButton} disabled={loading}>
+          <TouchableOpacity onPress={handleJoin} style={[styles.confirmButton, { backgroundColor: themeColor }]} disabled={loading}>
             <Text style={styles.confirmText}>{loading ? 'Joining...' : 'Join'}</Text>
           </TouchableOpacity>
         </View>
@@ -330,7 +330,7 @@ export default function Contest() {
         <Text style={styles.sectionTitle}>Social Circle</Text>
       </View>
 
-      <CircleManager token={token} API_URL={API_URL} />
+      <CircleManager token={token} API_URL={API_URL} themeColor={THEME_COLOR} />
 
 
       <View style={styles.infoSection}>
