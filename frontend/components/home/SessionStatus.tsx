@@ -28,6 +28,14 @@ export const SessionStatus: React.FC<SessionStatusProps> = ({
                 <MaterialCommunityIcons name="check-circle" size={60} color="#10B981" />
                 <Text style={styles.completedTitle}>Today's Meditation Complete!</Text>
                 <Text style={styles.completedSubtitle}>See you tomorrow morning</Text>
+
+                {/* ALLOW REPEAT for extra points */}
+                <TouchableOpacity
+                    style={[styles.meditateButton, { backgroundColor: themeColor, marginTop: 24 }]}
+                    onPress={() => router.push('/meditation')}
+                >
+                    <Text style={styles.meditateButtonText}>Meditate Again (+Points)</Text>
+                </TouchableOpacity>
             </View>
         );
     }
