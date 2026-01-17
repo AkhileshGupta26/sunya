@@ -1,41 +1,26 @@
 import React, { useRef } from 'react';
-import { StyleSheet, View, Dimensions } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
+import { StyleSheet, View, Dimensions, Image } from 'react-native';
 
 interface SplashScreenProps {
     onFinish: () => void;
 }
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
-    const videoRef = useRef(null);
-
+    // Timer to auto-dismiss splash
     React.useEffect(() => {
-        // Failsafe: If video doesn't finish in 2 seconds, force finish
         const timer = setTimeout(() => {
             onFinish();
-        }, 2000);
+        }, 2000); // 2 seconds delay
         return () => clearTimeout(timer);
     }, [onFinish]);
 
 
     return (
         <View style={styles.container}>
-            <Video
-                ref={videoRef}
-                source={require('../../assets/images/splash_image.webm')}
-                style={styles.video}
-                resizeMode={ResizeMode.COVER}
-                shouldPlay
-                isLooping={false}
-                onPlaybackStatusUpdate={(status) => {
-                    if (status.isLoaded && status.didJustFinish) {
-                        onFinish();
-                    }
-                }}
-                onError={(error) => {
-                    console.warn("Splash video failed to load, skipping.", error);
-                    onFinish();
-                }}
+            <Image
+                source={require('../../assets/images/splash_screen.png')}
+                style={styles.image}
+                resizeMode="contain"
             />
         </View>
     );
@@ -48,8 +33,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    video: {
-        width: Dimensions.get('window').width,
-        height: Dimensions.get('window').height,
+    image: {
+        width: '100%',
+        height: '100%',
     },
 });
