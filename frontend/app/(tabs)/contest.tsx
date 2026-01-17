@@ -270,112 +270,76 @@ export default function Contest() {
     router.push({ pathname: '/leaderboard', params: { type } });
   };
 
-  const renderContestRow = () => {
-    // Filter active contests only
-    const joinedContests = activeContests.filter(id => id === 'weekly' || id === 'monthly');
-
-    if (joinedContests.length === 0) {
-      return (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>You haven't joined any contests yet.</Text>
-          <Text style={styles.emptySubtext}>Join below to compete!</Text>
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.rowContainer}>
-        {joinedContests.includes('weekly') && renderActiveCard('weekly', 'Weekly', 'trophy', ['#F59E0B', '#D97706'])}
-        {joinedContests.includes('monthly') && renderActiveCard('monthly', 'Monthly', 'crown', ['#8B5CF6', '#6D28D9'])}
-      </View>
-    );
-  };
-
-  const renderActiveCard = (type: string, title: string, icon: any, colors: string[]) => {
-    return (
-      <TouchableOpacity
-        key={type}
-        style={styles.rowCard}
-        onPress={() => openLeaderboard(type)}
-      >
-        <LinearGradient colors={colors as any} style={styles.rowGradient}>
-          <MaterialCommunityIcons name={icon} size={32} color="white" style={{ marginBottom: 8 }} />
-          <Text style={styles.rowTitle}>{title}</Text>
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>ACTIVE</Text>
-          </View>
-        </LinearGradient>
-      </TouchableOpacity>
-    )
-  }
-
-  const renderJoinSection = () => {
-    // Show cards for contests NOT joined
-    const available = ['weekly', 'monthly'].filter(id => !activeContests.includes(id));
-
-    if (available.length === 0) return null;
-
-    return (
-      <View style={styles.joinSection}>
-        <Text style={styles.sectionTitle}>Available Contests</Text>
-        {available.map(type => (
-          <View key={type} style={styles.joinRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.joinTitle}>{type === 'weekly' ? 'Weekly Sprint' : 'Monthly Marathon'}</Text>
-              <Text style={styles.joinDesc}>{type === 'weekly' ? '7 Days • High Intensity' : '30 Days • Persistence'}</Text>
+  // Helper to render the Specific Cards from the Screenshot
+  const renderContestCard = (
+    title: string,
+    subtitle: string,
+    badgeText: string,
+    iconName: any,
+    colors: string[],
+    onPress: () => void,
+    isResultsMode: boolean = false
+  ) => (
+    <TouchableOpacity activeOpacity={0.9} onPress={onPress} style={styles.cardContainer}>
+      <LinearGradient colors={colors as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.cardGradient}>
+        <View style={styles.cardContent}>
+          <View style={styles.cardTextContainer}>
+            <Text style={styles.cardTitle}>{title}</Text>
+            <Text style={styles.cardSubtitle}>{subtitle}</Text>
+            <View style={isResultsMode ? styles.badgeContainerWarm : styles.badgeContainerCool}>
+              <Text style={styles.badgeText}>{badgeText}</Text>
             </View>
-            <TouchableOpacity
-              style={[styles.joinButton, { backgroundColor: THEME_COLOR }]}
-              onPress={() => handleJoinContest(type as any)}
-              disabled={loading}
-            >
-              <Text style={styles.joinButtonText}>Join</Text>
-            </TouchableOpacity>
           </View>
-        ))}
-      </View>
-    )
-  }
+          <MaterialCommunityIcons name={iconName} size={48} color="white" style={{ opacity: 0.9 }} />
+        </View>
+      </LinearGradient>
+    </TouchableOpacity>
+  );
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 100 }}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Contest Arena</Text>
         <Text style={styles.subtitle}>Compete with others globally</Text>
       </View>
 
-      {/* Active Contests (Row) */}
+      {/* Contests Stack */}
       <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Your Contests</Text>
-        {renderContestRow()}
+        {/* Weekly Contest Card - Matches Screenshot "Orange" */}
+        {renderContestCard(
+          "Weekly Contest",
+          "Results Period", // Or "High Intensity" based on state
+          "STARTS MONDAY",  // Or "ACTIVE"
+          "trophy",
+          ['#F59E0B', '#EA580C'], // Orange/Amber
+          () => openLeaderboard('weekly'),
+          true
+        )}
+
+        {/* Monthly Marathon Card - Matches Screenshot "Purple" */}
+        {renderContestCard(
+          "Monthly Marathon",
+          "You are participating!",
+          "ACTIVE • TAP TO VIEW",
+          "check-circle", // Start implies check? Or 'crown'
+          ['#8B5CF6', '#6D28D9'], // Purple/Violet
+          () => openLeaderboard('monthly'),
+          false
+        )}
       </View>
 
-      {/* Available to Join */}
-      {renderJoinSection()}
+      {/* Family Circles Text */}
+      <View style={styles.dividerContainer}>
+        <Text style={styles.dividerText}>Looking for Family Circles?</Text>
+      </View>
 
-      {/* Social Circle Section */}
+      {/* Social Circle Header */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Social Circle</Text>
       </View>
 
       <CircleManager token={token} API_URL={API_URL} themeColor={THEME_COLOR} />
-
-      <View style={styles.infoSection}>
-        <Text style={styles.infoTitle}>How it works</Text>
-        <View style={styles.infoItem}>
-          <MaterialCommunityIcons name="meditation" size={20} color={THEME_COLOR} />
-          <Text style={styles.infoText}>Meditate daily to earn points.</Text>
-        </View>
-        <View style={styles.infoItem}>
-          <MaterialCommunityIcons name="chart-bell-curve" size={20} color={THEME_COLOR} />
-          <Text style={styles.infoText}>Check your percentile on Progress tab.</Text>
-        </View>
-        <View style={styles.infoItem}>
-          <MaterialCommunityIcons name="trophy-award" size={20} color={THEME_COLOR} />
-          <Text style={styles.infoText}>Top 10% win badges at end of cycle.</Text>
-        </View>
-      </View>
 
     </ScrollView>
   );
@@ -385,47 +349,65 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0F0F1E',
-    // Web: Center content and max width to match Android/Mobile view
-    ...(Platform.OS === 'web' ? {
-      alignSelf: 'center',
-      width: '100%',
-      maxWidth: 600,
-    } : {})
+    ...Platform.select({
+      web: {
+        alignSelf: 'center',
+        width: '100%',
+        maxWidth: 600,
+      }
+    })
   },
-  header: { padding: 24, paddingTop: 60, alignItems: 'center' },
-  title: { fontSize: 32, fontWeight: 'bold', color: '#FFFFFF' },
-  subtitle: { fontSize: 16, color: '#9CA3AF', marginTop: 4 },
+  header: { padding: 24, paddingTop: 60, alignItems: 'center', marginBottom: 8 },
+  title: { fontSize: 28, fontWeight: 'bold', color: '#FFFFFF', textAlign: 'center' },
+  subtitle: { fontSize: 14, color: '#9CA3AF', marginTop: 4, textAlign: 'center' },
 
-  sectionContainer: { marginTop: 0, paddingHorizontal: 24 },
-  rowContainer: { flexDirection: 'row', gap: 12, marginTop: 12 },
-  emptyState: { padding: 20, alignItems: 'center', backgroundColor: '#1F1F2E', borderRadius: 16, marginTop: 12 },
-  emptyText: { color: 'white', fontWeight: 'bold' },
-  emptySubtext: { color: '#9CA3AF', fontSize: 12 },
+  sectionContainer: { marginTop: 0, paddingHorizontal: 20 },
 
-  rowCard: { flex: 1, height: 140, borderRadius: 16, overflow: 'hidden' },
-  rowGradient: { flex: 1, padding: 16, justifyContent: 'center', alignItems: 'center' },
-  rowTitle: { color: 'white', fontWeight: 'bold', fontSize: 18, marginBottom: 8 },
-  statusBadge: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
-  statusText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
+  // New Card Styles
+  cardContainer: {
+    height: 160,
+    borderRadius: 24,
+    marginBottom: 16,
+    overflow: 'hidden',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  cardGradient: { flex: 1, padding: 24, justifyContent: 'center' },
+  cardContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  cardTextContainer: { flex: 1, marginRight: 16 },
+  cardTitle: { fontSize: 22, fontWeight: 'bold', color: 'white', marginBottom: 4 },
+  cardSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.9)', marginBottom: 16 },
 
-  joinSection: { marginTop: 32, paddingHorizontal: 24 },
-  joinRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1F1F2E', padding: 16, borderRadius: 16, marginBottom: 12, borderWidth: 1, borderColor: '#2D2D3D' },
-  joinTitle: { color: 'white', fontWeight: 'bold', fontSize: 16 },
-  joinDesc: { color: '#9CA3AF', fontSize: 12, marginTop: 2 },
-  joinButton: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
-  joinButtonText: { color: 'white', fontWeight: 'bold' },
+  badgeContainerWarm: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20
+  },
+  badgeContainerCool: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20
+  },
+  badgeText: { color: 'white', fontWeight: 'bold', fontSize: 12, textTransform: 'uppercase' },
 
-  socialLink: { marginTop: 32, alignItems: 'center' },
+  // Divider
+  dividerContainer: { alignItems: 'center', marginVertical: 24 },
+  dividerText: { color: '#6B7280', fontSize: 14 },
 
-  infoSection: { marginTop: 40, paddingHorizontal: 32 },
-  infoTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 16 },
-  infoItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 12 },
-  infoText: { color: '#9CA3AF', fontSize: 14 },
-
-  // Circle Manager Styles
-  sectionHeader: { paddingHorizontal: 24, marginTop: 32, marginBottom: 12 },
+  // Social Head
+  sectionHeader: { paddingHorizontal: 24, marginBottom: 16 },
   sectionTitle: { color: 'white', fontSize: 20, fontWeight: 'bold' },
-  circleCard: { marginHorizontal: 24, backgroundColor: '#1F1F2E', padding: 20, borderRadius: 16, borderWidth: 1, borderColor: '#2F2F3D' },
+
+  // Make Circle Manager buttons look like "Social Circle" grid in screenshot
+  // Circle Manager Specifics (retained but tweaked)
+  circleCard: { marginHorizontal: 20, backgroundColor: '#1F1F2E', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: '#2F2F3D' },
   circleHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   circleName: { color: 'white', fontSize: 18, fontWeight: 'bold' },
   circleCode: { color: '#9CA3AF', fontSize: 14, fontFamily: 'monospace' },
@@ -441,9 +423,20 @@ const styles = StyleSheet.create({
   actionButton: { backgroundColor: '#7C3AED', padding: 12, borderRadius: 12, alignItems: 'center' },
   actionButtonText: { color: 'white', fontWeight: 'bold' },
 
-  circleOptions: { flexDirection: 'row', paddingHorizontal: 24, gap: 12 },
-  optionButton: { flex: 1, backgroundColor: '#1F1F2E', padding: 16, borderRadius: 16, alignItems: 'center', borderWidth: 1, borderColor: '#2D2D3D' },
-  optionText: { color: 'white', marginTop: 8, fontWeight: 'bold' },
+  // The "Create / Join" Buttons from screenshot (Grid)
+  circleOptions: { flexDirection: 'row', paddingHorizontal: 20, gap: 16 },
+  optionButton: {
+    flex: 1,
+    backgroundColor: '#1F1F2E',
+    padding: 24,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#2D2D3D',
+    height: 120
+  },
+  optionText: { color: 'white', marginTop: 12, fontWeight: 'bold', fontSize: 16 },
 
   inputLabel: { color: '#9CA3AF', marginBottom: 8 },
   input: { backgroundColor: '#0F0F1E', color: 'white', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#374151', marginBottom: 16 },
