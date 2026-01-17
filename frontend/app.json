@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sunya",
     "slug": "sunya",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/female/user.png",
     "scheme": "frontend",
@@ -24,6 +24,7 @@
         "backgroundColor": "#000000"
       },
       "package": "com.shunya.app",
+      "versionCode": 2,
       "edgeToEdgeEnabled": true,
       "permissions": [
         "CAMERA",
