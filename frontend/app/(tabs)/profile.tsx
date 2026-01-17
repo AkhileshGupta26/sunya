@@ -36,9 +36,7 @@ export default function Profile() {
   const [aboutModalVisible, setAboutModalVisible] = useState(false);
   const [zenModalVisible, setZenModalVisible] = useState(false);
   const [editProfileModalVisible, setEditProfileModalVisible] = useState(false);
-  const [alarmTimeModalVisible, setAlarmTimeModalVisible] = useState(false);
-
-  // State for editing
+  // State for settings
   const [editName, setEditName] = useState('');
   const [editGender, setEditGender] = useState('male');
   const [debugLog, setDebugLog] = useState('');
@@ -47,15 +45,18 @@ export default function Profile() {
   const [wakeTime, setWakeTime] = useState(user?.wake_time || '06:00');
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
-  // Alarm State
-  const [alarmEnabled, setAlarmEnabled] = useState(false);
-  const [alarmTime, setAlarmTime] = useState('06:00');
-  const [alarmRingtone, setAlarmRingtone] = useState('meditation_flute');
-  const [ringtoneModalVisible, setRingtoneModalVisible] = useState(false);
   const [developerModalVisible, setDeveloperModalVisible] = useState(false);
 
   // Settings from User object
+  // cameraEnabled is defined below, wait. I duplicated it.
+  // I need to remove the lines I added last time or the original ones.
+  // Last time I replaced lines 47-56.
+  // The original lines 57-59 had cameraEnabled.
+
+  // I will just consolidate here.
   const [cameraEnabled, setCameraEnabled] = useState(false);
+
+  // Settings from User object
   const [bpmCheck, setBpmCheck] = useState(false);
   const [timerCheck, setTimerCheck] = useState(false);
   // Removed redundant gender state
@@ -70,10 +71,7 @@ export default function Profile() {
       setBpmCheck(user.settings_bpm_check || false);
       setTimerCheck(user.settings_timer_check || false);
 
-      // Init Alarm
-      setAlarmEnabled(user.settings_alarm_enabled || false);
-      setAlarmTime(user.settings_alarm_time || '06:00');
-      setAlarmRingtone(user.settings_alarm_ringtone || 'meditation_flute');
+      setTimerCheck(user.settings_timer_check || false);
 
       // Init edit state
       setEditName(user.name);
@@ -238,40 +236,7 @@ export default function Profile() {
     }
   };
 
-  const updateAlarmTime = async () => {
-    // Basic validation for HH:MM
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(alarmTime)) {
-      Alert.alert('Invalid Time', 'Please enter time in HH:MM format');
-      return;
-    }
 
-    try {
-      // Update backend
-      await updateSettings({ alarm_time: alarmTime });
-
-      // Schedule if enabled
-      if (alarmEnabled) {
-        const [h, m] = alarmTime.split(':').map(Number);
-        await scheduleAlarm(h, m, alarmRingtone);
-      }
-
-      setAlarmTimeModalVisible(false);
-      Alert.alert('Success', 'Alarm time updated');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update alarm');
-    }
-  };
-
-  const updateRingtone = async (ringtone: string) => {
-    setAlarmRingtone(ringtone);
-    setRingtoneModalVisible(false);
-    await updateSettings({ alarm_ringtone: ringtone });
-    if (alarmEnabled) {
-      const [h, m] = alarmTime.split(':').map(Number);
-      await scheduleAlarm(h, m, ringtone);
-    }
-  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -425,58 +390,6 @@ export default function Profile() {
             thumbColor={notificationsEnabled ? "#FFFFFF" : "#f4f3f4"}
           />
         </View>
-
-        <TouchableOpacity style={styles.menuItem}>
-          <MaterialCommunityIcons name="school-outline" size={24} color={THEME_COLOR} />
-          <Text style={styles.menuText}>Institution</Text>
-          <Text style={styles.menuValue}>{user?.institution_id ? 'Joined' : 'Not joined'}</Text>
-          <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Alarm Settings Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Daily Alarm</Text>
-
-        <View style={styles.menuItem}>
-          <MaterialCommunityIcons name="alarm" size={24} color={THEME_COLOR} />
-          <Text style={styles.menuText}>Set Alarm</Text>
-          <Switch
-            value={alarmEnabled}
-            onValueChange={async (val) => {
-              setAlarmEnabled(val);
-              updateSettings({ alarm_enabled: val });
-              if (val) {
-                const [h, m] = alarmTime.split(':').map(Number);
-                await scheduleAlarm(h, m, alarmRingtone);
-              } else {
-                await cancelAlarm();
-              }
-            }}
-            trackColor={{ false: "#767577", true: THEME_COLOR }}
-            thumbColor={alarmEnabled ? "#FFFFFF" : "#f4f3f4"}
-          />
-        </View>
-
-        {alarmEnabled && (
-          <>
-            <TouchableOpacity style={styles.menuItem} onPress={() => setAlarmTimeModalVisible(true)}>
-              <MaterialCommunityIcons name="clock-time-four-outline" size={24} color={THEME_COLOR} />
-              <Text style={styles.menuText}>Alarm Time</Text>
-              <Text style={styles.menuValue}>{alarmTime}</Text>
-              <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.menuItem} onPress={() => setRingtoneModalVisible(true)}>
-              <MaterialCommunityIcons name="music-note" size={24} color={THEME_COLOR} />
-              <Text style={styles.menuText}>Ringtone</Text>
-              <Text style={styles.menuValue}>
-                {alarmRingtone.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-              </Text>
-              <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
-            </TouchableOpacity>
-          </>
-        )}
       </View>
 
       <View style={styles.section}>
@@ -664,74 +577,7 @@ export default function Profile() {
 
 
       {/* Alarm Time Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={alarmTimeModalVisible}
-        onRequestClose={() => setAlarmTimeModalVisible(false)}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Text style={[styles.modalTitle, { color: THEME_COLOR }]}>Set Alarm Time</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="HH:MM"
-              placeholderTextColor="#9CA3AF"
-              value={alarmTime}
-              onChangeText={setAlarmTime}
-              keyboardType="numbers-and-punctuation"
-              maxLength={5}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.button, styles.buttonClose]}
-                onPress={() => setAlarmTimeModalVisible(false)}
-              >
-                <Text style={styles.textStyle}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.buttonSave, { backgroundColor: THEME_COLOR }]}
-                onPress={updateAlarmTime}
-              >
-                <Text style={styles.textStyle}>Save</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
-      {/* Ringtone Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={ringtoneModalVisible}
-        onRequestClose={() => setRingtoneModalVisible(false)}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Text style={[styles.modalTitle, { color: THEME_COLOR }]}>Select Ringtone</Text>
-            {['meditation_flute', 'krishna_flute', 'om_chanting', 'rain_sounds'].map((tone) => (
-              <TouchableOpacity
-                key={tone}
-                style={[styles.menuItem, { width: '100%', borderBottomWidth: 0, paddingVertical: 12 }]}
-                onPress={() => updateRingtone(tone)}
-              >
-                <MaterialCommunityIcons
-                  name={alarmRingtone === tone ? "radiobox-marked" : "radiobox-blank"}
-                  size={24}
-                  color={THEME_COLOR}
-                />
-                <Text style={[styles.menuText, { marginLeft: 12 }]}>
-                  {tone.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-                </Text>
-              </TouchableOpacity>
-            ))}
-            <TouchableOpacity style={[styles.button, styles.buttonClose, { marginTop: 16 }]} onPress={() => setRingtoneModalVisible(false)}>
-              <Text style={styles.textStyle}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
 
       {/* Developer Modal */}
       <Modal

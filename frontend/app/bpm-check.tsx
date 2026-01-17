@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -255,7 +256,7 @@ export default function BPMCheck() {
         <CameraView
           style={styles.camera}
           facing="back"
-          enableTorch={checking} // Turn on flashlight during measurement
+          enableTorch={Platform.OS !== 'web' && checking} // Turn on flashlight during measurement
         >
           <View style={styles.overlay} />
         </CameraView>
