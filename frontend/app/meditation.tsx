@@ -364,7 +364,14 @@ export default function Meditation() {
               'Exiting now will end your session.',
               [
                 { text: 'Resume', style: 'cancel', onPress: handleResume },
-                { text: 'Exit', style: 'destructive', onPress: () => { handleStop(); router.back(); } }
+                {
+                  text: 'Exit',
+                  style: 'destructive',
+                  onPress: async () => {
+                    await handleStop();
+                    router.back();
+                  }
+                }
               ]
             );
           }}

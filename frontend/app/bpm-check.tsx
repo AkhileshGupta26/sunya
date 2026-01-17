@@ -180,16 +180,33 @@ export default function BPMCheck() {
           bpm_reading: measuredBpm
         });
 
-        setTimeout(() => {
-          router.push({
-            pathname: '/detox',
-            params: {
-              autoStart: 'true',
-              duration: data.next_detox_duration || 1800
+        // Logic Update: Do NOT force Detox. Allow repeatable sessions.
+        Alert.alert(
+          'Session Complete',
+          `BPM Verified: ${measuredBpm}. You earned points!`,
+          [
+            {
+              text: 'Start Detox Mode',
+              onPress: () => {
+                router.push({
+                  pathname: '/detox',
+                  params: {
+                    autoStart: 'true',
+                    duration: data.next_detox_duration || 1800
+                  }
+                });
+              }
+            },
+            {
+              text: 'Meditate Again',
+              style: 'cancel',
+              onPress: () => {
+                // Return to meditation screen (reset) or home
+                router.back();
+              }
             }
-          });
-          Alert.alert('Namaste', `Session complete! BPM: ${measuredBpm}. Starting Digital Detox...`);
-        }, 1500);
+          ]
+        );
 
       } catch (error) {
         console.error('BPM Check Complete Error', error);
