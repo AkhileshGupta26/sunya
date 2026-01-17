@@ -136,6 +136,8 @@ export default function Meditation() {
     }
   }, [meditating, paused]);
 
+  const [probeTriggered, setProbeTriggered] = useState(false);
+
   useEffect(() => {
     let interval: any;
     if (meditating && !paused && timeRemaining > 0) {
@@ -148,15 +150,18 @@ export default function Meditation() {
           return prev - 1;
         });
 
-        // Randomly trigger awareness probe (1% chance per second)
-        if (!awarenessProbe && Math.random() < 0.01) {
+        // Trigger awareness probe ONLY ONCE per session (randomly)
+        // Check if not already triggered, not currently probing, and random chance
+        if (!probeTriggered && !awarenessProbe && Math.random() < 0.005) {
+          setProbeTriggered(true);
           setAwarenessProbe(true);
           triggerHaptic('warning');
+          // Ideally play a bell sound here if asset available
         }
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [meditating, paused, timeRemaining, awarenessProbe]);
+  }, [meditating, paused, timeRemaining, awarenessProbe, probeTriggered]);
 
   // Break Timer
   useEffect(() => {
@@ -219,6 +224,7 @@ export default function Meditation() {
 
       setMeditating(true);
       setPaused(false);
+      setProbeTriggered(false); // Reset probe for new session
       setStartTime(new Date());
       // timeRemaining is already set by duration selector, don't reset it
       setBreakTimeRemaining(2 * 60);
