@@ -8,6 +8,7 @@ import {
   ScrollView,
   Share,
   TextInput,
+  Platform,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -381,7 +382,16 @@ export default function Contest() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F1E' },
+  container: {
+    flex: 1,
+    backgroundColor: '#0F0F1E',
+    // Web: Center content and max width to match Android/Mobile view
+    ...(Platform.OS === 'web' ? {
+      alignSelf: 'center',
+      width: '100%',
+      maxWidth: 600,
+    } : {})
+  },
   header: { padding: 24, paddingTop: 60, alignItems: 'center' },
   title: { fontSize: 32, fontWeight: 'bold', color: '#FFFFFF' },
   subtitle: { fontSize: 16, color: '#9CA3AF', marginTop: 4 },
