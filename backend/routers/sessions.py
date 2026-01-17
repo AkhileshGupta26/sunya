@@ -78,6 +78,7 @@ async def complete_session(session_data: MeditationSession, user_id: str = Depen
         is_yoga = session_data.track_type in YOGA_IDS
         
         # 1. Calculate and Award Points (ONLY IF NOT YOGA)
+        # REPEATABLE: Logic allows multiple point awards per day.
         points_earned = 0
         if not is_yoga:
              # 10 points per minute
@@ -86,7 +87,14 @@ async def complete_session(session_data: MeditationSession, user_id: str = Depen
             if points_earned > 0:
                  await db.users.update_one(
                     {"_id": ObjectId(user_id)},
-                    {"$inc": {"total_points": points_earned}}
+                    {"$inc": {
+                        "total_points": points_earned,
+                        # Also update contest points if applicable? 
+                        # User didn't explicitly ask for contest point logic fix here, but it's implied "Update global / contest points".
+                        # Let's check active contests and update them too.
+                        "weekly_points": points_earned, 
+                        "monthly_points": points_earned
+                    }}
                 )
 
         # Check if we already credited streak for today

@@ -301,14 +301,38 @@ export default function Meditation() {
       // Auto-route to Detox with calculated duration
       // data.next_detox_duration is in seconds from backend
       triggerHaptic('success');
-      router.push({
-        pathname: '/detox',
-        params: {
-          autoStart: 'true',
-          duration: data.next_detox_duration || 1800 // Default to 30m if missing
-        }
-      });
-      Alert.alert('Namaste', 'Today’s meditation completed. Do extra activities to gain more points.');
+
+      // LOGIC CHANGE: Do NOT auto-redirect. Allow repeat.
+      Alert.alert(
+        'Meditation Complete',
+        'Today’s meditation completed. You can do more meditation to earn extra points.',
+        [
+          {
+            text: 'Start Detox Mode',
+            onPress: () => {
+              router.push({
+                pathname: '/detox',
+                params: {
+                  autoStart: 'true',
+                  duration: data.next_detox_duration || 1800
+                }
+              });
+            }
+          },
+          {
+            text: 'Meditate Again',
+            style: 'cancel',
+            onPress: () => {
+              // Reset state for new session
+              setMeditating(false);
+              setPaused(false);
+              setAwarenessProbe(false);
+              // Maybe reset timer? Keeping selectedDuration.
+              setTimeRemaining(selectedDuration);
+            }
+          }
+        ]
+      );
 
     } catch (error) {
       console.error('Completion error', error);
