@@ -117,8 +117,20 @@ export default function Leaderboard() {
         );
     }
 
+    // Filter Logic: Top 3 + Me
+    const filteredLeaderboard: any[] = [];
+    const top3 = leaderboard.slice(0, 3);
+    filteredLeaderboard.push(...top3);
+
+    const me = leaderboard.find((u: any) => u.is_me);
+    // If I'm not in top 3, add me
+    if (me && me.rank > 3) {
+        // Add divider if gap? (Optional, kept simple for now)
+        filteredLeaderboard.push(me);
+    }
+
     // No Active Contest View
-    if (activeContest === 'none' && !loading) {
+    if (activeContest === 'none' && !loading && contestType !== 'global') {
         return (
             <View style={styles.container}>
                 <View style={styles.header}>
@@ -131,9 +143,9 @@ export default function Leaderboard() {
                 <View style={styles.emptyContainer}>
                     <MaterialCommunityIcons name="trophy-variant-outline" size={80} color="#4B5563" />
                     <Text style={styles.emptyTitle}>No Active Contest</Text>
-                    <Text style={styles.emptyText}>Join a Weekly or Monthly contest to see rankings!</Text>
+                    <Text style={styles.emptyText}>Join this contest to see rankings!</Text>
 
-                    <TouchableOpacity style={[styles.joinButton, { backgroundColor: THEME_COLOR }]} onPress={() => router.push('/(tabs)/circle')}>
+                    <TouchableOpacity style={[styles.joinButton, { backgroundColor: THEME_COLOR }]} onPress={() => router.push('/(tabs)/contest')}>
                         <Text style={styles.joinButtonText}>Go to Contest Arena</Text>
                     </TouchableOpacity>
                 </View>
@@ -154,7 +166,7 @@ export default function Leaderboard() {
             </View>
 
             <FlatList
-                data={leaderboard}
+                data={filteredLeaderboard}
                 renderItem={renderItem}
                 keyExtractor={(item: any) => item.id || Math.random().toString()}
                 contentContainerStyle={styles.listContent}

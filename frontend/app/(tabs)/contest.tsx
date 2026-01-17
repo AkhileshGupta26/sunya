@@ -269,38 +269,72 @@ export default function Contest() {
     router.push({ pathname: '/leaderboard', params: { type } });
   };
 
-  const renderCard = (type: 'weekly' | 'monthly', title: string, subtitle: string, icon: any, colors: string[]) => {
-    const isActive = activeContests.includes(type);
-    const isWeeklyResults = type === 'weekly' && !isActive && (new Date().getDay() === 0 || new Date().getDay() === 6);
+  const renderContestRow = () => {
+    // Filter active contests only
+    const joinedContests = activeContests.filter(id => id === 'weekly' || id === 'monthly');
+
+    if (joinedContests.length === 0) {
+      return (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>You haven't joined any contests yet.</Text>
+          <Text style={styles.emptySubtext}>Join below to compete!</Text>
+        </View>
+      );
+    }
 
     return (
+      <View style={styles.rowContainer}>
+        {joinedContests.includes('weekly') && renderActiveCard('weekly', 'Weekly', 'trophy', ['#F59E0B', '#D97706'])}
+        {joinedContests.includes('monthly') && renderActiveCard('monthly', 'Monthly', 'crown', ['#8B5CF6', '#6D28D9'])}
+      </View>
+    );
+  };
+
+  const renderActiveCard = (type: string, title: string, icon: any, colors: string[]) => {
+    return (
       <TouchableOpacity
-        style={styles.contestCard}
-        onPress={() => isActive ? openLeaderboard(type) : handleJoinContest(type)}
-        disabled={loading}
+        key={type}
+        style={styles.rowCard}
+        onPress={() => openLeaderboard(type)}
       >
-        <LinearGradient colors={colors as any} style={styles.contestGradient}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <View>
-              <Text style={styles.contestTitle}>{title}</Text>
-              <Text style={styles.contestSubtitle}>{isActive ? "You are participating!" : isWeeklyResults ? "Results Period" : subtitle}</Text>
-              {isActive && (
-                <View style={{ marginTop: 8, backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start' }}>
-                  <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>ACTIVE • TAP TO VIEW</Text>
-                </View>
-              )}
-              {isWeeklyResults && (
-                <View style={{ marginTop: 8, backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start' }}>
-                  <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>STARTS MONDAY</Text>
-                </View>
-              )}
-            </View>
-            <MaterialCommunityIcons name={isActive ? "check-circle" : icon} size={48} color="white" style={{ opacity: 0.9 }} />
+        <LinearGradient colors={colors as any} style={styles.rowGradient}>
+          <MaterialCommunityIcons name={icon} size={32} color="white" style={{ marginBottom: 8 }} />
+          <Text style={styles.rowTitle}>{title}</Text>
+          <View style={styles.statusBadge}>
+            <Text style={styles.statusText}>ACTIVE</Text>
           </View>
         </LinearGradient>
       </TouchableOpacity>
-    );
-  };
+    )
+  }
+
+  const renderJoinSection = () => {
+    // Show cards for contests NOT joined
+    const available = ['weekly', 'monthly'].filter(id => !activeContests.includes(id));
+
+    if (available.length === 0) return null;
+
+    return (
+      <View style={styles.joinSection}>
+        <Text style={styles.sectionTitle}>Available Contests</Text>
+        {available.map(type => (
+          <View key={type} style={styles.joinRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.joinTitle}>{type === 'weekly' ? 'Weekly Sprint' : 'Monthly Marathon'}</Text>
+              <Text style={styles.joinDesc}>{type === 'weekly' ? '7 Days • High Intensity' : '30 Days • Persistence'}</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.joinButton, { backgroundColor: THEME_COLOR }]}
+              onPress={() => handleJoinContest(type as any)}
+              disabled={loading}
+            >
+              <Text style={styles.joinButtonText}>Join</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </View>
+    )
+  }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
@@ -310,16 +344,14 @@ export default function Contest() {
         <Text style={styles.subtitle}>Compete with others globally</Text>
       </View>
 
-      {/* Contest Cards */}
-      <View style={styles.activeContainer}>
-        {renderCard('weekly', 'Weekly Contest', 'Top the charts this week', 'trophy', ['#F59E0B', '#D97706'])}
-        {renderCard('monthly', 'Monthly Marathon', 'Consistency is key', 'crown', ['#8B5CF6', '#6D28D9'])}
+      {/* Active Contests (Row) */}
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionTitle}>Your Contests</Text>
+        {renderContestRow()}
       </View>
 
-      {/* Social Link */}
-      <TouchableOpacity style={styles.socialLink} onPress={() => Alert.alert("Coming Soon", "Social features are being revamped.")}>
-        <Text style={{ color: '#6B7280' }}>Looking for Family Circles?</Text>
-      </TouchableOpacity>
+      {/* Available to Join */}
+      {renderJoinSection()}
 
       {/* Social Circle Section */}
       <View style={styles.sectionHeader}>
@@ -327,7 +359,6 @@ export default function Contest() {
       </View>
 
       <CircleManager token={token} API_URL={API_URL} themeColor={THEME_COLOR} />
-
 
       <View style={styles.infoSection}>
         <Text style={styles.infoTitle}>How it works</Text>
@@ -355,17 +386,24 @@ const styles = StyleSheet.create({
   title: { fontSize: 32, fontWeight: 'bold', color: '#FFFFFF' },
   subtitle: { fontSize: 16, color: '#9CA3AF', marginTop: 4 },
 
-  contestRow: { paddingHorizontal: 24, gap: 16, marginTop: 24, flexDirection: 'row' },
-  contestCard: { flex: 1, borderRadius: 20, overflow: 'hidden', height: 160, marginBottom: 16 },
-  contestGradient: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  contestTitle: { color: 'white', fontWeight: 'bold', fontSize: 24, marginTop: 12 },
-  contestSubtitle: { color: 'white', fontSize: 14, opacity: 0.9 },
+  sectionContainer: { marginTop: 0, paddingHorizontal: 24 },
+  rowContainer: { flexDirection: 'row', gap: 12, marginTop: 12 },
+  emptyState: { padding: 20, alignItems: 'center', backgroundColor: '#1F1F2E', borderRadius: 16, marginTop: 12 },
+  emptyText: { color: 'white', fontWeight: 'bold' },
+  emptySubtext: { color: '#9CA3AF', fontSize: 12 },
 
-  activeContainer: { paddingHorizontal: 24, marginTop: 24 },
-  activeCard: { borderRadius: 24, padding: 32, alignItems: 'flex-start', justifyContent: 'center', height: 200 },
-  activeLabel: { color: 'white', fontSize: 12, opacity: 0.8, letterSpacing: 1, fontWeight: 'bold' },
-  activeTitle: { color: 'white', fontSize: 28, fontWeight: 'bold', marginTop: 8 },
-  activeDesc: { color: 'white', marginTop: 16, fontSize: 16, opacity: 0.9 },
+  rowCard: { flex: 1, height: 140, borderRadius: 16, overflow: 'hidden' },
+  rowGradient: { flex: 1, padding: 16, justifyContent: 'center', alignItems: 'center' },
+  rowTitle: { color: 'white', fontWeight: 'bold', fontSize: 18, marginBottom: 8 },
+  statusBadge: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
+  statusText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
+
+  joinSection: { marginTop: 32, paddingHorizontal: 24 },
+  joinRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1F1F2E', padding: 16, borderRadius: 16, marginBottom: 12, borderWidth: 1, borderColor: '#2D2D3D' },
+  joinTitle: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+  joinDesc: { color: '#9CA3AF', fontSize: 12, marginTop: 2 },
+  joinButton: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
+  joinButtonText: { color: 'white', fontWeight: 'bold' },
 
   socialLink: { marginTop: 32, alignItems: 'center' },
 

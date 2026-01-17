@@ -151,21 +151,16 @@ export default function Yoga() {
             });
 
             if (response.ok) {
-                const data = await response.json();
-                router.push({
-                    pathname: '/detox',
-                    params: {
-                        autoStart: 'true',
-                        duration: data.next_detox_duration || 1800
-                    }
-                });
-                Alert.alert('Namaste', 'Session completed. Your mind is clearer.');
+                // const data = await response.json(); // Data unused if no detox
+                Alert.alert('Session Complete', 'You have completed this yoga practice.', [
+                    { text: 'OK', onPress: () => exitPractice() }
+                ]);
             }
         } catch (error) {
             console.error('Completion error', error);
             Alert.alert('Error', 'Could not save session.');
         }
-        setIsPracticing(false);
+        // setIsPracticing(false); // Moved to OnPress OK
     };
 
     if (isPracticing && selectedTrack && currentStep) {
