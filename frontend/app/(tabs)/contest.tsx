@@ -313,13 +313,13 @@ export default function Contest() {
 
       {/* Contests Stack */}
       <View style={styles.sectionContainer}>
-        {/* Weekly Contest Card - Matches Screenshot "Orange" */}
+        {/* Weekly Contest Card */}
         {renderContestCard(
           "Weekly Contest",
-          "Results Period", // Or "High Intensity" based on state
-          "STARTS MONDAY",  // Or "ACTIVE"
+          "Results Period",
+          activeContests.includes('weekly') ? "JOINED ✅" : "STARTS MONDAY",
           "trophy",
-          ['#F59E0B', '#EA580C'], // Orange/Amber
+          ['#F59E0B', '#EA580C'],
           () => openLeaderboard('weekly'),
           true
         )}
@@ -328,10 +328,10 @@ export default function Contest() {
         {renderContestCard(
           "21-Day Challenge",
           "Build a life-changing habit",
-          "JOIN NOW • 21 DAYS",
-          "check-circle", // Start implies check? Or 'crown'
-          ['#8B5CF6', '#6D28D9'], // Purple/Violet
-          () => openLeaderboard('monthly'),
+          activeContests.includes('monthly') ? "ACTIVE (DAY 1)" : "JOIN NOW • 21 DAYS",
+          "check-circle",
+          ['#8B5CF6', '#6D28D9'],
+          () => activeContests.includes('monthly') ? openLeaderboard('monthly') : handleJoinContest('monthly'),
           false
         )}
 

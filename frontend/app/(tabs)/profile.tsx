@@ -349,7 +349,7 @@ export default function Profile() {
         <Text style={styles.sectionTitle}>Meditation Verification</Text>
         <View style={styles.menuItem}>
           <MaterialCommunityIcons name="heart-pulse" size={24} color={THEME_COLOR} />
-          <Text style={styles.menuText}>BPM Check</Text>
+          <Text style={styles.menuText}>BPM Check (Experimental)</Text>
           <Switch
             value={bpmCheck}
             onValueChange={toggleBpm}
@@ -405,6 +405,12 @@ export default function Profile() {
           <Text style={styles.menuText}>Zen Passes Explained</Text>
           <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
         </TouchableOpacity>
+
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/privacy-policy')}>
+          <MaterialCommunityIcons name="shield-lock-outline" size={24} color={THEME_COLOR} />
+          <Text style={styles.menuText}>Privacy Policy</Text>
+          <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+        </TouchableOpacity>
       </View>
 
       {/* ... Rest of render ... */}
@@ -425,17 +431,33 @@ export default function Profile() {
 
       <Text style={styles.version}>Version 1.0.0</Text>
 
-      <View style={{ alignItems: 'center', marginBottom: 40 }}>
-        <Text style={{ color: '#6B7280', fontSize: 12 }}>Made with ❤️ in India</Text>
-        <View style={{ flexDirection: 'row', gap: 16, marginTop: 8 }}>
-          <TouchableOpacity onPress={() => router.push('/privacy-policy')}>
-            <Text style={{ color: THEME_COLOR, fontSize: 12, fontWeight: '600' }}>Privacy Policy</Text>
-          </TouchableOpacity>
-          <Text style={{ color: '#333' }}>|</Text>
-          <TouchableOpacity onPress={() => router.push('/privacy-policy')}>
-            <Text style={{ color: THEME_COLOR, fontSize: 12, fontWeight: '600' }}>Know Developer</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={{ alignItems: 'center', marginBottom: 40, marginTop: -20 }}>
+        <TouchableOpacity
+          onPress={() => router.push('/privacy-policy')}
+          style={{
+            backgroundColor: '#000',
+            borderWidth: 1,
+            borderColor: '#333',
+            paddingHorizontal: 20,
+            paddingVertical: 12,
+            borderRadius: 8,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10
+          }}
+        >
+          <MaterialCommunityIcons name="code-braces" size={20} color={THEME_COLOR} />
+          <View>
+            <Text style={{ color: '#FFF', fontSize: 12, fontWeight: 'bold', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>
+              DEVELOPER
+            </Text>
+            <Text style={{ color: '#666', fontSize: 10, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>
+              AKHILESH GUPTA
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={16} color="#444" />
+        </TouchableOpacity>
+        <Text style={{ color: '#333', fontSize: 10, marginTop: 12, fontStyle: 'italic' }}>Made with ❤️ in India</Text>
       </View>
 
       {/* Wake Time Modal */}
