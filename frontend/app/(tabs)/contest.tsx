@@ -213,6 +213,7 @@ export default function Contest() {
   const [loading, setLoading] = useState(false);
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(ROUTINE_CATEGORIES[0]?.id || '');
 
   useEffect(() => {
     if (user?.active_contests) {
@@ -341,27 +342,59 @@ export default function Contest() {
         <View style={{ marginTop: 24, marginBottom: 24 }}>
           <Text style={[styles.sectionTitle, { marginBottom: 16, paddingHorizontal: 4 }]}>Routines of Greatness</Text>
 
-          {ROUTINE_CATEGORIES.map((category) => (
-            <View key={category.id} style={{ marginBottom: 24 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 4 }}>
-                <Text style={{ color: '#D1D5DB', fontSize: 16, fontWeight: 'bold' }}>{category.title}</Text>
-                {/* Optional: Add "See All" if list is long */}
+          {/* Category Pills */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginBottom: 20 }}
+            contentContainerStyle={{ paddingHorizontal: 4, gap: 12 }}
+          >
+            {ROUTINE_CATEGORIES.map((category) => {
+              const isActive = selectedCategory === category.id;
+              return (
+                <TouchableOpacity
+                  key={category.id}
+                  onPress={() => setSelectedCategory(category.id)}
+                  style={[
+                    styles.categoryPill,
+                    isActive && { backgroundColor: THEME_COLOR, borderColor: THEME_COLOR }
+                  ]}
+                >
+                  <Text style={[
+                    styles.categoryPillText,
+                    isActive ? { color: 'white' } : { color: '#9CA3AF' }
+                  ]}>
+                    {category.title}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {/* Selected Category Content */}
+          {(() => {
+            const currentCategory = ROUTINE_CATEGORIES.find(c => c.id === selectedCategory);
+            if (!currentCategory) return null;
+
+            return (
+              <View>
+                <Text style={styles.categoryDescription}>{currentCategory.description}</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 4 }}>
+                  {currentCategory.routines.map((routine) => (
+                    <View key={routine.id} style={{ marginRight: 12 }}>
+                      <RoutineCard
+                        routine={routine}
+                        onPress={(r) => {
+                          setSelectedRoutine(r);
+                          setIsModalVisible(true);
+                        }}
+                      />
+                    </View>
+                  ))}
+                </ScrollView>
               </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 4 }}>
-                {category.routines.map((routine) => (
-                  <View key={routine.id} style={{ marginRight: 12 }}>
-                    <RoutineCard
-                      routine={routine}
-                      onPress={(r) => {
-                        setSelectedRoutine(r);
-                        setIsModalVisible(true);
-                      }}
-                    />
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
-          ))}
+            );
+          })()}
         </View>
       </View>
 
@@ -486,5 +519,26 @@ const styles = StyleSheet.create({
   cancelButton: { flex: 1, padding: 12, alignItems: 'center' },
   cancelText: { color: '#9CA3AF' },
   confirmButton: { flex: 1, backgroundColor: '#7C3AED', padding: 12, borderRadius: 8, alignItems: 'center' },
-  confirmText: { color: 'white', fontWeight: 'bold' }
+  confirmText: { color: 'white', fontWeight: 'bold' },
+
+  // Category Pills
+  categoryPill: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#374151',
+    backgroundColor: '#1F1F2E',
+  },
+  categoryPillText: {
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  categoryDescription: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    marginBottom: 16,
+    paddingHorizontal: 4,
+    lineHeight: 20,
+  }
 });
