@@ -22,8 +22,10 @@ interface User {
   settings_alarm_enabled?: boolean;
   settings_alarm_time?: string;
   settings_alarm_ringtone?: string;
+  settings_notifications_enabled?: boolean;
   profile_picture?: string;
   isGuest?: boolean;
+  active_contests?: string[];
 }
 
 interface AuthContextType {

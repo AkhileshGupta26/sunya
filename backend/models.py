@@ -33,6 +33,7 @@ class UserResponse(BaseModel):
     settings_alarm_enabled: bool = False
     settings_alarm_time: Optional[str] = "06:00"
     settings_alarm_ringtone: str = "meditation_flute"
+    settings_notifications_enabled: bool = False
     active_contests: List[str] = [] # Replaces active_contest
     contest_joined_weekly_at: Optional[str] = None
     contest_joined_monthly_at: Optional[str] = None
@@ -48,6 +49,7 @@ class UserSettingsUpdate(BaseModel):
     alarm_enabled: Optional[bool] = None
     alarm_time: Optional[str] = None
     alarm_ringtone: Optional[str] = None
+    notifications_enabled: Optional[bool] = None
 
 class WakeTimeUpdate(BaseModel):
     wake_time: str  # Format: "HH:MM"

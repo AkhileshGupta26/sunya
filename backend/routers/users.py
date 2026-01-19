@@ -54,8 +54,14 @@ async def update_user_profile(profile_data: UserProfileUpdate, user_id: str = De
         settings_alarm_enabled=updated_user.get("settings_alarm_enabled", False),
         settings_alarm_time=updated_user.get("settings_alarm_time", "06:00"),
         settings_alarm_ringtone=updated_user.get("settings_alarm_ringtone", "meditation_flute"),
-        active_contest=updated_user.get("active_contest", "none"),
-        contest_joined_at=updated_user.get("contest_joined_at"),
+        settings_alarm_time=updated_user.get("settings_alarm_time", "06:00"),
+        settings_alarm_ringtone=updated_user.get("settings_alarm_ringtone", "meditation_flute"),
+        settings_notifications_enabled=updated_user.get("settings_notifications_enabled", False),
+        active_contests=updated_user.get("active_contests", []),
+        contest_joined_weekly_at=updated_user.get("contest_joined_weekly_at"),
+        contest_joined_monthly_at=updated_user.get("contest_joined_monthly_at"),
+        weekly_points=updated_user.get("weekly_points", 0),
+        monthly_points=updated_user.get("monthly_points", 0),
         badges=updated_user.get("badges", [])
     )
 
@@ -74,6 +80,8 @@ async def update_settings(settings: UserSettingsUpdate, user_id: str = Depends(g
         update_data["settings_alarm_time"] = settings.alarm_time
     if settings.alarm_ringtone is not None:
         update_data["settings_alarm_ringtone"] = settings.alarm_ringtone
+    if settings.notifications_enabled is not None:
+        update_data["settings_notifications_enabled"] = settings.notifications_enabled
     
     if update_data:
         await db.users.update_one(

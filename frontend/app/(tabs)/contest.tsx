@@ -111,7 +111,7 @@ const CircleManager = ({ token, API_URL, themeColor }: { token: string | null, A
 
   if (myCircle) {
     return (
-      <View style={styles.circleCard}>
+      <View style={[styles.circleCard, { borderColor: themeColor }]}>
         <View style={styles.circleHeader}>
           <View>
             <Text style={styles.circleName}>{myCircle.name}</Text>
@@ -122,14 +122,14 @@ const CircleManager = ({ token, API_URL, themeColor }: { token: string | null, A
         <View style={styles.harmonyContainer}>
           <Text style={styles.harmonyLabel}>Harmony Score</Text>
           <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${myCircle.harmony_score}%` }]} />
+            <View style={[styles.progressFill, { width: `${myCircle.harmony_score}%`, backgroundColor: themeColor }]} />
           </View>
-          <Text style={styles.harmonyValue}>{Math.round(myCircle.harmony_score)}%</Text>
+          <Text style={[styles.harmonyValue, { color: themeColor }]}>{Math.round(myCircle.harmony_score)}%</Text>
         </View>
         <Text style={styles.membersLabel}>Members ({myCircle.members.length})</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.membersRow}>
           {myCircle.members.map((m: any, i: number) => (
-            <View key={i} style={styles.memberChip}>
+            <View key={i} style={[styles.memberChip, { borderColor: `${themeColor}40` }]}>
               <Text style={styles.memberText}>{m.name.split(' ')[0]}</Text>
             </View>
           ))}
@@ -193,20 +193,20 @@ const CircleManager = ({ token, API_URL, themeColor }: { token: string | null, A
 
   return (
     <View style={styles.circleOptions}>
-      <TouchableOpacity style={styles.optionButton} onPress={() => setViewMode('create')}>
-        <MaterialCommunityIcons name="plus-circle" size={24} color="white" />
-        <Text style={styles.optionText}>Create Circle</Text>
+      <TouchableOpacity style={[styles.optionButton, { borderColor: themeColor }]} onPress={() => setViewMode('create')}>
+        <MaterialCommunityIcons name="plus-circle" size={32} color={themeColor} />
+        <Text style={[styles.optionText, { color: themeColor }]}>Create Circle</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.optionButton} onPress={() => setViewMode('join')}>
-        <MaterialCommunityIcons name="login" size={24} color="white" />
-        <Text style={styles.optionText}>Join Circle</Text>
+      <TouchableOpacity style={[styles.optionButton, { borderColor: themeColor }]} onPress={() => setViewMode('join')}>
+        <MaterialCommunityIcons name="login" size={32} color={themeColor} />
+        <Text style={[styles.optionText, { color: themeColor }]}>Join Circle</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
 export default function Contest() {
-  const { token, user } = useAuth();
+  const { token, user, refreshUser } = useAuth();
   const router = useRouter();
   const THEME_COLOR = useThemeColor();
   const [activeContests, setActiveContests] = useState<string[]>([]);
@@ -215,18 +215,20 @@ export default function Contest() {
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
+    if (user?.active_contests) {
+      setActiveContests(user.active_contests);
+    }
     loadContestStatus();
-  }, []);
+  }, [user]);
 
   const loadContestStatus = async () => {
     if (!user) return;
     try {
-      const response = await fetch(`${API_URL}/api/user/me`, {
+      const response = await fetch(`${API_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
         const data = await response.json();
-        // Handle migration fallback: if backend hasn't migrated yet (it handles in-memory), use returned value
         setActiveContests(data.active_contests || []);
       }
     } catch (e) { console.error(e); }
@@ -256,7 +258,8 @@ export default function Contest() {
 
             if (res.ok) {
               const data = await res.json();
-              setActiveContests(data.active_contests); // Update list
+              setActiveContests(data.active_contests); // Update local
+              refreshUser(); // Update global context
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               Alert.alert('Success', `You joined the ${type} contest!`);
             } else {

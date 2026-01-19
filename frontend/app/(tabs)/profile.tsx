@@ -69,8 +69,8 @@ export default function Profile() {
       setCameraEnabled(user.settings_camera_enabled || false);
       setBpmCheck(user.settings_bpm_check || false);
       setTimerCheck(user.settings_timer_check || false);
-
-      setTimerCheck(user.settings_timer_check || false);
+      // @ts-ignore
+      setNotificationsEnabled(user.settings_notifications_enabled || false);
 
       // Init edit state
       setEditName(user.name);
@@ -212,6 +212,11 @@ export default function Profile() {
   const toggleTimer = (value: boolean) => {
     setTimerCheck(value);
     updateSettings({ timer_check: value });
+  };
+
+  const toggleNotifications = (value: boolean) => {
+    setNotificationsEnabled(value);
+    updateSettings({ notifications_enabled: value });
   };
 
   const updateWakeTime = async () => {
@@ -384,7 +389,7 @@ export default function Profile() {
           <Text style={styles.menuText}>Notifications</Text>
           <Switch
             value={notificationsEnabled}
-            onValueChange={setNotificationsEnabled}
+            onValueChange={toggleNotifications}
             trackColor={{ false: "#767577", true: THEME_COLOR }}
             thumbColor={notificationsEnabled ? "#FFFFFF" : "#f4f3f4"}
           />
