@@ -18,11 +18,11 @@ async def join_contest(data: JoinContestRequest, user_id: str = Depends(get_curr
 
     # Time/Schedule Check for Weekly
     # Monday=0, Sunday=6
-    if data.contest_type == "weekly":
-        weekday = datetime.utcnow().weekday()
-        if weekday >= 5: # Saturday or Sunday
-            # User specifically asked for "moving part" or block on Sat/Sun
-            raise HTTPException(status_code=400, detail="Weekly contest starts Monday! Results are being calculated.")
+    # if data.contest_type == "weekly":
+    #     weekday = datetime.utcnow().weekday()
+    #     if weekday >= 5: # Saturday or Sunday
+    #         # User specifically asked for "moving part" or block on Sat/Sun
+    #         raise HTTPException(status_code=400, detail="Weekly contest starts Monday! Results are being calculated.")
 
     user = await db.users.find_one({"_id": ObjectId(user_id)})
     if not user:
@@ -37,21 +37,39 @@ async def join_contest(data: JoinContestRequest, user_id: str = Depends(get_curr
          # Let's just return success if it's Monday-Friday.
          return {"success": True, "active_contests": active_contests}
 
-    # Add to list
+    # Weekly Contest Logic: Checks current week number to ensure fresh start
+    current_week = datetime.utcnow().isocalendar()[1]
+    
     update_ops = {
         "$addToSet": {"active_contests": data.contest_type}
     }
     
     if data.contest_type == "weekly":
-        update_ops["$set"] = {
-            "contest_joined_weekly_at": datetime.utcnow().isoformat(),
-            "weekly_points": 0 # Reset weekly points on new join
-        }
-    else:
-        update_ops["$set"] = {
+        # Check if user has data from a previous week
+        last_week_joined = user.get("weekly_contest_week", 0)
+        
+        if last_week_joined != current_week:
+            # New week, reset points
+            update_ops["$set"] = {
+                "contest_joined_weekly_at": datetime.utcnow().isoformat(),
+                "weekly_points": 0,
+                "weekly_contest_week": current_week
+            }
+        else:
+             # Re-joining same week (maybe accidentally left?), keep points
+             update_ops["$set"] = {
+                "contest_joined_weekly_at": datetime.utcnow().isoformat()
+             }
+             
+    elif data.contest_type == "monthly":
+         # 21-Day Challenge Logic (mapped to 'monthly' internally)
+         # Check if they are restarting after completion
+         update_ops["$set"] = {
             "contest_joined_monthly_at": datetime.utcnow().isoformat(),
-            "monthly_points": 0 # Reset monthly points
-        }
+            # Only reset if they want a fresh start or it's their first time
+            # For now, we assume 'Join' means Start/Restart
+            "monthly_points": 0 
+         }
 
     # Execute
     await db.users.update_one(

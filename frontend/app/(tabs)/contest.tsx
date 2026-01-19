@@ -17,6 +17,10 @@ import { useRouter } from 'expo-router';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import { RoutinesEntryCard } from '../../components/home/RoutinesEntryCard';
+import { ROUTINE_CATEGORIES, Routine } from '@/utils/routinesData';
+import RoutineCard from '@/components/routines/RoutineCard';
+import RoutineDetailModal from '@/components/routines/RoutineDetailModal';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -207,6 +211,8 @@ export default function Contest() {
   const THEME_COLOR = useThemeColor();
   const [activeContests, setActiveContests] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
     loadContestStatus();
@@ -317,17 +323,41 @@ export default function Contest() {
           true
         )}
 
-        {/* Monthly Marathon Card - Matches Screenshot "Purple" */}
+        {/* 21-Day Challenge Card */}
         {renderContestCard(
-          "Monthly Marathon",
-          "You are participating!",
-          "ACTIVE • TAP TO VIEW",
+          "21-Day Challenge",
+          "Build a life-changing habit",
+          "JOIN NOW • 21 DAYS",
           "check-circle", // Start implies check? Or 'crown'
           ['#8B5CF6', '#6D28D9'], // Purple/Violet
           () => openLeaderboard('monthly'),
           false
         )}
+
+        <View style={{ marginTop: 24, marginBottom: 8 }}>
+          <Text style={[styles.sectionTitle, { marginBottom: 12, paddingHorizontal: 4 }]}>Routine of Greatness</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 4 }}>
+            {/* Feature Cricket Legends or CEOs as context */}
+            {ROUTINE_CATEGORIES.find(c => c.id === 'cricket')?.routines.map((routine) => (
+              <View key={routine.id} style={{ marginRight: 12 }}>
+                <RoutineCard
+                  routine={routine}
+                  onPress={(r) => {
+                    setSelectedRoutine(r);
+                    setIsModalVisible(true);
+                  }}
+                />
+              </View>
+            ))}
+          </ScrollView>
+        </View>
       </View>
+
+      <RoutineDetailModal
+        isVisible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        routine={selectedRoutine}
+      />
 
       {/* Family Circles Text */}
       <View style={styles.dividerContainer}>

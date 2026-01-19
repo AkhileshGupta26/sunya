@@ -21,7 +21,6 @@ import { QuickDetoxCard } from '../../components/home/QuickDetoxCard';
 import { DailyFocus } from '../../components/home/DailyFocus';
 import { HomeSkeleton } from '../../components/home/HomeSkeleton';
 import { YogaCard } from '../../components/home/YogaCard';
-import { RoutinesEntryCard } from '../../components/home/RoutinesEntryCard';
 
 export default function Home() {
   const router = useRouter();
@@ -100,9 +99,6 @@ export default function Home() {
         <QuickDetoxCard themeColor={THEME_COLOR} />
       </View>
 
-      <View style={cardWrapperStyle}>
-        <RoutinesEntryCard themeColor={THEME_COLOR} />
-      </View>
 
     </ScrollView>
   );

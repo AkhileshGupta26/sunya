@@ -4,7 +4,17 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 
-export const RoutinesEntryCard = ({ themeColor = '#7F5AF0' }) => {
+interface RoutinesEntryCardProps {
+    themeColor?: string;
+    title?: string;
+    subtitle?: string;
+}
+
+export const RoutinesEntryCard: React.FC<RoutinesEntryCardProps> = ({
+    themeColor = '#7F5AF0',
+    title = "Routines of Greatness",
+    subtitle = "Copy habits from cricket, business & science legends."
+}) => {
     const router = useRouter();
 
     return (
@@ -20,8 +30,8 @@ export const RoutinesEntryCard = ({ themeColor = '#7F5AF0' }) => {
                     </View>
 
                     <View style={styles.textContainer}>
-                        <Text style={styles.title}>Routines of Greatness</Text>
-                        <Text style={styles.subtitle}>Copy habits from cricket, business & science legends.</Text>
+                        <Text style={styles.title}>{title}</Text>
+                        <Text style={styles.subtitle}>{subtitle}</Text>
                     </View>
 
                     <Ionicons name="chevron-forward" size={24} color="#666" />

@@ -23,6 +23,40 @@ export default function BPMCheck() {
   const [signalQuality, setSignalQuality] = useState(0);
   const [fingerDetected, setFingerDetected] = useState(false);
 
+  // --- BPM PAUSE LOGIC ---
+  // The user requested to pause BPM safely. We return early with a message.
+  // We keep the rest of the code for when it's re-enabled.
+  useEffect(() => {
+    // Only run this effect once on mount
+  }, []);
+
+  const handleSkip = () => {
+    // Navigate away safely
+    if (phase === 'before') {
+      router.replace({
+        pathname: '/meditation',
+        params: { autoStart: 'true', trackId: trackId as string }
+      });
+    } else {
+      router.back();
+    }
+  };
+
+  return (
+    <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 24 }]}>
+      <MaterialCommunityIcons name="beaker-outline" size={80} color="#F59E0B" />
+      <Text style={[styles.title, { marginBottom: 16 }]}>Experimental Feature</Text>
+      <Text style={styles.instructions}>
+        BPM tracking is currently experimental and temporarily disabled while accuracy improvements are in progress.
+      </Text>
+      <TouchableOpacity style={styles.button} onPress={handleSkip}>
+        <Text style={styles.buttonText}>Continue Without BPM</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  // --- ORIGINAL LOGIC BELOW (Unreachable while paused) ---
+
   // For BPM calculation
   const redValuesRef = useRef<number[]>([]);
   const timestampsRef = useRef<number[]>([]);
