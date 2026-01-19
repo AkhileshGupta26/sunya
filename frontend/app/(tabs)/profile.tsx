@@ -437,7 +437,7 @@ export default function Profile() {
       <Text style={styles.version}>Version 1.0.0</Text>
 
       <View style={{ alignItems: 'center', marginBottom: 40, marginTop: -20 }}>
-        <Text style={{ color: '#6B7280', fontSize: 12 }}>Made with ❤️ in India</Text>
+        <Text style={{ color: '#6B7280', fontSize: 12 }}>Made with ❤️ in India 🇮🇳</Text>
         <TouchableOpacity onPress={() => router.push('/developer')} style={{ marginTop: 8 }}>
           <Text style={{ color: THEME_COLOR, fontSize: 12, fontWeight: '600' }}>Know Developer</Text>
         </TouchableOpacity>

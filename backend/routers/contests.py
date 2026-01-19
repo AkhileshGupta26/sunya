@@ -13,6 +13,7 @@ class JoinContestRequest(BaseModel):
 
 @router.post("/join")
 async def join_contest(data: JoinContestRequest, user_id: str = Depends(get_current_user)):
+    print(f"DEBUG: User {user_id} attempting to join contest: {data.contest_type}")
     if data.contest_type not in ["weekly", "monthly"]:
         raise HTTPException(status_code=400, detail="Invalid contest type")
 
