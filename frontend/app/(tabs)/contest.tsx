@@ -338,22 +338,30 @@ export default function Contest() {
           false
         )}
 
-        <View style={{ marginTop: 24, marginBottom: 8 }}>
-          <Text style={[styles.sectionTitle, { marginBottom: 12, paddingHorizontal: 4 }]}>Routine of Greatness</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 4 }}>
-            {/* Feature Cricket Legends or CEOs as context */}
-            {ROUTINE_CATEGORIES.find(c => c.id === 'cricket')?.routines.map((routine) => (
-              <View key={routine.id} style={{ marginRight: 12 }}>
-                <RoutineCard
-                  routine={routine}
-                  onPress={(r) => {
-                    setSelectedRoutine(r);
-                    setIsModalVisible(true);
-                  }}
-                />
+        <View style={{ marginTop: 24, marginBottom: 24 }}>
+          <Text style={[styles.sectionTitle, { marginBottom: 16, paddingHorizontal: 4 }]}>Routines of Greatness</Text>
+
+          {ROUTINE_CATEGORIES.map((category) => (
+            <View key={category.id} style={{ marginBottom: 24 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 4 }}>
+                <Text style={{ color: '#D1D5DB', fontSize: 16, fontWeight: 'bold' }}>{category.title}</Text>
+                {/* Optional: Add "See All" if list is long */}
               </View>
-            ))}
-          </ScrollView>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 4 }}>
+                {category.routines.map((routine) => (
+                  <View key={routine.id} style={{ marginRight: 12 }}>
+                    <RoutineCard
+                      routine={routine}
+                      onPress={(r) => {
+                        setSelectedRoutine(r);
+                        setIsModalVisible(true);
+                      }}
+                    />
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          ))}
         </View>
       </View>
 
