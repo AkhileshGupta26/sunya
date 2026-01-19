@@ -16,7 +16,7 @@ import { Audio } from 'expo-av';
 import { useThemeColor } from '../hooks/useThemeColor';
 import { triggerHaptic } from '../utils/haptics';
 import { Platform } from 'react-native';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import LottieView from 'lottie-react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -435,13 +435,14 @@ export default function Meditation() {
         </View>
 
         <View style={[styles.meditationImageContainer, animatedStyle]}>
-          <DotLottieReact
-            src={user?.settings_gender === 'female'
-              ? "https://lottie.host/d66e81d2-5fe5-4cc8-abb4-5283462ee3c6/2FiRCfnpgp.lottie"
-              : "https://lottie.host/fdf7a741-0f0d-40cd-bdf0-63330dfe4a17/lNe0vk8p4k.lottie"
-            }
+          <LottieView
+            source={{
+              uri: user?.settings_gender === 'female'
+                ? "https://lottie.host/d66e81d2-5fe5-4cc8-abb4-5283462ee3c6/2FiRCfnpgp.lottie"
+                : "https://lottie.host/fdf7a741-0f0d-40cd-bdf0-63330dfe4a17/lNe0vk8p4k.lottie"
+            }}
             loop
-            autoplay
+            autoPlay
             style={{ width: '100%', height: 250 }}
           />
         </View>

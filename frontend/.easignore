@@ -1,19 +1,20 @@
-# Exclude heavy folders
+
+# Valid for EAS Build and Update
 node_modules/
-**/node_modules/
-node_modules
 /node_modules
+**/node_modules
 
-# Native build artifact caches (MUST IGNORE these for Bare Workflow)
-android/.gradle/
-android/app/build/
-android/build/
-
-# Expo & Tools
-.expo/
-.git/
+# Native build artifacts
+android/
+ios/
 dist/
 web-build/
+.expo/
+.git/
+
+# Backups
+android_backup/
+*_backup/
 
 # Logs
 npm-debug.log

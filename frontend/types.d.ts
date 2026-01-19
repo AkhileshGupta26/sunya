@@ -13,6 +13,9 @@ declare module 'react-native-modal' {
         animationOut?: string;
         useNativeDriver?: boolean;
         hideModalContentWhileAnimating?: boolean;
+        onSwipeComplete?: () => void;
+        swipeDirection?: string | string[];
+        propagateSwipe?: boolean;
     }
 
     export default class Modal extends Component<ModalProps> { }

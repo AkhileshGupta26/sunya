@@ -4,7 +4,7 @@
     "slug": "sunya",
     "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/adaptive_icon.png",
     "scheme": "frontend",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -20,7 +20,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/adaptive_icon.png",
         "backgroundColor": "#000000"
       },
       "package": "com.shunya.app",
@@ -32,17 +32,7 @@
         "NOTIFICATIONS",
         "SCHEDULE_EXACT_ALARM",
         "VIBRATE",
-        "WAKE_LOCK",
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "CAMERA",
-        "RECORD_AUDIO",
-        "NOTIFICATIONS",
-        "SCHEDULE_EXACT_ALARM",
-        "VIBRATE",
-        "WAKE_LOCK",
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "WAKE_LOCK"
       ],
       "runtimeVersion": "1.0.0"
     },

@@ -12,7 +12,8 @@
       "distribution": "internal",
       "android": {
         "image": "ubuntu-22.04-jdk-17-ndk-r26b"
-      }
+      },
+      "channel": "preview"
     },
     "production": {
       "autoIncrement": true,
