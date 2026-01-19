@@ -237,12 +237,8 @@ export default function Contest() {
 
   const handleJoinContest = async (type: 'weekly' | 'monthly') => {
     if (type === 'weekly') {
-      const day = new Date().getDay(); // 0 is Sunday, 6 is Saturday
-      // Rule: Open Mon(1)-Sat(6). Closed Sunday(0).
-      if (day === 0) {
-        Alert.alert("Weekly Contest Closed", "The Weekly Contest is currently calculating results.\n\nNew contest starts Monday!");
-        return;
-      }
+      // We rely on backend to enforce the "Sunday Closed" rule. 
+      // This avoids client-side timezone issues.
     }
 
     Alert.alert('Join Contest', `Join the ${type} contest?`, [

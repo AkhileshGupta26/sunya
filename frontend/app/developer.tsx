@@ -42,10 +42,17 @@ export default function Developer() {
                     </Text>
                 </View>
 
-                <TouchableOpacity onPress={handleContact} style={[styles.contactButton, { backgroundColor: THEME_COLOR }]}>
-                    <MaterialCommunityIcons name="email-outline" size={24} color="white" style={{ marginRight: 8 }} />
-                    <Text style={styles.contactButtonText}>Contact Support</Text>
-                </TouchableOpacity>
+                <View style={styles.socialRow}>
+                    <TouchableOpacity onPress={() => Linking.openURL('https://github.com/AkhileshGupta26')} style={styles.socialButton}>
+                        <MaterialCommunityIcons name="github" size={28} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => Linking.openURL('https://www.linkedin.com/in/akhilesh-gupta-26/')} style={styles.socialButton}>
+                        <MaterialCommunityIcons name="linkedin" size={28} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleContact} style={styles.socialButton}>
+                        <MaterialCommunityIcons name="email-outline" size={28} color="white" />
+                    </TouchableOpacity>
+                </View>
 
                 <View style={{ marginTop: 40, alignItems: 'center' }}>
                     <Text style={{ color: '#6B7280', fontSize: 14 }}>Made with ❤️ in India 🇮🇳</Text>
@@ -137,5 +144,20 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: 'bold',
         fontSize: 16,
+    },
+    socialRow: {
+        flexDirection: 'row',
+        gap: 20,
+        marginTop: 8,
+    },
+    socialButton: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#1F1F2E',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#374151',
     },
 });
