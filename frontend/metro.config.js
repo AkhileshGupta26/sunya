@@ -22,4 +22,8 @@ const config = getDefaultConfig(__dirname);
 // Reduce the number of workers to decrease resource usage
 // config.maxWorkers = 2;
 
+config.resolver.assetExts.push(
+    'mp4', 'mp3', 'wav'
+);
+
 module.exports = config;

@@ -432,32 +432,10 @@ export default function Profile() {
       <Text style={styles.version}>Version 1.0.0</Text>
 
       <View style={{ alignItems: 'center', marginBottom: 40, marginTop: -20 }}>
-        <TouchableOpacity
-          onPress={() => router.push('/developer')}
-          style={{
-            backgroundColor: '#000',
-            borderWidth: 1,
-            borderColor: '#333',
-            paddingHorizontal: 20,
-            paddingVertical: 12,
-            borderRadius: 8,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 10
-          }}
-        >
-          <MaterialCommunityIcons name="code-braces" size={20} color={THEME_COLOR} />
-          <View>
-            <Text style={{ color: '#FFF', fontSize: 12, fontWeight: 'bold', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>
-              DEVELOPER
-            </Text>
-            <Text style={{ color: '#666', fontSize: 10, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>
-              AKHILESH GUPTA
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={16} color="#444" />
+        <Text style={{ color: '#6B7280', fontSize: 12 }}>Made with ❤️ in India</Text>
+        <TouchableOpacity onPress={() => router.push('/developer')} style={{ marginTop: 8 }}>
+          <Text style={{ color: THEME_COLOR, fontSize: 12, fontWeight: '600' }}>Know Developer</Text>
         </TouchableOpacity>
-        <Text style={{ color: '#333', fontSize: 10, marginTop: 12, fontStyle: 'italic' }}>Made with ❤️ in India</Text>
       </View>
 
       {/* Wake Time Modal */}

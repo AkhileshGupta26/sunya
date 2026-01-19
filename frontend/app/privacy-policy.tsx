@@ -93,7 +93,7 @@ export default function PrivacyPolicy() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#000000',
+        backgroundColor: '#0F0F1E', // App Standard Dark
     },
     header: {
         flexDirection: 'row',
@@ -102,44 +102,39 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingBottom: 20,
         borderBottomWidth: 1,
-        borderBottomColor: '#1A1A1A',
-        backgroundColor: '#000000',
+        borderBottomColor: '#1F1F2E',
+        backgroundColor: '#0F0F1E',
     },
     backButton: {
         marginRight: 16,
         padding: 8,
     },
     headerTitle: {
-        color: '#00BFFF',
+        color: '#FFFFFF',
         fontSize: 20,
-        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
         fontWeight: 'bold',
-        letterSpacing: 2,
     },
     content: {
         padding: 24,
     },
     lastUpdated: {
-        color: '#666',
-        fontSize: 12,
-        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-        marginBottom: 32,
+        color: '#9CA3AF',
+        fontSize: 14,
+        marginBottom: 24,
     },
     section: {
         marginBottom: 32,
     },
     heading: {
-        color: '#FFFFFF',
+        color: '#7C3AED', // Theme Violet
         fontSize: 18,
         fontWeight: 'bold',
-        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
         marginBottom: 12,
     },
     paragraph: {
-        color: '#AAAAAA',
-        fontSize: 14,
-        lineHeight: 22,
-        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+        color: '#D1D5DB', // Gray-300
+        fontSize: 16,
+        lineHeight: 24,
     },
     bold: {
         color: '#FFFFFF',
@@ -151,7 +146,7 @@ const styles = StyleSheet.create({
         paddingRight: 10,
     },
     bullet: {
-        color: '#00BFFF',
+        color: '#7C3AED',
         fontWeight: 'bold',
         marginRight: 10,
         fontSize: 16,

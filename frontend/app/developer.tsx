@@ -8,7 +8,7 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export default function DeveloperPage() {
     const router = useRouter();
-    const THEME_COLOR = '#00BFFF'; // Electric Blue
+    const THEME_COLOR = '#7C3AED'; // Violet
 
     return (
         <View style={styles.container}>
@@ -16,76 +16,41 @@ export default function DeveloperPage() {
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <MaterialCommunityIcons name="arrow-left" size={28} color="#FFFFFF" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>DEVELOPER_MODE</Text>
+                <Text style={styles.headerTitle}>About Developer</Text>
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
 
-                {/* Main Glitch Card */}
-                <View style={styles.developerContainer}>
-                    <LinearGradient
-                        colors={['#00BFFF10', '#000000']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.devGradient}
-                    >
-                        {/* Decorative Grid Background */}
-                        <View style={styles.gridOverlay} pointerEvents="none">
-                            {[...Array(10)].map((_, i) => (
-                                <View key={i} style={[styles.gridLine, { top: i * 40 }]} />
-                            ))}
-                        </View>
+                <View style={styles.devCard}>
+                    <View style={styles.avatarContainer}>
+                        <MaterialCommunityIcons name="xml" size={40} color="white" />
+                    </View>
 
-                        <View style={styles.devContent}>
-                            <View style={styles.glitchBox}>
-                                <Text style={styles.devLabel}>ARCHITECT</Text>
-                                <Text style={styles.devName}>AKHILESH</Text>
-                                <Text style={[styles.devName, { marginTop: -10, color: '#00BFFF' }]}>GUPTA</Text>
+                    <Text style={styles.devName}>Akhilesh Gupta</Text>
+                    <Text style={styles.devRole}>Full Stack Engineer</Text>
 
-                                <View style={styles.pixelLine} />
+                    <Text style={styles.bio}>
+                        Building digital sanctuaries for the modern mind.
+                        Dedicated to creating mindful technology that
+                        respects your time and attention.
+                    </Text>
 
-                                <View style={styles.roleContainer}>
-                                    <MaterialCommunityIcons name="xml" size={20} color="#666" />
-                                    <Text style={styles.devRole}>FULL STACK ENGINEER</Text>
-                                    <MaterialCommunityIcons name="xml" size={20} color="#666" />
-                                </View>
-                            </View>
+                    <View style={styles.divider} />
 
-                            <Text style={styles.bio}>
-                                Building digital sanctuaries.
-                                Focused on mindful technology and
-                                sustainable code architectures.
-                            </Text>
-
-                            <View style={styles.socialRow}>
-                                <TouchableOpacity onPress={() => Linking.openURL('https://github.com/AkhileshGupta26')} style={styles.iconBox}>
-                                    <MaterialCommunityIcons name="github" size={32} color="#FFFFFF" />
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={() => Linking.openURL('https://linkedin.com/in/akhilesh-gupta26')} style={styles.iconBox}>
-                                    <MaterialCommunityIcons name="linkedin" size={32} color="#0077B5" />
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={() => Linking.openURL('mailto:akhilesh@example.com')} style={styles.iconBox}>
-                                    <MaterialCommunityIcons name="email" size={32} color="#EF4444" />
-                                </TouchableOpacity>
-                            </View>
-
-                            <View style={styles.terminalBox}>
-                                <Text style={styles.terminalText}>$ git commit -m "With Love"</Text>
-                                <Text style={styles.terminalText}>$ git push origin india</Text>
-                                <View style={styles.cursor} />
-                            </View>
-
-                        </View>
-                    </LinearGradient>
-
-                    {/* Pixel corners */}
-                    <View style={[styles.corner, styles.tl]} />
-                    <View style={[styles.corner, styles.tr]} />
-                    <View style={[styles.corner, styles.bl]} />
-                    <View style={[styles.corner, styles.br]} />
+                    <View style={styles.socialRow}>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://github.com/AkhileshGupta26')} style={styles.iconButton}>
+                            <MaterialCommunityIcons name="github" size={24} color="white" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://linkedin.com/in/akhilesh-gupta26')} style={styles.iconButton}>
+                            <MaterialCommunityIcons name="linkedin" size={24} color="white" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => Linking.openURL('mailto:akhilesh@example.com')} style={styles.iconButton}>
+                            <MaterialCommunityIcons name="email" size={24} color="white" />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
-                <Text style={styles.footerText}>EST. 2026 • INDIA</Text>
+                <Text style={styles.footerText}>Made with ❤️ in India</Text>
 
             </ScrollView>
         </View>
@@ -95,7 +60,7 @@ export default function DeveloperPage() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#000000',
+        backgroundColor: '#0F0F1E',
     },
     header: {
         flexDirection: 'row',
@@ -104,142 +69,84 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingBottom: 20,
         borderBottomWidth: 1,
-        borderBottomColor: '#1A1A1A',
+        borderBottomColor: '#1F1F2E',
+        backgroundColor: '#0F0F1E',
     },
     backButton: {
         marginRight: 16,
         padding: 8,
-        borderWidth: 1,
-        borderColor: '#333',
-        borderRadius: 8,
     },
     headerTitle: {
-        color: '#00BFFF',
+        color: '#FFFFFF',
         fontSize: 20,
-        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
         fontWeight: 'bold',
-        letterSpacing: 2,
     },
     scrollContent: {
         padding: 24,
         alignItems: 'center',
     },
-    developerContainer: {
-        width: '100%',
-        position: 'relative',
-        padding: 2,
-        marginBottom: 40,
-    },
-    devGradient: {
+    devCard: {
+        backgroundColor: '#1F1F2E',
+        borderRadius: 24,
         padding: 32,
+        alignItems: 'center',
+        width: '100%',
         borderWidth: 1,
-        borderColor: '#333',
-        minHeight: 500,
+        borderColor: '#7C3AED',
+        shadowColor: '#7C3AED',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 8,
+        marginBottom: 32,
+    },
+    avatarContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: '#7C3AED',
+        alignItems: 'center',
         justifyContent: 'center',
-        overflow: 'hidden',
-    },
-    gridOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        opacity: 0.1,
-    },
-    gridLine: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        height: 1,
-        backgroundColor: '#00BFFF',
-    },
-    devContent: {
-        alignItems: 'center',
-    },
-    glitchBox: {
-        alignItems: 'center',
-        marginBottom: 40,
-    },
-    devLabel: {
-        color: '#555',
-        fontSize: 12,
-        letterSpacing: 6,
         marginBottom: 16,
-        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
     },
     devName: {
         color: '#FFFFFF',
-        fontSize: 42,
-        fontWeight: '900',
-        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-        letterSpacing: -2,
-    },
-    pixelLine: {
-        height: 4,
-        width: 80,
-        backgroundColor: '#00BFFF',
-        marginVertical: 24,
-    },
-    roleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 4,
     },
     devRole: {
-        color: '#888',
-        fontSize: 14,
-        letterSpacing: 2,
-        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+        color: '#9CA3AF',
+        fontSize: 16,
+        marginBottom: 24,
     },
     bio: {
-        color: '#AAA',
+        color: '#D1D5DB',
         textAlign: 'center',
-        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-        fontSize: 14,
+        fontSize: 16,
         lineHeight: 24,
-        maxWidth: 260,
-        marginBottom: 40,
+        marginBottom: 24,
+    },
+    divider: {
+        width: '100%',
+        height: 1,
+        backgroundColor: '#2D2D3D',
+        marginBottom: 24,
     },
     socialRow: {
         flexDirection: 'row',
-        gap: 24,
-        marginBottom: 40,
+        gap: 20,
     },
-    iconBox: {
-        padding: 16,
-        borderWidth: 1,
-        borderColor: '#333',
-        backgroundColor: '#050505',
-    },
-    terminalBox: {
-        alignSelf: 'stretch',
-        backgroundColor: '#111',
-        padding: 16,
-        borderLeftWidth: 2,
-        borderLeftColor: '#00BFFF',
-    },
-    terminalText: {
-        color: '#00BFFF',
-        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-        fontSize: 12,
-        marginBottom: 4,
-    },
-    cursor: {
-        width: 8,
-        height: 14,
-        backgroundColor: '#00BFFF',
-        marginTop: 4,
+    iconButton: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#2D2D3D',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     footerText: {
-        color: '#333',
-        fontSize: 10,
-        letterSpacing: 4,
+        color: '#6B7280',
+        fontSize: 12,
     },
-    // Pixel Corners
-    corner: {
-        position: 'absolute',
-        width: 8,
-        height: 8,
-        backgroundColor: '#00BFFF',
-    },
-    tl: { top: 0, left: 0 },
-    tr: { top: 0, right: 0 },
-    bl: { bottom: 0, left: 0 },
-    br: { bottom: 0, right: 0 },
 });

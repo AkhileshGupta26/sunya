@@ -34,9 +34,18 @@ const AUDIO_FILES = {
   guided: require('../assets/guided.mp3'),
   flute: require('../assets/flute.mp3'),
   forest: require('../assets/forest.mp4'),
+  bird_piano: require('../assets/bird_piano.mp3'),
 };
 
 const MEDITATION_TRACKS = [
+  {
+    id: 'bird_piano',
+    name: 'Bird Piano',
+    icon: 'piano',
+    color: '#8B5CF6',
+    description: 'Gentle piano with birdsong',
+    source: AUDIO_FILES.bird_piano,
+  },
   {
     id: 'flute',
     name: 'Krishna Flute',
@@ -44,14 +53,6 @@ const MEDITATION_TRACKS = [
     color: '#F472B6',
     description: 'Divine, relaxing flute melody',
     source: AUDIO_FILES.flute,
-  },
-  {
-    id: 'rain',
-    name: 'Rain Sounds',
-    icon: 'weather-pouring',
-    color: '#3B82F6',
-    description: 'Soothing rainfall for deep sleep',
-    source: AUDIO_FILES.nature, // Using nature as proxy for now
   },
   {
     id: 'forest',
@@ -62,20 +63,20 @@ const MEDITATION_TRACKS = [
     source: AUDIO_FILES.forest,
   },
   {
+    id: 'rain',
+    name: 'Rain Sounds',
+    icon: 'weather-pouring',
+    color: '#3B82F6',
+    description: 'Soothing rainfall for deep sleep',
+    source: AUDIO_FILES.nature,
+  },
+  {
     id: 'vedic',
     name: 'Vedic Chants',
     icon: 'om',
     color: '#F59E0B',
     description: 'Ancient mantras for deep focus',
     source: AUDIO_FILES.vedic,
-  },
-  {
-    id: 'guided',
-    name: 'Guided Session',
-    icon: 'account-voice',
-    color: '#8B5CF6',
-    description: 'Gentle voice guidance',
-    source: AUDIO_FILES.guided,
   },
   {
     id: 'silence',
