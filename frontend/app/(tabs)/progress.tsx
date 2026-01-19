@@ -255,44 +255,36 @@ export default function Progress() {
         </View>
       </View>
 
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Recent Sessions</Text>
-      </View>
-
-      {sessions.length === 0 ? (
-        <View style={styles.emptyState}>
-          <MaterialCommunityIcons name="meditation" size={60} color="#4B5563" />
-          <Text style={styles.emptyText}>No meditation sessions yet</Text>
-          <Text style={styles.emptySubtext}>Start your journey today!</Text>
-        </View>
-      ) : (
-        <View style={styles.sessionsList}>
-          {sessions.map((session, index) => (
-            <View key={session.id} style={styles.sessionCard}>
-              <View style={[
-                styles.sessionIcon,
-                { backgroundColor: session.completed ? getTrackColor(session.track_type) + '20' : '#4B556320' }
-              ]}>
-                <MaterialCommunityIcons
-                  name={session.completed ? getTrackIcon(session.track_type) : 'cancel'}
-                  size={24}
-                  color={session.completed ? getTrackColor(session.track_type) : '#6B7280'}
-                />
+      {/* Logic Update: Only show INCOMPLETE sessions. completed ones are history. */}
+      {sessions.filter(s => !s.completed).length === 0 ? null : (
+        <>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recent Sessions (Incomplete)</Text>
+          </View>
+          <View style={styles.sessionsList}>
+            {sessions.filter(s => !s.completed).map((session) => (
+              <View key={session.id} style={styles.sessionCard}>
+                <View style={[
+                  styles.sessionIcon,
+                  { backgroundColor: '#4B556320' }
+                ]}>
+                  <MaterialCommunityIcons
+                    name={'clock-alert-outline'}
+                    size={24}
+                    color={'#EF4444'}
+                  />
+                </View>
+                <View style={styles.sessionInfo}>
+                  <Text style={styles.sessionDate}>{new Date(session.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Text>
+                  <Text style={styles.sessionType}>
+                    Incomplete Session captured
+                  </Text>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
               </View>
-              <View style={styles.sessionInfo}>
-                <Text style={styles.sessionDate}>{new Date(session.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Text>
-                <Text style={styles.sessionType}>
-                  {session.completed
-                    ? `${session.track_type.charAt(0).toUpperCase() + session.track_type.slice(1)} - 10 min`
-                    : 'Incomplete'}
-                </Text>
-              </View>
-              {session.completed && (
-                <MaterialCommunityIcons name="check-circle" size={24} color="#10B981" />
-              )}
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        </>
       )}
     </ScrollView>
   );

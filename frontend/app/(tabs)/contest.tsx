@@ -234,9 +234,10 @@ export default function Contest() {
 
   const handleJoinContest = async (type: 'weekly' | 'monthly') => {
     if (type === 'weekly') {
-      const day = new Date().getDay();
-      if (day === 0 || day === 6) {
-        Alert.alert("Weekly Contest", "The Weekly Contest is in cooldown (Results Phase). \n\nJoin us on Monday!");
+      const day = new Date().getDay(); // 0 is Sunday, 6 is Saturday
+      // Rule: Open Mon(1)-Sat(6). Closed Sunday(0).
+      if (day === 0) {
+        Alert.alert("Weekly Contest Closed", "The Weekly Contest is currently calculating results.\n\nNew contest starts Monday!");
         return;
       }
     }

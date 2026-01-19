@@ -45,7 +45,6 @@ export default function Profile() {
   const [wakeTime, setWakeTime] = useState(user?.wake_time || '06:00');
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
-  const [developerModalVisible, setDeveloperModalVisible] = useState(false);
 
   // Settings from User object
   // cameraEnabled is defined below, wait. I duplicated it.
@@ -428,9 +427,15 @@ export default function Profile() {
 
       <View style={{ alignItems: 'center', marginBottom: 40 }}>
         <Text style={{ color: '#6B7280', fontSize: 12 }}>Made with ❤️ in India</Text>
-        <TouchableOpacity onPress={() => setDeveloperModalVisible(true)} style={{ marginTop: 8 }}>
-          <Text style={{ color: THEME_COLOR, fontSize: 12, fontWeight: '600' }}>Know Developer</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 16, marginTop: 8 }}>
+          <TouchableOpacity onPress={() => router.push('/privacy-policy')}>
+            <Text style={{ color: THEME_COLOR, fontSize: 12, fontWeight: '600' }}>Privacy Policy</Text>
+          </TouchableOpacity>
+          <Text style={{ color: '#333' }}>|</Text>
+          <TouchableOpacity onPress={() => router.push('/privacy-policy')}>
+            <Text style={{ color: THEME_COLOR, fontSize: 12, fontWeight: '600' }}>Know Developer</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Wake Time Modal */}
@@ -579,41 +584,6 @@ export default function Profile() {
       {/* Alarm Time Modal */}
 
 
-      {/* Developer Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={developerModalVisible}
-        onRequestClose={() => setDeveloperModalVisible(false)}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <MaterialCommunityIcons name="code-tags" size={48} color={THEME_COLOR} style={{ marginBottom: 16 }} />
-            <Text style={[styles.modalTitle, { color: THEME_COLOR }]}>About Developer</Text>
-            <Text style={styles.modalBody}>
-              Built with passion by Akhilesh Gupta.
-              Dedicated to bringing mindfulness to the digital age.
-            </Text>
-            <View style={{ flexDirection: 'row', gap: 16, marginBottom: 24 }}>
-              <TouchableOpacity onPress={() => Linking.openURL('https://github.com/AkhileshGupta26')}>
-                <MaterialCommunityIcons name="github" size={32} color="#FFFFFF" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => Linking.openURL('https://linkedin.com/in/akhilesh-gupta26')}>
-                <MaterialCommunityIcons name="linkedin" size={32} color="#0077B5" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => Linking.openURL('mailto:akhilesh@example.com')}>
-                <MaterialCommunityIcons name="email" size={32} color="#EF4444" />
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => setDeveloperModalVisible(false)}
-            >
-              <Text style={styles.textStyle}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
 
     </ScrollView >
   );

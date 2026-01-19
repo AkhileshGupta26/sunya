@@ -16,13 +16,11 @@ async def join_contest(data: JoinContestRequest, user_id: str = Depends(get_curr
     if data.contest_type not in ["weekly", "monthly"]:
         raise HTTPException(status_code=400, detail="Invalid contest type")
 
-    # Time/Schedule Check for Weekly
-    # Monday=0, Sunday=6
-    # if data.contest_type == "weekly":
-    #     weekday = datetime.utcnow().weekday()
-    #     if weekday >= 5: # Saturday or Sunday
-    #         # User specifically asked for "moving part" or block on Sat/Sun
-    #         raise HTTPException(status_code=400, detail="Weekly contest starts Monday! Results are being calculated.")
+    # Time/Schedule Check for Weekly: Mon(0) - Sat(5) Open. Sun(6) Closed.
+    if data.contest_type == "weekly":
+        weekday = datetime.utcnow().weekday()
+        if weekday == 6: # Sunday
+            raise HTTPException(status_code=400, detail="Weekly contest is closed on Sundays. Results calculation in progress.")
 
     user = await db.users.find_one({"_id": ObjectId(user_id)})
     if not user:
