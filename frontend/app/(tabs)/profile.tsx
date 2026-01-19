@@ -433,7 +433,7 @@ export default function Profile() {
 
       <View style={{ alignItems: 'center', marginBottom: 40, marginTop: -20 }}>
         <TouchableOpacity
-          onPress={() => router.push('/privacy-policy')}
+          onPress={() => router.push('/developer')}
           style={{
             backgroundColor: '#000',
             borderWidth: 1,
