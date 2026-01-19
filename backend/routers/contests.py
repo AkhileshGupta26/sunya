@@ -19,7 +19,13 @@ async def join_contest(data: JoinContestRequest, user_id: str = Depends(get_curr
 
     # Time/Schedule Check for Weekly: Mon(0) - Sat(5) Open. Sun(6) Closed.
     if data.contest_type == "weekly":
-        weekday = datetime.utcnow().weekday()
+        # Use IST (UTC+5:30) to avoid blocking Monday mornings in India
+        # Sunday 6:30 PM UTC is already Monday 12:00 AM IST.
+        # We want to open as soon as it's Monday in the target market.
+        from datetime import timedelta
+        ist_time = datetime.utcnow() + timedelta(hours=5, minutes=30)
+        weekday = ist_time.weekday()
+        
         if weekday == 6: # Sunday
             raise HTTPException(status_code=400, detail="Weekly contest is closed on Sundays. Results calculation in progress.")
 
