@@ -33,7 +33,8 @@ const AUDIO_FILES = {
   nature: require('../assets/nature.mp3'),
   guided: require('../assets/guided.mp3'),
   flute: require('../assets/flute.mp3'),
-  forest: require('../assets/forest.mp4'),
+  // TODO: forest.mp4 was silent or invalid audio. Using bird_piano as fallback for now.
+  forest: require('../assets/bird_piano.mp3'),
   bird_piano: require('../assets/bird_piano.mp3'),
 };
 
