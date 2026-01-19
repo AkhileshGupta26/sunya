@@ -5,6 +5,9 @@
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive_icon.png",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "scheme": "frontend",
     "userInterfaceStyle": "automatic",
     "ios": {

@@ -3,12 +3,13 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Platform
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useThemeColor } from '../hooks/useThemeColor';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export default function DeveloperPage() {
     const router = useRouter();
-    const THEME_COLOR = '#7C3AED'; // Violet
+    const THEME_COLOR = useThemeColor();
 
     return (
         <View style={styles.container}>
@@ -21,8 +22,8 @@ export default function DeveloperPage() {
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
 
-                <View style={styles.devCard}>
-                    <View style={styles.avatarContainer}>
+                <View style={[styles.devCard, { borderColor: THEME_COLOR, shadowColor: THEME_COLOR }]}>
+                    <View style={[styles.avatarContainer, { backgroundColor: THEME_COLOR }]}>
                         <MaterialCommunityIcons name="xml" size={40} color="white" />
                     </View>
 
