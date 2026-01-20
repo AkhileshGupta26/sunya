@@ -44,6 +44,22 @@ const AUDIO_FILES = {
 
 const MEDITATION_TRACKS = [
   {
+    id: 'flute_music',
+    name: 'Flute Music',
+    icon: 'music-clef-treble',
+    color: '#D97706',
+    description: 'Relaxing flute melody',
+    source: AUDIO_FILES.flute,
+  },
+  {
+    id: 'beauty',
+    name: 'Beauty',
+    icon: 'star-four-points',
+    color: '#F472B6',
+    description: 'Radiant & calming vibes',
+    source: AUDIO_FILES.beauty,
+  },
+  {
     id: 'silence',
     name: 'Sunya Silence',
     icon: 'volume-off',
@@ -58,14 +74,6 @@ const MEDITATION_TRACKS = [
     color: '#F59E0B',
     description: 'Single Om / AUM chant (Focus)',
     source: AUDIO_FILES.om_chant,
-  },
-  {
-    id: 'flute_music',
-    name: 'Flute Music',
-    icon: 'music-clef-treble',
-    color: '#D97706',
-    description: 'Relaxing flute melody',
-    source: AUDIO_FILES.flute,
   },
   {
     id: 'cosmic_universe',
@@ -92,28 +100,12 @@ const MEDITATION_TRACKS = [
     source: AUDIO_FILES.forest,
   },
   {
-    id: 'singing_bowl',
-    name: 'Singing Bowl',
-    icon: 'alarm-bell',
-    color: '#FCD34D',
-    description: 'Tibetan bowl strikes (Release)',
-    source: AUDIO_FILES.singing_bowl,
-  },
-  {
     id: 'bird_chirping',
     name: 'Bird Chirping',
     icon: 'bird',
     color: '#10B981',
     description: 'Gentle birdsong & piano',
     source: AUDIO_FILES.birds,
-  },
-  {
-    id: 'beauty',
-    name: 'Beauty',
-    icon: 'star-four-points',
-    color: '#F472B6',
-    description: 'Radiant & calming vibes',
-    source: AUDIO_FILES.beauty,
   },
   {
     id: 'ocean',
@@ -599,7 +591,7 @@ export default function Meditation() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#FFFFFF" />
@@ -607,7 +599,7 @@ export default function Meditation() {
         <Text style={styles.title}>Choose Your Path</Text>
       </View>
 
-      <View style={styles.tracksContainer}>
+      <ScrollView style={styles.tracksScroll} contentContainerStyle={styles.tracksContainer}>
         {sortedTracks.map(track => {
           const isLiked = likedTracks.includes(track.id);
           const isPinned = pinnedTracks.includes(track.id);
@@ -645,42 +637,43 @@ export default function Meditation() {
             </TouchableOpacity>
           )
         })}
-      </View>
+      </ScrollView>
 
-      <View style={styles.infoCard}>
-        <MaterialCommunityIcons name="clock-outline" size={24} color={THEME_COLOR} />
-        <Text style={styles.infoText}>
-          Duration: {timeRemaining / 60} Minutes
-        </Text>
-      </View>
+      <View style={styles.fixedBottom}>
+        <View style={styles.timerRow}>
+          <View style={styles.infoCard}>
+            <MaterialCommunityIcons name="clock-outline" size={20} color={THEME_COLOR} />
+            <Text style={[styles.infoText, { marginLeft: 8 }]}>{timeRemaining / 60}m</Text>
+          </View>
+          <View style={styles.durationSelector}>
+            {[5, 10, 20].map(min => (
+              <TouchableOpacity
+                key={min}
+                style={[
+                  styles.durationOption,
+                  timeRemaining === min * 60 && { backgroundColor: THEME_COLOR, borderColor: THEME_COLOR }
+                ]}
+                onPress={() => {
+                  triggerHaptic('selection');
+                  setTimeRemaining(min * 60);
+                  setSelectedDuration(min * 60);
+                }}
+              >
+                <Text style={[styles.durationText, timeRemaining === min * 60 && { color: '#FFF' }]}>{min}m</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
-      <View style={styles.durationSelector}>
-        {[5, 10, 20].map(min => (
-          <TouchableOpacity
-            key={min}
-            style={[
-              styles.durationOption,
-              timeRemaining === min * 60 && { backgroundColor: THEME_COLOR, borderColor: THEME_COLOR }
-            ]}
-            onPress={() => {
-              triggerHaptic('selection');
-              setTimeRemaining(min * 60);
-              setSelectedDuration(min * 60);
-            }}
-          >
-            <Text style={[styles.durationText, timeRemaining === min * 60 && { color: '#FFF' }]}>{min}m</Text>
-          </TouchableOpacity>
-        ))}
+        <TouchableOpacity
+          style={[styles.startButton, { backgroundColor: THEME_COLOR, opacity: selectedTrack ? 1 : 0.5 }]}
+          onPress={() => startMeditation()}
+          disabled={!selectedTrack}
+        >
+          <Text style={styles.startButtonText}>Begin Meditation</Text>
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        style={[styles.startButton, { backgroundColor: THEME_COLOR, width: '90%', alignSelf: 'center', marginTop: 12 }, !selectedTrack && { opacity: 0.5 }]}
-        onPress={() => startMeditation()}
-        disabled={!selectedTrack}
-      >
-        <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>Begin Meditation</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -772,27 +765,45 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
+  tracksScroll: {
+    flex: 1,
+  },
+  fixedBottom: {
+    backgroundColor: '#161622',
+    padding: 24,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#2D2D3D',
+    elevation: 20,
+  },
+  timerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   infoCard: {
     flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#1F1F2E',
-    marginHorizontal: 24,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   infoText: {
-    flex: 1,
-    fontSize: 13,
+    fontSize: 14,
     color: '#D1D5DB',
-    marginLeft: 12,
-    lineHeight: 20,
+    fontWeight: '600',
+  },
+  durationSelector: {
+    flexDirection: 'row',
+    gap: 8,
   },
   startButton: {
-    marginHorizontal: 24,
     borderRadius: 12,
-    padding: 18,
+    padding: 16,
     alignItems: 'center',
-    marginBottom: 24,
+    justifyContent: 'center',
   },
   startButtonDisabled: {
     opacity: 0.5,
