@@ -789,10 +789,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  trackInfo: {
-    flex: 1,
-    marginRight: 8,
-  },
+
   infoCard: {
     flexDirection: 'row',
     backgroundColor: '#1F1F2E',
