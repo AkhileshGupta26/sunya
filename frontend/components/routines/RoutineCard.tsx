@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Routine } from '@/utils/routinesData';
+import { api } from '@/services/api'; // Import api service
+import { useEffect, useState } from 'react';
 
 interface RoutineCardProps {
     routine: Routine;
@@ -10,6 +12,44 @@ interface RoutineCardProps {
 }
 
 const RoutineCard: React.FC<RoutineCardProps> = ({ routine, onPress }) => {
+    const [likes, setLikes] = useState(0);
+    const [isLiked, setIsLiked] = useState(false);
+
+    useEffect(() => {
+        fetchLikes();
+    }, []);
+
+    const fetchLikes = async () => {
+        try {
+            const res = await api.get(`/api/routines/status/${routine.id}`);
+            setLikes(res.likes_count);
+            setIsLiked(res.is_liked);
+        } catch (e) {
+            console.log('Error fetching likes', e);
+        }
+    };
+
+    const handleLike = async (e: any) => {
+        e.stopPropagation();
+        // Optimistic update
+        const prevLikes = likes;
+        const prevLiked = isLiked;
+
+        setIsLiked(!isLiked);
+        setLikes(isLiked ? likes - 1 : likes + 1);
+
+        try {
+            const res = await api.post('/api/routines/like', { routine_id: routine.id });
+            setLikes(res.likes_count);
+            setIsLiked(res.is_liked);
+        } catch (e) {
+            // Revert on error
+            setIsLiked(prevLiked);
+            setLikes(prevLikes);
+            console.error('Like failed', e);
+        }
+    };
+
     return (
         <TouchableOpacity
             activeOpacity={0.9}
@@ -26,7 +66,14 @@ const RoutineCard: React.FC<RoutineCardProps> = ({ routine, onPress }) => {
                     <View style={styles.iconContainer}>
                         <Ionicons name="person" size={16} color="#fff" />
                     </View>
-                    <Ionicons name="arrow-forward-circle-outline" size={24} color="rgba(255,255,255,0.3)" />
+                    <TouchableOpacity onPress={handleLike} style={styles.likeButton}>
+                        <Ionicons
+                            name={isLiked ? "heart" : "heart-outline"}
+                            size={22}
+                            color={isLiked ? "#EF4444" : "rgba(255,255,255,0.6)"}
+                        />
+                        <Text style={styles.likeCount}>{likes > 0 ? likes : ''}</Text>
+                    </TouchableOpacity>
                 </View>
 
                 <Text style={styles.name}>{routine.name}</Text>
@@ -73,6 +120,20 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.1)',
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    likeButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.2)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+        gap: 4,
+    },
+    likeCount: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
     },
     name: {
         fontSize: 18,

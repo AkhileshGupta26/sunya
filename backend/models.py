@@ -106,3 +106,11 @@ class InstitutionResponse(BaseModel):
 # --- Detox Models ---
 class DetoxComplete(BaseModel):
     duration_minutes: int
+
+# --- Routine Models ---
+class RoutineLikeRequest(BaseModel):
+    routine_id: str
+
+class RoutineLikeResponse(BaseModel):
+    likes_count: int
+    is_liked: bool
