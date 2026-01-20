@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sunya",
     "slug": "sunya",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive_icon.png",
     "assetBundlePatterns": [
@@ -27,7 +27,7 @@
         "backgroundColor": "#000000"
       },
       "package": "com.shunya.app",
-      "versionCode": 2,
+      "versionCode": 4,
       "edgeToEdgeEnabled": true,
       "permissions": [
         "CAMERA",

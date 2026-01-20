@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api } from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from 'expo-av';
 import { useThemeColor } from '../hooks/useThemeColor';
 import { triggerHaptic } from '../utils/haptics';
@@ -23,7 +24,7 @@ import Animated, {
   withRepeat,
   withTiming,
   Easing,
-  cancelAnimation
+  cancelAnimation,
 } from 'react-native-reanimated';
 
 
@@ -36,6 +37,9 @@ const AUDIO_FILES = {
   // TODO: forest.mp4 was silent or invalid audio. Using bird_piano as fallback for now.
   forest: require('../assets/bird_piano.mp3'),
   bird_piano: require('../assets/bird_piano.mp3'),
+  ocean: require('../assets/ocean.mp3'),
+  cosmic: require('../assets/cosmic.mp3'),
+  zen_garden: require('../assets/zen_garden.mp3'),
 };
 
 const MEDITATION_TRACKS = [
@@ -80,6 +84,33 @@ const MEDITATION_TRACKS = [
     source: AUDIO_FILES.vedic,
   },
   {
+    id: 'ocean',
+    name: 'Ocean Waves',
+    icon: 'waves',
+    color: '#0EA5E9',
+    description: 'Calming tides for deep relaxation',
+    source: AUDIO_FILES.ocean,
+  },
+  {
+    id: 'cosmic',
+    name: 'Cosmic Drift',
+    icon: 'rocket-launch', // or 'orbit' or 'planet' - material community icons has 'rocket-launch' or 'google-earth' or 'planet'
+    // 'planet' might not exist in all sets, 'earth' or 'orbit'
+    // checking material community icons: 'weather-night' is good for cosmic
+    icon: 'weather-night',
+    color: '#6366F1',
+    description: 'Ambient space sounds for sleep',
+    source: AUDIO_FILES.cosmic,
+  },
+  {
+    id: 'zen_garden',
+    name: 'Zen Garden',
+    icon: 'flower-tulip',
+    color: '#10B981',
+    description: 'Peaceful garden ambience',
+    source: AUDIO_FILES.zen_garden,
+  },
+  {
     id: 'silence',
     name: 'Pure Silence',
     icon: 'volume-off',
@@ -95,6 +126,70 @@ export default function Meditation() {
   const THEME_COLOR = useThemeColor();
   const { autoStart, trackId } = useLocalSearchParams();
   const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
+
+  const [likedTracks, setLikedTracks] = useState<string[]>([]);
+  const [pinnedTracks, setPinnedTracks] = useState<string[]>([]);
+
+  useEffect(() => {
+    loadPrefs();
+  }, []);
+
+  const loadPrefs = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('meditation_prefs');
+      if (stored) {
+        const { liked, pinned } = JSON.parse(stored);
+        setLikedTracks(liked || []);
+        setPinnedTracks(pinned || []);
+      }
+    } catch (e) { console.error('Failed to load prefs', e); }
+  };
+
+  const savePrefs = async (newLiked: string[], newPinned: string[]) => {
+    try {
+      await AsyncStorage.setItem('meditation_prefs', JSON.stringify({ liked: newLiked, pinned: newPinned }));
+    } catch (e) { console.error('Failed to save prefs', e); }
+  };
+
+  const toggleLike = (id: string) => {
+    let newLiked;
+    if (likedTracks.includes(id)) {
+      newLiked = likedTracks.filter(k => k !== id);
+    } else {
+      newLiked = [...likedTracks, id];
+    }
+    setLikedTracks(newLiked);
+    savePrefs(newLiked, pinnedTracks);
+    triggerHaptic('selection');
+  };
+
+  const togglePin = (id: string) => {
+    let newPinned;
+    if (pinnedTracks.includes(id)) {
+      newPinned = pinnedTracks.filter(k => k !== id);
+    } else {
+      newPinned = [...pinnedTracks, id];
+    }
+    setPinnedTracks(newPinned);
+    savePrefs(likedTracks, newPinned);
+    triggerHaptic('medium');
+  };
+
+  const sortedTracks = useMemo(() => {
+    return [...MEDITATION_TRACKS].sort((a, b) => {
+      const aPinned = pinnedTracks.includes(a.id);
+      const bPinned = pinnedTracks.includes(b.id);
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+
+      const aLiked = likedTracks.includes(a.id);
+      const bLiked = likedTracks.includes(b.id);
+      if (aLiked && !bLiked) return -1;
+      if (!aLiked && bLiked) return 1;
+
+      return 0;
+    });
+  }, [likedTracks, pinnedTracks]);
 
   const [meditating, setMeditating] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -500,30 +595,43 @@ export default function Meditation() {
       </View>
 
       <View style={styles.tracksContainer}>
-        {MEDITATION_TRACKS.map(track => (
-          <TouchableOpacity
-            key={track.id}
-            style={[
-              styles.trackCard,
-              selectedTrack === track.id && { borderColor: THEME_COLOR, backgroundColor: THEME_COLOR + '20' },
-            ]}
-            onPress={() => {
-              triggerHaptic('selection');
-              setSelectedTrack(track.id);
-            }}
-          >
-            <View style={[styles.trackIcon, { backgroundColor: track.color + '20' }]}>
-              <MaterialCommunityIcons name={track.icon as any} size={32} color={track.color} />
-            </View>
-            <View style={styles.trackInfo}>
-              <Text style={styles.trackName}>{track.name}</Text>
-              <Text style={styles.trackDescription}>{track.description}</Text>
-            </View>
-            {selectedTrack === track.id && (
-              <MaterialCommunityIcons name="check-circle" size={24} color={THEME_COLOR} />
-            )}
-          </TouchableOpacity>
-        ))}
+        {sortedTracks.map(track => {
+          const isLiked = likedTracks.includes(track.id);
+          const isPinned = pinnedTracks.includes(track.id);
+          return (
+            <TouchableOpacity
+              key={track.id}
+              style={[
+                styles.trackCard,
+                selectedTrack === track.id && { borderColor: THEME_COLOR, backgroundColor: THEME_COLOR + '20' },
+              ]}
+              onPress={() => {
+                triggerHaptic('selection');
+                setSelectedTrack(track.id);
+              }}
+            >
+              <View style={[styles.trackIcon, { backgroundColor: track.color + '20' }]}>
+                <MaterialCommunityIcons name={track.icon as any} size={32} color={track.color} />
+              </View>
+              <View style={styles.trackInfo}>
+                <View style={styles.trackHeader}>
+                  <Text style={styles.trackName}>{track.name}</Text>
+                  {isPinned && <MaterialCommunityIcons name="pin" size={14} color={THEME_COLOR} style={{ marginLeft: 6 }} />}
+                </View>
+                <Text style={styles.trackDescription}>{track.description}</Text>
+              </View>
+
+              <View style={styles.actions}>
+                <TouchableOpacity onPress={(e) => { e.stopPropagation(); togglePin(track.id); }} style={styles.actionBtn}>
+                  <MaterialCommunityIcons name={isPinned ? "pin" : "pin-outline"} size={22} color={isPinned ? THEME_COLOR : "#6B7280"} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={(e) => { e.stopPropagation(); toggleLike(track.id); }} style={styles.actionBtn}>
+                  <MaterialCommunityIcons name={isLiked ? "heart" : "heart-outline"} size={22} color={isLiked ? "#EF4444" : "#6B7280"} />
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          )
+        })}
       </View>
 
       <View style={styles.infoCard}>
@@ -616,6 +724,19 @@ const styles = StyleSheet.create({
   trackDescription: {
     fontSize: 13,
     color: '#9CA3AF',
+  },
+  trackHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionBtn: {
+    padding: 6,
   },
   infoCard: {
     flexDirection: 'row',
