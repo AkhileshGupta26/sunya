@@ -795,10 +795,7 @@ const styles = StyleSheet.create({
     color: '#D1D5DB',
     fontWeight: '600',
   },
-  durationSelector: {
-    flexDirection: 'row',
-    gap: 8,
-  },
+
   startButton: {
     borderRadius: 12,
     padding: 16,
