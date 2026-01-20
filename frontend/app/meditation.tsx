@@ -34,7 +34,7 @@ const AUDIO_FILES = {
   om_chant: require('../assets/vedic.mp3'),
   mantra: require('../assets/guided.mp3'), // Placeholder for Mantra
   nada_drone: require('../assets/cosmic_drift.mp3'),
-  breath: require('../assets/nature.mp3'),
+  breath: require('../assets/nature_beauty.mp3'),
   forest: require('../assets/forst_music.mp3'),
   river: require('../assets/nature_beauty.mp3'), // Placeholder for River
   singing_bowl: require('../assets/zen_garden.mp3'),
