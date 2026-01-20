@@ -30,93 +30,116 @@ import Animated, {
 
 
 const AUDIO_FILES = {
-  vedic: require('../assets/vedic.mp3'),
-  nature: require('../assets/nature.mp3'),
-  guided: require('../assets/guided.mp3'),
+  silence: null,
+  om_chant: require('../assets/vedic.mp3'),
+  mantra: require('../assets/guided.mp3'), // Placeholder for Mantra
+  nada_drone: require('../assets/cosmic_drift.mp3'),
+  breath: require('../assets/nature.mp3'),
+  forest: require('../assets/forst_music.mp3'),
+  river: require('../assets/nature_beauty.mp3'), // Placeholder for River
+  singing_bowl: require('../assets/zen_garden.mp3'),
+  bell: require('../assets/bird_piano.mp3'), // Placeholder for Bell
+  one_tone: require('../assets/mindfulness_relaxation.mp3'),
   flute: require('../assets/flute.mp3'),
-  // TODO: forest.mp4 was silent or invalid audio. Using bird_piano as fallback for now.
-  forest: require('../assets/bird_piano.mp3'),
-  bird_piano: require('../assets/bird_piano.mp3'),
-  ocean: require('../assets/ocean.mp3'),
-  cosmic: require('../assets/cosmic.mp3'),
-  zen_garden: require('../assets/zen_garden.mp3'),
+  deep_rest: require('../assets/ocean-choir-meditation-8234.mp3'),
 };
 
 const MEDITATION_TRACKS = [
   {
-    id: 'bird_piano',
-    name: 'Bird Piano',
-    icon: 'piano',
+    id: 'silence',
+    name: 'Sunya Silence',
+    icon: 'volume-off',
+    color: '#6B7280',
+    description: 'Absolute silence (Advanced, insight)',
+    source: null,
+  },
+  {
+    id: 'om_awareness',
+    name: 'Om Awareness',
+    icon: 'om',
+    color: '#F59E0B',
+    description: 'Single Om / AUM chant (Focus)',
+    source: AUDIO_FILES.om_chant,
+  },
+  {
+    id: 'mantra_flow',
+    name: 'Mantra Flow',
+    icon: 'script-text',
+    color: '#D97706',
+    description: 'Soft mantra (Concentration)',
+    source: AUDIO_FILES.mantra,
+  },
+  {
+    id: 'nada_inner',
+    name: 'Nada Inner Sound',
+    icon: 'bullseye-arrow',
     color: '#8B5CF6',
-    description: 'Gentle piano with birdsong',
-    source: AUDIO_FILES.bird_piano,
+    description: 'Subtle drone (Deep meditation)',
+    source: AUDIO_FILES.nada_drone,
   },
   {
-    id: 'flute',
-    name: 'Krishna Flute',
-    icon: 'music-clef-treble',
-    color: '#F472B6',
-    description: 'Divine, relaxing flute melody',
-    source: AUDIO_FILES.flute,
-  },
-  {
-    id: 'forest',
-    name: 'Forest Ambience',
-    icon: 'tree',
+    id: 'breath_awareness',
+    name: 'Breath Awareness',
+    icon: 'flower-pollen', // or feather
     color: '#10B981',
-    description: 'Birds and rustling leaves',
+    description: 'Natural breath sound (Mindfulness)',
+    source: AUDIO_FILES.breath,
+  },
+  {
+    id: 'forest_presence',
+    name: 'Forest Presence',
+    icon: 'tree',
+    color: '#059669',
+    description: 'Birds & leaves (Grounding)',
     source: AUDIO_FILES.forest,
   },
   {
-    id: 'rain',
-    name: 'Rain Sounds',
-    icon: 'weather-pouring',
+    id: 'river_stillness',
+    name: 'River Stillness',
+    icon: 'water',
     color: '#3B82F6',
-    description: 'Soothing rainfall for deep sleep',
-    source: AUDIO_FILES.nature,
+    description: 'Flowing water (Relaxation)',
+    source: AUDIO_FILES.river,
   },
   {
-    id: 'vedic',
-    name: 'Vedic Chants',
-    icon: 'om',
-    color: '#F59E0B',
-    description: 'Ancient mantras for deep focus',
-    source: AUDIO_FILES.vedic,
+    id: 'singing_bowl',
+    name: 'Singing Bowl',
+    icon: 'alarm-bell',
+    color: '#FCD34D',
+    description: 'Tibetan bowl strikes (Release)',
+    source: AUDIO_FILES.singing_bowl,
   },
   {
-    id: 'ocean',
-    name: 'Ocean Waves',
-    icon: 'waves',
-    color: '#0EA5E9',
-    description: 'Calming tides for deep relaxation',
-    source: AUDIO_FILES.ocean,
+    id: 'mindfulness_bell',
+    name: 'Mindfulness Bell',
+    icon: 'bell-ring',
+    color: '#EF4444',
+    description: 'Bell every few minutes (Awareness)',
+    source: AUDIO_FILES.bell,
   },
   {
-    id: 'cosmic',
-    name: 'Cosmic Drift',
-    icon: 'rocket-launch', // or 'orbit' or 'planet' - material community icons has 'rocket-launch' or 'google-earth' or 'planet'
-    // 'planet' might not exist in all sets, 'earth' or 'orbit'
-    // checking material community icons: 'weather-night' is good for cosmic
-    icon: 'weather-night',
+    id: 'one_tone',
+    name: 'One-Tone Focus',
+    icon: 'wifi-strength-1',
     color: '#6366F1',
-    description: 'Ambient space sounds for sleep',
-    source: AUDIO_FILES.cosmic,
+    description: 'Single tone (Dharana)',
+    source: AUDIO_FILES.one_tone,
   },
   {
-    id: 'zen_garden',
-    name: 'Zen Garden',
-    icon: 'flower-tulip',
-    color: '#10B981',
-    description: 'Peaceful garden ambience',
-    source: AUDIO_FILES.zen_garden,
+    id: 'heart_devotion',
+    name: 'Heart Devotion',
+    icon: 'heart',
+    color: '#EC4899',
+    description: 'Slow flute (Emotional calm)',
+    source: AUDIO_FILES.flute,
   },
   {
-    id: 'silence',
-    name: 'Pure Silence',
-    icon: 'volume-off',
-    color: '#6B7280',
-    description: 'Deep stillness and awareness',
-    uri: null,
+    id: 'deep_rest',
+    name: 'Deep Rest',
+    icon: 'bed',
+    color: '#818CF8',
+    description: 'Soft ambient pad (Beginners/Sleep)',
+    source: AUDIO_FILES.deep_rest,
   },
 ];
 
@@ -289,8 +312,9 @@ export default function Meditation() {
     }
   }, [autoStart, selectedTrack]);
 
-  const startMeditation = async () => {
-    if (!selectedTrack) {
+  const startMeditation = async (overrideId?: string) => {
+    const trackToPlay = overrideId || selectedTrack;
+    if (!trackToPlay) {
       Alert.alert('Select a Track', 'Please choose a meditation track first.');
       return;
     }
@@ -298,14 +322,14 @@ export default function Meditation() {
     if (user?.settings_bpm_check && !autoStart) {
       router.push({
         pathname: '/bpm-check',
-        params: { phase: 'before', trackId: selectedTrack }
+        params: { phase: 'before', trackId: trackToPlay }
       });
       return;
     }
 
     triggerHaptic('medium');
 
-    const track = MEDITATION_TRACKS.find(t => t.id === selectedTrack);
+    const track = MEDITATION_TRACKS.find(t => t.id === trackToPlay);
     if (!track) return;
 
     try {
@@ -334,6 +358,13 @@ export default function Meditation() {
       console.error('Failed to start session/audio', error);
       // Alert.alert('Error', 'Could not play audio track.'); // Optional: Don't block user if tracking fails
     }
+  };
+
+  const handleQuickStart = (id: string) => {
+    setSelectedTrack(id);
+    // Slight delay to ensure state update if strictly needed, though passing arg to startMeditation is better
+    // But since startMeditation is async and we modify it to verify:
+    startMeditation(id);
   };
 
   const handlePause = async () => {
@@ -661,11 +692,11 @@ export default function Meditation() {
       </View>
 
       <TouchableOpacity
-        style={[styles.startButton, { backgroundColor: THEME_COLOR }, !selectedTrack && styles.startButtonDisabled]}
-        onPress={startMeditation}
+        style={[styles.startButton, { backgroundColor: THEME_COLOR, width: '90%', alignSelf: 'center', marginTop: 12 }, !selectedTrack && { opacity: 0.5 }]}
+        onPress={() => startMeditation()}
         disabled={!selectedTrack}
       >
-        <Text style={styles.startButtonText}>Begin Meditation</Text>
+        <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>Begin Meditation</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -733,10 +764,34 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
   actionBtn: {
     padding: 6,
+  },
+  playBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 4,
+  },
+  quickDurationContainer: {
+    marginBottom: 8,
+  },
+  durationRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  trackInfo: {
+    flex: 1,
+    marginRight: 8,
   },
   infoCard: {
     flexDirection: 'row',
