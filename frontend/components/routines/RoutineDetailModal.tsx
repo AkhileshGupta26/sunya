@@ -317,9 +317,10 @@ const styles = StyleSheet.create({
     },
     closeButton: {
         position: 'absolute',
-        top: 20,
+        top: 24, // Increased top margin
         right: 20,
         zIndex: 10,
+        padding: 8, // Larger touch area
     },
 });
 

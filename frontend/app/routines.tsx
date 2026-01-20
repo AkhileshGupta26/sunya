@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        paddingBottom: 40,
+        paddingBottom: 100, // Increased bottom padding for Android scrolling
     },
     subtitle: {
         fontSize: 16,
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     categorySection: {
-        marginBottom: 32,
+        marginBottom: 24,
     },
     categoryHeader: {
         paddingHorizontal: 20,
