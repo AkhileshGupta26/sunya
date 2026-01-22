@@ -46,7 +46,7 @@ export default function Developer() {
                     <TouchableOpacity onPress={() => Linking.openURL('https://github.com/AkhileshGupta26')} style={styles.socialButton}>
                         <MaterialCommunityIcons name="github" size={28} color="white" />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => Linking.openURL('https://www.linkedin.com/in/akhilesh-gupta-26/')} style={styles.socialButton}>
+                    <TouchableOpacity onPress={() => Linking.openURL('https://www.linkedin.com/in/akhilesh-gupta26')} style={styles.socialButton}>
                         <MaterialCommunityIcons name="linkedin" size={28} color="white" />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleContact} style={styles.socialButton}>

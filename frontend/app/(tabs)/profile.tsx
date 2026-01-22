@@ -438,8 +438,8 @@ export default function Profile() {
 
       <View style={{ alignItems: 'center', marginBottom: 40, marginTop: -20 }}>
         <Text style={{ color: '#6B7280', fontSize: 12 }}>Made with ❤️ in India 🇮🇳</Text>
-        <TouchableOpacity onPress={() => Linking.openURL('https://www.linkedin.com/in/akhilesh-gupta26')} style={{ marginTop: 8 }}>
-          <Text style={{ color: THEME_COLOR, fontSize: 12, fontWeight: '600' }}>Developed by Akhilesh Gupta</Text>
+        <TouchableOpacity onPress={() => router.push('/developer')} style={{ marginTop: 8 }}>
+          <Text style={{ color: THEME_COLOR, fontSize: 12, fontWeight: '600' }}>Know Developer</Text>
         </TouchableOpacity>
       </View>
 
