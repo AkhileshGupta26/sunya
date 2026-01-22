@@ -6,6 +6,7 @@ import AppHeader from '../components/ui/AppHeader';
 import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { AuthProvider } from '../contexts/AuthContext';
+import { DetoxProvider } from '../contexts/DetoxContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as Notifications from 'expo-notifications';
 import { registerForPushNotificationsAsync, setupSmartNotifications } from '../utils/notifications';
@@ -41,21 +42,23 @@ export default function RootLayout() {
           persistOptions={{ persister: asyncStoragePersister }}
         >
           <AuthProvider>
-            <View style={{ flex: 1 }}>
-              <AppHeader />
-              <Stack screenOptions={{ headerShown: false, contentStyle: { paddingTop: 0 } }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="auth/login" />
-                <Stack.Screen name="auth/register" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="meditation" />
-                <Stack.Screen name="yoga" />
-                <Stack.Screen name="wake-up" />
-                <Stack.Screen name="bpm-check" />
-                <Stack.Screen name="detox" />
-                <Stack.Screen name="leaderboard" />
-              </Stack>
-            </View>
+            <DetoxProvider>
+              <View style={{ flex: 1 }}>
+                <AppHeader />
+                <Stack screenOptions={{ headerShown: false, contentStyle: { paddingTop: 0 } }}>
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="auth/login" />
+                  <Stack.Screen name="auth/register" />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="meditation" />
+                  <Stack.Screen name="yoga" />
+                  <Stack.Screen name="wake-up" />
+                  <Stack.Screen name="bpm-check" />
+                  <Stack.Screen name="detox" />
+                  <Stack.Screen name="leaderboard" />
+                </Stack>
+              </View>
+            </DetoxProvider>
           </AuthProvider>
         </PersistQueryClientProvider>
       </ErrorBoundary>

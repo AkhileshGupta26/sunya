@@ -27,13 +27,12 @@
         "backgroundColor": "#000000"
       },
       "package": "com.shunya.app",
-      "versionCode": 5,
+      "versionCode": 6,
       "edgeToEdgeEnabled": true,
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO",
         "NOTIFICATIONS",
-        "SCHEDULE_EXACT_ALARM",
         "VIBRATE",
         "WAKE_LOCK"
       ],

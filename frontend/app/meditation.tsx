@@ -36,7 +36,6 @@ const AUDIO_FILES = {
   cosmic: require('../assets/cosmic_drift.mp3'),
   rain: require('../assets/nature_beauty.mp3'),
   forest: require('../assets/forst_music.mp3'),
-  singing_bowl: require('../assets/zen_garden.mp3'),
   birds: require('../assets/bird_piano.mp3'),
   beauty: require('../assets/beauty.mp3'),
   ocean: require('../assets/ocean-choir-meditation-8234.mp3'),

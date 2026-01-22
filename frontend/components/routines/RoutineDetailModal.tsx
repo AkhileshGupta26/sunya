@@ -36,7 +36,7 @@ const RoutineDetailModal: React.FC<RoutineDetailModalProps> = ({ isVisible, onCl
             onSwipeComplete={onClose}
             swipeDirection={['down']}
             style={styles.modal}
-            propagateSwipe
+            propagateSwipe={true} // Ensure scroll view receives touches
         >
             <View style={styles.container}>
                 <BlurView intensity={80} tint="dark" style={styles.blurContainer}>

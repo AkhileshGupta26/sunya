@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface YogaCardProps {
     themeColor: string;
@@ -15,8 +16,10 @@ export const YogaCard: React.FC<YogaCardProps> = ({ themeColor }) => {
     // Dynamic text state
     const [actionText, setActionText] = useState("Start Flow");
     const TEXTS = ["Start Flow", "Ready to stretch?", "Begin Yoga"];
+    const [isLiked, setIsLiked] = useState(false);
 
     useEffect(() => {
+        loadLikeStatus();
         // Shimmer Loop
         Animated.loop(
             Animated.sequence([
@@ -45,6 +48,26 @@ export const YogaCard: React.FC<YogaCardProps> = ({ themeColor }) => {
         return () => clearInterval(interval);
     }, []);
 
+    const loadLikeStatus = async () => {
+        try {
+            const stored = await AsyncStorage.getItem('yoga_liked');
+            if (stored === 'true') setIsLiked(true);
+        } catch (e) {
+            console.log('Error loading like', e);
+        }
+    };
+
+    const toggleLike = async () => {
+        const newState = !isLiked;
+        setIsLiked(newState);
+        Haptics.selectionAsync();
+        try {
+            await AsyncStorage.setItem('yoga_liked', newState.toString());
+        } catch (e) {
+            console.log('Error saving like', e);
+        }
+    };
+
     const handlePress = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         router.push('/yoga');
@@ -64,11 +87,20 @@ export const YogaCard: React.FC<YogaCardProps> = ({ themeColor }) => {
     return (
         <View style={styles.card}>
             <View style={styles.header}>
-                <MaterialCommunityIcons name="yoga" size={32} color={themeColor} />
-                <View>
-                    <Text style={styles.title}>Daily Yoga</Text>
-                    <Text style={styles.subtitle}>Mindful Movement</Text>
+                <View style={styles.headerLeft}>
+                    <MaterialCommunityIcons name="yoga" size={32} color={themeColor} />
+                    <View>
+                        <Text style={styles.title}>Daily Yoga</Text>
+                        <Text style={styles.subtitle}>Mindful Movement</Text>
+                    </View>
                 </View>
+                <TouchableOpacity onPress={toggleLike} style={styles.likeButton}>
+                    <MaterialCommunityIcons
+                        name={isLiked ? "heart" : "heart-outline"}
+                        size={24}
+                        color={isLiked ? "#EF4444" : "rgba(255,255,255,0.4)"}
+                    />
+                </TouchableOpacity>
             </View>
 
             <Text style={styles.description}>
@@ -114,8 +146,16 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 16,
+        justifyContent: 'space-between',
         marginBottom: 16,
+    },
+    headerLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 16,
+    },
+    likeButton: {
+        padding: 4,
     },
     title: {
         fontSize: 20,

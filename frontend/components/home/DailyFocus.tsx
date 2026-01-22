@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import LottieView from 'lottie-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface DailyFocusProps {
     themeColor: string;
@@ -10,6 +12,29 @@ interface DailyFocusProps {
 
 export const DailyFocus: React.FC<DailyFocusProps> = ({ themeColor }) => {
     const router = useRouter();
+    const [isLiked, setIsLiked] = useState(false);
+
+    useEffect(() => {
+        loadLikeStatus();
+    }, []);
+
+    const loadLikeStatus = async () => {
+        try {
+            const stored = await AsyncStorage.getItem('daily_focus_liked');
+            if (stored === 'true') setIsLiked(true);
+        } catch (e) { console.log(e); }
+    };
+
+    const toggleLike = async () => {
+        const newState = !isLiked;
+        setIsLiked(newState);
+        Haptics.selectionAsync();
+        try {
+            await AsyncStorage.setItem('daily_focus_liked', newState.toString());
+        } catch (e) {
+            console.log('Error saving like', e);
+        }
+    };
 
     const handleStart = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -37,6 +62,18 @@ export const DailyFocus: React.FC<DailyFocusProps> = ({ themeColor }) => {
                     />
                 </View>
             </View>
+
+            {/* Like Button - Absolutely Positioned */}
+            <TouchableOpacity
+                onPress={(e) => { e.stopPropagation(); toggleLike(); }}
+                style={styles.likeButton}
+            >
+                <MaterialCommunityIcons
+                    name={isLiked ? "heart" : "heart-outline"}
+                    size={24}
+                    color={isLiked ? "#EF4444" : "rgba(255,255,255,0.4)"}
+                />
+            </TouchableOpacity>
         </TouchableOpacity>
     );
 };
@@ -51,6 +88,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#2D2D3D',
         justifyContent: 'center', // Vertically center content if needed
+        position: 'relative', // For absolute positioning of like button
     },
     heroContent: {
         flexDirection: 'row',
@@ -60,6 +98,7 @@ const styles = StyleSheet.create({
     },
     textContainer: {
         flex: 1, // Allow text to take up available space
+        paddingRight: 24, // Avoid overlapping with button if text is long
     },
     sectionTitle: {
         fontSize: 20,
@@ -83,4 +122,11 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
     },
+    likeButton: {
+        position: 'absolute',
+        top: 24,
+        right: 24,
+        zIndex: 10,
+        padding: 4,
+    }
 });

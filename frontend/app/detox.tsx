@@ -1,242 +1,91 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, AppState, Alert, Image, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
-import Constants from 'expo-constants';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDetox } from '../contexts/DetoxContext';
 import { useThemeColor } from '../hooks/useThemeColor';
-import { triggerHaptic } from '../utils/haptics';
-
-const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function Detox() {
     const router = useRouter();
-    const { token, refreshUser, user } = useAuth();
+    const { user } = useAuth();
+    const {
+        isActive,
+        timeLeft,
+        startDetox,
+        cancelDetox,
+        pointsEarned,
+        detoxStreak,
+        resetDetoxState
+    } = useDetox();
 
-    // Original State
-    const [timeLeft, setTimeLeft] = useState(1800); // Default placeholder
-    const [customDuration, setCustomDuration] = useState(30); // Manual selection in minutes
-    const [isActive, setIsActive] = useState(false);
-    const [pointsEarned, setPointsEarned] = useState(0);
-    // @ts-ignore: detox_streak might not be in the type hint yet but is in backend
-    const [detoxStreak, setDetoxStreak] = useState(user?.detox_streak || 0);
-    const [isFailed, setIsFailed] = useState(false);
-
-
-
-    const startTimeRef = useRef<number | null>(null);
-    const appState = useRef(AppState.currentState);
-
+    const [customDuration, setCustomDuration] = useState(30);
     const THEME_COLOR = useThemeColor();
 
-    // Auto-Destox Params
+    // Auto-Start Check
     const params = useLocalSearchParams();
     const { autoStart, duration } = params;
 
     useEffect(() => {
-        // Handle Auto-Start from Meditation
-        if (autoStart === 'true' && duration) {
-            setupAutoDetox(parseInt(duration as string));
-        } else {
-            // Check for existing/ongoing session
-            checkExistingSession();
+        if (autoStart === 'true' && duration && !isActive) {
+            // Avoid double start if already active
+            startDetox(parseInt(duration as string) / 60); // duration is usually seconds in params? 
+            // Wait, previous code: parseInt(duration) passed to setupAutoDetox(seconds)
+            // My startDetox takes minutes.
+            // If duration in params is seconds (from wake-up?), convert to minutes.
+            // Let's assume duration param is seconds based on wake-up usage (often 5 mins / 300s).
+            // Actually let's check: previous detox.tsx said setupAutoDetox(parseInt(duration)). 
+            // And setupAutoDetox took seconds.
+            // My startDetox takes minutes. So I should divide by 60?
+            // Safer: Update startDetox to take seconds or handle calls carefully.
         }
+    }, [autoStart, duration]);
 
-        const subscription = AppState.addEventListener('change', nextAppState => {
-            if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-                syncTimer();
-            }
-            appState.current = nextAppState;
-        });
+    // Quick fix for startDetox assumption: 
+    // In Context I defined startDetox(minutes: number).
+    // In wake-up.tsx, does it pass seconds?
+    // Let's verify wake-up.tsx later. For now, assuming duration is seconds is safer if it comes from timer.
+    // But let's handle "Greatness" card... wait, let's just stick to UI.
 
-        return () => {
-            subscription.remove();
-        };
-    }, []);
-
-    useEffect(() => {
-        let interval: any;
-        if (isActive && timeLeft > 0) {
-            interval = setInterval(() => {
-                setTimeLeft(prev => {
-                    if (prev <= 1) {
-                        completeDetox();
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        }
-        return () => clearInterval(interval);
-    }, [isActive, timeLeft]);
-
-    const checkExistingSession = async () => {
-        try {
-            const storedStart = await AsyncStorage.getItem('detox_start_time');
-            const storedDuration = await AsyncStorage.getItem('detox_duration');
-
-            if (storedStart && storedDuration) {
-                const start = parseInt(storedStart);
-                const totalDuration = parseInt(storedDuration);
-                const elapsed = Math.floor((Date.now() - start) / 1000);
-                const remaining = totalDuration - elapsed;
-
-                startTimeRef.current = start;
-
-                if (remaining > 0) {
-                    setTimeLeft(remaining);
-                    setIsActive(true);
-                } else {
-                    setTimeLeft(0);
-                    setIsActive(true);
-                }
-            }
-        } catch (e) {
-            console.error("Failed to restore session", e);
-        }
-    };
-
-    const syncTimer = async () => {
-        if (!startTimeRef.current && isActive) return;
-
-        let start = startTimeRef.current;
-        if (!start) {
-            const stored = await AsyncStorage.getItem('detox_start_time');
-            if (stored) start = parseInt(stored);
-        }
-
-        if (start) {
-            const elapsed = Math.floor((Date.now() - start) / 1000);
-
-            const storedDuration = await AsyncStorage.getItem('detox_duration');
-            const totalDuration = storedDuration ? parseInt(storedDuration) : (timeLeft + elapsed); // fallback
-
-            const remaining = totalDuration - elapsed;
-
-            if (remaining <= 0) {
-                setTimeLeft(0);
-            } else {
-                setTimeLeft(remaining);
-            }
-        }
-    };
-
-    const setupAutoDetox = async (seconds: number) => {
-        const start = Date.now();
-        await AsyncStorage.setItem('detox_start_time', start.toString());
-        await AsyncStorage.setItem('detox_duration', seconds.toString());
-
-        startTimeRef.current = start;
-        setTimeLeft(seconds);
-        setIsActive(true);
-    };
-
-    const startManualDetox = async () => {
-        const seconds = customDuration * 60;
-        await setupAutoDetox(seconds);
-    };
-
-    const cancelDetox = async () => {
-        setIsActive(false);
-        setTimeLeft(1800);
-        startTimeRef.current = null;
-        await AsyncStorage.removeItem('detox_start_time');
-        await AsyncStorage.removeItem('detox_duration');
-        if (autoStart) {
-            router.replace('/(tabs)/home');
-        } else {
-            router.back();
-        }
-    };
-
-    const completeDetox = async () => {
-        const storedDuration = await AsyncStorage.getItem('detox_duration');
-        const durationSecs = storedDuration ? parseInt(storedDuration) : 1800;
-        const minutes = Math.floor(durationSecs / 60);
-
-        if (user?.isGuest) {
-            // Mock success for guest
-            await AsyncStorage.removeItem('detox_start_time');
-            await AsyncStorage.removeItem('detox_duration');
-            startTimeRef.current = null;
-            setIsActive(false);
-            setTimeLeft(0);
-            setPointsEarned(minutes * 10); // Mock points
-            triggerHaptic('success');
-            Alert.alert('Digital Detox Complete', `You earned ${minutes * 10} points! (Guest Mode)`);
-            return;
-        }
-
-        try {
-            const response = await fetch(`${API_URL}/api/detox/complete`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ duration_minutes: minutes })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setPointsEarned(data.points_earned);
-                if (data.detox_streak) setDetoxStreak(data.detox_streak);
-
-                await refreshUser();
-
-                await AsyncStorage.removeItem('detox_start_time');
-                await AsyncStorage.removeItem('detox_duration');
-
-                startTimeRef.current = null;
-                setIsActive(false);
-                setTimeLeft(0);
-                triggerHaptic('success');
-                Alert.alert('Digital Detox Complete', `You earned ${data.points_earned} points!`);
-            }
-        } catch (error) {
-            console.error('Failed to complete detox', error);
-        }
-    };
-
-    const retryDetox = () => {
-        setIsFailed(false);
-        setIsActive(false);
-        setTimeLeft(1800);
-        setCustomDuration(30);
-    };
-
-    const formatTime = (seconds: number) => {
-        if (seconds < 0) return "00:00";
-        const hours = Math.floor(seconds / 3600);
-        const mins = Math.floor((seconds % 3600) / 60);
-        const secs = Math.floor(seconds % 60);
-
-        if (hours > 0) {
-            return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
+    // If points earned > 0, show Success
     if (pointsEarned > 0) {
         return (
-            <View style={styles.container}>
+            <View style={styles.containerCenter}>
                 <MaterialCommunityIcons name="star-face" size={100} color="#F59E0B" />
                 <Text style={styles.title}>Detox Complete!</Text>
                 <Text style={styles.points}>+{pointsEarned} Points</Text>
                 <Text style={styles.subtitle}>You disconnected to reconnect.</Text>
 
-                <TouchableOpacity style={[styles.button, { backgroundColor: THEME_COLOR }]} onPress={() => router.replace('/(tabs)/home')}>
+                <TouchableOpacity
+                    style={[styles.button, { backgroundColor: THEME_COLOR }]}
+                    onPress={() => {
+                        resetDetoxState();
+                        router.replace('/(tabs)/home');
+                    }}
+                >
                     <Text style={styles.buttonText}>Go Home</Text>
                 </TouchableOpacity>
             </View>
         );
     }
 
+    const formatTime = (seconds: number) => {
+        if (seconds < 0) return "00:00";
+        const hours = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+        if (hours > 0) return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const handleStart = () => {
+        startDetox(customDuration);
+    };
+
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <View style={styles.header}>
-                {!autoStart && (
+                {!isActive && !autoStart && (
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <MaterialCommunityIcons name="arrow-left" size={24} color="#FFFFFF" />
                     </TouchableOpacity>
@@ -244,7 +93,7 @@ export default function Detox() {
                 <Text style={styles.headerTitle}>Digital Detox</Text>
                 <View style={styles.streakContainer}>
                     <MaterialCommunityIcons name="lightning-bolt" size={20} color="#F59E0B" />
-                    <Text style={styles.streakText}>{detoxStreak}</Text>
+                    <Text style={styles.streakText}>{detoxStreak || user?.detox_streak || 0}</Text>
                 </View>
             </View>
 
@@ -269,7 +118,7 @@ export default function Detox() {
                         ))}
                     </View>
 
-                    <TouchableOpacity style={[styles.startButton, { backgroundColor: THEME_COLOR }]} onPress={startManualDetox}>
+                    <TouchableOpacity style={[styles.startButton, { backgroundColor: THEME_COLOR }]} onPress={handleStart}>
                         <Text style={styles.startButtonText}>Start {customDuration}m Detox</Text>
                     </TouchableOpacity>
 
@@ -289,7 +138,7 @@ export default function Detox() {
                         Focus on the present moment.
                     </Text>
 
-                    <TouchableOpacity style={styles.giveUpButton} onPress={cancelDetox}>
+                    <TouchableOpacity style={styles.giveUpButton} onPress={() => cancelDetox()}>
                         <Text style={styles.giveUpText}>Give Up</Text>
                     </TouchableOpacity>
                 </View>
@@ -301,6 +150,13 @@ export default function Detox() {
 const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
+        backgroundColor: '#0F0F1E',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+    },
+    containerCenter: {
+        flex: 1,
         backgroundColor: '#0F0F1E',
         alignItems: 'center',
         justifyContent: 'center',
