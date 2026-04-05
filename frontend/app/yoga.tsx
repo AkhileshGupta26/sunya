@@ -14,21 +14,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useThemeColor } from '../hooks/useThemeColor';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic } from '../utils/haptics';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
-const triggerHaptic = (type: 'impact' | 'notification' | 'selection') => {
-    if (Platform.OS === 'web') return;
-    try {
-        if (type === 'impact') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        else if (type === 'notification') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        else Haptics.selectionAsync();
-    } catch (e) { }
-};
+// Using centralized triggerHaptic from utils
 
 const YOGA_TRACKS = [
     {
@@ -92,7 +85,7 @@ const YOGA_TRACKS = [
 
 export default function Yoga() {
     const router = useRouter();
-    const { token } = useAuth();
+    const { token, refreshUser } = useAuth();
     const THEME_COLOR = useThemeColor();
 
     // State
@@ -151,7 +144,9 @@ export default function Yoga() {
             });
 
             if (response.ok) {
-                // const data = await response.json(); // Data unused if no detox
+                // --- SENIOR AUDITOR FIX: Refresh User Stats ---
+                await refreshUser();
+                
                 Alert.alert('Session Complete', 'You have completed this yoga practice.', [
                     { text: 'OK', onPress: () => exitPractice() }
                 ]);

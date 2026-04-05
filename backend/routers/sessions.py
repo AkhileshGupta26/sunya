@@ -85,17 +85,43 @@ async def complete_session(session_data: MeditationSession, user_id: str = Depen
             minutes = session_data.duration_seconds // 60
             points_earned = minutes * 10
             if points_earned > 0:
-                 await db.users.update_one(
+                # --- SENIOR AUDITOR FIX: Lazy point reset for Leaderboards ---
+                current_date = datetime.utcnow()
+                current_week = current_date.isocalendar()[1]
+                current_month = current_date.month
+                
+                user_last_week = user_doc.get("contest_joined_weekly_at") # Used as 'last_update_week'
+                user_last_month = user_doc.get("contest_joined_monthly_at") # Used as 'last_update_month'
+                
+                reset_weekly = user_last_week != str(current_week)
+                reset_monthly = user_last_month != str(current_month)
+                
+                # Perform the update
+                await db.users.update_one(
                     {"_id": ObjectId(user_id)},
-                    {"$inc": {
-                        "total_points": points_earned,
-                        # Also update contest points if applicable? 
-                        # User didn't explicitly ask for contest point logic fix here, but it's implied "Update global / contest points".
-                        # Let's check active contests and update them too.
-                        "weekly_points": points_earned, 
-                        "monthly_points": points_earned
-                    }}
+                    {
+                        "$inc": {
+                            "total_points": points_earned,
+                            "weekly_points": points_earned if not reset_weekly else 0,
+                            "monthly_points": points_earned if not reset_monthly else 0
+                        },
+                        "$set": {
+                            "contest_joined_weekly_at": str(current_week),
+                            "contest_joined_monthly_at": str(current_month)
+                        }
+                    }
                 )
+                
+                # If reset occurred, we need to set the initial points for the new period
+                if reset_weekly or reset_monthly:
+                    inc_reset = {}
+                    if reset_weekly: inc_reset["weekly_points"] = points_earned
+                    if reset_monthly: inc_reset["monthly_points"] = points_earned
+                    
+                    await db.users.update_one(
+                        {"_id": ObjectId(user_id)},
+                        {"$set": inc_reset}
+                    )
 
         # Check if we already credited streak for today
         # We check by looking for ANY completed meditation session for today (excluding this one if we just saved it? No, just check if user field updated?)
@@ -131,12 +157,19 @@ async def complete_session(session_data: MeditationSession, user_id: str = Depen
             # Logic: If streak > 0, we check yesterday. If streak is 0, start new.
             # If yesterday missing but have Zen Pass? (Simplification: Auto-use pass not requested here, just standard logic)
             
+            # --- SENIOR AUDITOR FIX: Zen Pass Heroics ---
+            has_zen_pass = user_doc.get("zen_passes", 0) > 0
+            
             if yesterday_session or user_doc["current_streak"] == 0:
                 new_streak += 1
+            elif has_zen_pass:
+                # Automagically use a Zen Pass to save the streak!
+                new_streak += 1
+                zen_passes -= 1
+                streak_updated = True
+                logger.info(f"User {user_id} used a Zen Pass to save a {new_streak} day streak!")
             else:
-                # Streak broken? Or maybe they used a pass? 
-                # For now assume reset if broken, unless we want to handle grace logic here.
-                # Use existing logic:
+                # Streak broken
                 new_streak = 1 
 
             new_total_days += 1

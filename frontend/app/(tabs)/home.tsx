@@ -5,13 +5,17 @@ import {
   RefreshControl,
   useWindowDimensions,
   View,
+  TouchableOpacity,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import Constants from 'expo-constants';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import { useSession } from '../../hooks/useSession';
 import { triggerHaptic } from '../../utils/haptics';
+import { api } from '../../services/api';
+import { useEffect } from 'react';
 
 // Components
 import { HomeHeader } from '../../components/home/HomeHeader';
@@ -42,6 +46,10 @@ export default function Home() {
     await Promise.all([refreshUser(), refetch()]);
     setIsRefreshing(false);
   };
+
+  useEffect(() => {
+    // Initial fetch if needed
+  }, []);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -100,6 +108,16 @@ export default function Home() {
       </View>
 
 
+      {/* Sunya Yogi FAB */}
+        <TouchableOpacity
+          style={[styles.fab, { backgroundColor: THEME_COLOR }]}
+          onPress={() => {
+            triggerHaptic('impact');
+            router.push('/yogi');
+          }}
+        >
+          <MaterialCommunityIcons name="meditation" size={30} color="white" />
+        </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -129,5 +147,21 @@ const styles = StyleSheet.create({
     width: '48%', // 2 cards per row with some gap
     marginHorizontal: '1%',
     marginBottom: 16,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    width: 65,
+    height: 65,
+    borderRadius: 32.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    zIndex: 1000,
   },
 });

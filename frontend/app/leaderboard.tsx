@@ -9,6 +9,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { useLocalSearchParams } from 'expo-router';
 
+interface LeaderboardEntry {
+    id: string;
+    rank: number;
+    name: string;
+    total_points: number;
+    is_me: boolean;
+    badges?: string[];
+}
+
 export default function Leaderboard() {
     const router = useRouter();
     const { user } = useAuth();
@@ -16,7 +25,7 @@ export default function Leaderboard() {
     const contestType = (type as string) || 'global';
 
     const THEME_COLOR = useThemeColor();
-    const [leaderboard, setLeaderboard] = useState([]);
+    const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [activeContest, setActiveContest] = useState('none'); // Keep for UI info if needed
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -129,40 +138,35 @@ export default function Leaderboard() {
         filteredLeaderboard.push(me);
     }
 
-    // No Active Contest View
-    if (activeContest === 'none' && !loading && contestType !== 'global') {
-        return (
-            <View style={styles.container}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <MaterialCommunityIcons name="arrow-left" size={24} color="#FFFFFF" />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Leaderboard</Text>
-                    <View style={{ width: 24 }} />
-                </View>
-                <View style={styles.emptyContainer}>
-                    <MaterialCommunityIcons name="trophy-variant-outline" size={80} color="#4B5563" />
-                    <Text style={styles.emptyTitle}>No Active Contest</Text>
-                    <Text style={styles.emptyText}>Join this contest to see rankings!</Text>
-
-                    <TouchableOpacity style={[styles.joinButton, { backgroundColor: THEME_COLOR }]} onPress={() => router.push('/(tabs)/contest')}>
-                        <Text style={styles.joinButtonText}>Go to Contest Arena</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-        );
-    }
-
     return (
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <MaterialCommunityIcons name="arrow-left" size={24} color="#FFFFFF" />
                 </TouchableOpacity>
-                <Text style={styles.title}>
-                    {activeContest.charAt(0).toUpperCase() + activeContest.slice(1)} Leaderboard
-                </Text>
+                <Text style={styles.title}>Zen Leaderboard</Text>
                 <View style={{ width: 24 }} />
+            </View>
+
+            {/* TAB SWITCHER */}
+            <View style={styles.tabContainer}>
+                {['global', 'weekly', 'monthly'].map((t) => (
+                    <TouchableOpacity
+                        key={t}
+                        style={[
+                            styles.tabButton,
+                            contestType === t && { backgroundColor: THEME_COLOR }
+                        ]}
+                        onPress={() => router.setParams({ type: t })}
+                    >
+                        <Text style={[
+                            styles.tabText,
+                            contestType === t && { color: '#FFF', fontWeight: 'bold' }
+                        ]}>
+                            {t.charAt(0).toUpperCase() + t.slice(1)}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
             </View>
 
             <FlatList
@@ -195,6 +199,25 @@ const styles = StyleSheet.create({
         padding: 24,
         paddingTop: 60,
         justifyContent: 'space-between',
+    },
+    tabContainer: {
+        flexDirection: 'row',
+        backgroundColor: '#1F1F2E',
+        marginHorizontal: 24,
+        padding: 6,
+        borderRadius: 12,
+        marginBottom: 8,
+    },
+    tabButton: {
+        flex: 1,
+        paddingVertical: 10,
+        alignItems: 'center',
+        borderRadius: 8,
+    },
+    tabText: {
+        color: '#9CA3AF',
+        fontSize: 14,
+        fontWeight: '500',
     },
     backButton: {
     },

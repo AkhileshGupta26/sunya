@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, useSegments } from 'expo-router';
 import Constants from 'expo-constants';
 import { useAuth } from './AuthContext';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic } from '../utils/haptics';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -181,7 +181,7 @@ export const DetoxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (user?.isGuest) {
             await clearSession();
             setPointsEarned(minutes * 10);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            triggerHaptic('success');
             return;
         }
 
@@ -202,7 +202,7 @@ export const DetoxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
                 await refreshUser();
                 await clearSession();
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                triggerHaptic('success');
             }
         } catch (error) {
             console.error('Failed to complete detox', error);

@@ -33,6 +33,7 @@
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="frontend"/>
         <data android:scheme="com.shunya.app"/>
+        <data android:scheme="exp+sunya"/>
       </intent-filter>
     </activity>
   </application>

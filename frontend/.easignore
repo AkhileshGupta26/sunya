@@ -1,22 +1,7 @@
-
-# Valid for EAS Build and Update
 node_modules/
-/node_modules
-**/node_modules
-
-# Native build artifacts
-android/
-ios/
+android/build/
+android/.gradle/
+ios/build/
+.expo/
 dist/
 web-build/
-.expo/
-.git/
-
-# Backups
-android_backup/
-*_backup/
-
-# Logs
-npm-debug.log
-yarn-error.log
-.DS_Store

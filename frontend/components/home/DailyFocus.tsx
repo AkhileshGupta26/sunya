@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic } from '../../utils/haptics';
 import LottieView from 'lottie-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -28,7 +28,7 @@ export const DailyFocus: React.FC<DailyFocusProps> = ({ themeColor }) => {
     const toggleLike = async () => {
         const newState = !isLiked;
         setIsLiked(newState);
-        Haptics.selectionAsync();
+        triggerHaptic('selection');
         try {
             await AsyncStorage.setItem('daily_focus_liked', newState.toString());
         } catch (e) {
@@ -37,7 +37,7 @@ export const DailyFocus: React.FC<DailyFocusProps> = ({ themeColor }) => {
     };
 
     const handleStart = () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        triggerHaptic('impact');
         router.push('/meditation');
     };
 

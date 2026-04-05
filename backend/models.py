@@ -40,6 +40,27 @@ class UserResponse(BaseModel):
     weekly_points: int = 0
     monthly_points: int = 0
     badges: List[str] = []
+    # AI Personalized Coaching Fields
+    aspirations: Optional[str] = "Find inner peace and focus"
+    current_state: Optional[str] = "Feeling balanced"
+
+# --- AI Yogi Models ---
+class MantraResponse(BaseModel):
+    sankalpa: str # The Sanskrit-inspired resolution
+    explanation: str # Modern translation/wisdom
+    focus_points: List[str] # 2-3 focus points
+
+class VedicSearchResponse(BaseModel):
+    wisdom: str # The core teaching
+    practical_steps: List[str] # Actionable items
+    source_context: Optional[str] = None # Which scripture/concept it's from
+    sanskrit_shloka: Optional[str] = None # The original Sanskrit verse
+    shloka_translation: Optional[str] = None # The English translation of the shloka
+
+class JourneySummaryResponse(BaseModel):
+    summary: str # The poetic reflection
+    milestone_hit: Optional[str] = None # Anniversary or achievement
+    focus_advice: str # Short advice for the future
 
 # --- Settings & Profile Updates ---
 class UserSettingsUpdate(BaseModel):
@@ -58,6 +79,8 @@ class UserProfileUpdate(BaseModel):
     name: Optional[str] = None
     profile_picture: Optional[str] = None # Base64 or URL
     settings_gender: Optional[str] = None
+    aspirations: Optional[str] = None
+    current_state: Optional[str] = None
 
 # --- Meditation Session Models ---
 class MeditationSession(BaseModel):
@@ -101,7 +124,7 @@ class InstitutionResponse(BaseModel):
     name: str
     total_minutes: int
     member_count: int
-    rank: int
+    rank: int = 0
 
 # --- Detox Models ---
 class DetoxComplete(BaseModel):

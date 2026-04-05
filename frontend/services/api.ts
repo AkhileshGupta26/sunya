@@ -1,7 +1,7 @@
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL;
+const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL || Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
 class ApiError extends Error {
     status: number;
@@ -102,5 +102,19 @@ export const api = {
             body: formData,
         });
         return handleResponse(response);
+    },
+
+    // Yogi Extensions
+    getMantra: async () => {
+        return api.post('/api/yogi/mantra', {});
+    },
+    askYogi: async (message: string) => {
+        return api.post('/api/yogi/ask', { message });
+    },
+    searchVedic: async (message: string) => {
+        return api.post('/api/yogi/search', { message });
+    },
+    getJourneySummary: async () => {
+        return api.post('/api/yogi/journey', {});
     }
 };

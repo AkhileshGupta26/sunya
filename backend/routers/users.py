@@ -24,6 +24,10 @@ async def update_user_profile(profile_data: UserProfileUpdate, user_id: str = De
         updates["profile_picture"] = profile_data.profile_picture
     if profile_data.settings_gender is not None:
         updates["settings_gender"] = profile_data.settings_gender
+    if profile_data.aspirations is not None:
+        updates["aspirations"] = profile_data.aspirations
+    if profile_data.current_state is not None:
+        updates["current_state"] = profile_data.current_state
         
     if updates:
         await db.users.update_one(
@@ -60,7 +64,9 @@ async def update_user_profile(profile_data: UserProfileUpdate, user_id: str = De
         contest_joined_monthly_at=updated_user.get("contest_joined_monthly_at"),
         weekly_points=updated_user.get("weekly_points", 0),
         monthly_points=updated_user.get("monthly_points", 0),
-        badges=updated_user.get("badges", [])
+        badges=updated_user.get("badges", []),
+        aspirations=updated_user.get("aspirations", "Find inner peace and focus"),
+        current_state=updated_user.get("current_state", "Feeling balanced")
     )
 
 @router.put("/api/user/settings")
@@ -140,17 +146,22 @@ async def complete_detox(data: DetoxComplete, user_id: str = Depends(get_current
 
 @router.get("/api/leaderboard")
 async def get_leaderboard(type: str = "global", user_id: str = Depends(get_current_user)):
-    if type == "circle":
+    # Supported types: global, weekly, monthly, circle
+    sort_field = "total_points"
+    query = {}
+    
+    if type == "weekly":
+        sort_field = "weekly_points"
+    elif type == "monthly":
+        sort_field = "monthly_points"
+    elif type == "circle":
         user = await db.users.find_one({"_id": ObjectId(user_id)})
         circle_id = user.get("circle_id")
-        
         if not circle_id:
             return {"leaderboard": []}
-            
-        users = await db.users.find({"circle_id": circle_id}).sort("total_points", -1).limit(20).to_list(20)
-    else:
-        # Global
-        users = await db.users.find().sort("total_points", -1).limit(50).to_list(50)
+        query = {"circle_id": circle_id}
+        
+    users = await db.users.find(query).sort(sort_field, -1).limit(50).to_list(50)
     
     leaderboard = []
     for idx, u in enumerate(users):
@@ -158,6 +169,7 @@ async def get_leaderboard(type: str = "global", user_id: str = Depends(get_curre
             "rank": idx + 1,
             "id": str(u["_id"]),
             "name": u["name"],
+            "points": u.get(sort_field, 0), # Map dynamic field to generic 'points'
             "total_points": u.get("total_points", 0),
             "is_me": str(u["_id"]) == user_id
         })

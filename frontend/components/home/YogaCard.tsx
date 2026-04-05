@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic } from '../../utils/haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface YogaCardProps {
@@ -60,7 +60,7 @@ export const YogaCard: React.FC<YogaCardProps> = ({ themeColor }) => {
     const toggleLike = async () => {
         const newState = !isLiked;
         setIsLiked(newState);
-        Haptics.selectionAsync();
+        triggerHaptic('selection');
         try {
             await AsyncStorage.setItem('yoga_liked', newState.toString());
         } catch (e) {
@@ -69,7 +69,7 @@ export const YogaCard: React.FC<YogaCardProps> = ({ themeColor }) => {
     };
 
     const handlePress = () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        triggerHaptic('light');
         router.push('/yoga');
     };
 

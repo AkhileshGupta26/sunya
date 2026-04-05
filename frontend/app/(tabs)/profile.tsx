@@ -19,7 +19,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCameraPermissions } from 'expo-camera';
 import { useThemeColor } from '../../hooks/useThemeColor';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic } from '../../utils/haptics';
 import { StreakFlame } from '../../components/ui/StreakFlame';
 import { api } from '../../services/api';
 import { scheduleAlarm, cancelAlarm } from '../../utils/notifications';
@@ -40,6 +40,9 @@ export default function Profile() {
   const [editName, setEditName] = useState('');
   const [editGender, setEditGender] = useState('male');
   const [debugLog, setDebugLog] = useState('');
+  const [journeySummary, setJourneySummary] = useState<any>(null);
+  const [journeyLoading, setJourneyLoading] = useState(false);
+  const [journeyModalVisible, setJourneyModalVisible] = useState(false);
 
   // State for settings
   const [wakeTime, setWakeTime] = useState(user?.wake_time || '06:00');
@@ -111,6 +114,7 @@ export default function Profile() {
       // @ts-ignore
       await updateUser(updatedUser);
       setEditProfileModalVisible(false);
+      triggerHaptic('success');
       Alert.alert('Success', 'Profile updated!');
 
     } catch (error: any) {
@@ -136,6 +140,7 @@ export default function Profile() {
 
   const toggleGender = (value: string) => {
     // Legacy direct toggle if used elsewhere
+    triggerHaptic('selection');
     updateSettings({ settings_gender: value });
   };
 
@@ -240,7 +245,18 @@ export default function Profile() {
     }
   };
 
-
+  const fetchJourneySummary = async () => {
+    setJourneyLoading(true);
+    setJourneyModalVisible(true);
+    try {
+      const data = await api.getJourneySummary();
+      setJourneySummary(data);
+    } catch (error) {
+      console.error('Failed to fetch journey summary:', error);
+    } finally {
+      setJourneyLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -252,6 +268,7 @@ export default function Profile() {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
+            triggerHaptic('notification');
             await logout(() => router.replace('/auth/login'));
           },
         },
@@ -315,6 +332,14 @@ export default function Profile() {
             <Text style={styles.statLabel}>Zen Passes</Text>
           </View>
         </View>
+
+        <TouchableOpacity 
+          style={[styles.journeyButton, { borderColor: THEME_COLOR + '40' }]} 
+          onPress={fetchJourneySummary}
+        >
+          <MaterialCommunityIcons name="auto-fix" size={20} color={THEME_COLOR} />
+          <Text style={[styles.journeyButtonText, { color: THEME_COLOR }]}>AI Journey Reflection</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
@@ -584,11 +609,50 @@ export default function Profile() {
         </View>
       </Modal>
 
+      {/* Journey Reflection Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={journeyModalVisible}
+        onRequestClose={() => setJourneyModalVisible(false)}
+      >
+        <View style={styles.centeredView}>
+          <View style={[styles.modalView, { width: '90%' }]}>
+            <MaterialCommunityIcons name="auto-fix" size={48} color={THEME_COLOR} />
+            <Text style={[styles.modalTitle, { color: THEME_COLOR, marginTop: 10 }]}>Sacred Reflection</Text>
+            
+            {journeyLoading ? (
+              <ActivityIndicator size="large" color={THEME_COLOR} style={{ marginVertical: 40 }} />
+            ) : (
+              <ScrollView style={{ width: '100%', maxHeight: 400 }}>
+                <Text style={styles.journeySummaryText}>"{journeySummary?.summary}"</Text>
+                
+                {journeySummary?.milestone_hit && (
+                  <View style={[styles.milestoneBox, { backgroundColor: `${THEME_COLOR}20` }]}>
+                    <MaterialCommunityIcons name="trophy-variant" size={20} color={THEME_COLOR} />
+                    <Text style={[styles.milestoneText, { color: THEME_COLOR }]}>
+                      Milestone: {journeySummary.milestone_hit}
+                    </Text>
+                  </View>
+                )}
 
+                <View style={styles.adviceHeader}>
+                  <MaterialCommunityIcons name="star-face" size={16} color="#9CA3AF" />
+                  <Text style={styles.adviceTitle}>YOGI'S GUIDANCE</Text>
+                </View>
+                <Text style={styles.adviceText}>{journeySummary?.focus_advice}</Text>
+              </ScrollView>
+            )}
 
-      {/* Alarm Time Modal */}
-
-
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: THEME_COLOR, marginTop: 20, width: '100%' }]}
+              onPress={() => setJourneyModalVisible(false)}
+            >
+              <Text style={styles.textStyle}>Continue My Path</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
     </ScrollView >
   );
@@ -861,5 +925,58 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: 'bold',
     fontSize: 12,
+  },
+  journeyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    marginHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 8,
+  },
+  journeyButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  journeySummaryText: {
+    color: '#E5E7EB',
+    fontSize: 18,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    lineHeight: 28,
+    marginVertical: 20,
+  },
+  milestoneBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 20,
+    gap: 8,
+  },
+  milestoneText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  adviceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  adviceTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#9CA3AF',
+    letterSpacing: 1,
+  },
+  adviceText: {
+    color: '#D1D5DB',
+    fontSize: 14,
+    lineHeight: 22,
   },
 });

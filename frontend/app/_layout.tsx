@@ -56,6 +56,8 @@ export default function RootLayout() {
                   <Stack.Screen name="bpm-check" />
                   <Stack.Screen name="detox" />
                   <Stack.Screen name="leaderboard" />
+                  <Stack.Screen name="yogi" />
+                  <Stack.Screen name="vedic-search" />
                 </Stack>
               </View>
             </DetoxProvider>

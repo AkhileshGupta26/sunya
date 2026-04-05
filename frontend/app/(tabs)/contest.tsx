@@ -15,7 +15,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useThemeColor } from '../../hooks/useThemeColor';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic } from '../../utils/haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RoutinesEntryCard } from '../../components/home/RoutinesEntryCard';
 import { ROUTINE_CATEGORIES, Routine } from '@/utils/routinesData';
@@ -257,7 +257,7 @@ export default function Contest() {
               const data = await res.json();
               setActiveContests(data.active_contests); // Update local
               refreshUser(); // Update global context
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              triggerHaptic('success');
               Alert.alert('Success', `You joined the ${type} contest!`);
             } else {
               const err = await res.json();

@@ -8,7 +8,7 @@ import { useThemeColor } from '../hooks/useThemeColor';
 
 export default function Detox() {
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
     const {
         isActive,
         timeLeft,
@@ -58,7 +58,8 @@ export default function Detox() {
 
                 <TouchableOpacity
                     style={[styles.button, { backgroundColor: THEME_COLOR }]}
-                    onPress={() => {
+                    onPress={async () => {
+                        await refreshUser();
                         resetDetoxState();
                         router.replace('/(tabs)/home');
                     }}

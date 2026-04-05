@@ -118,7 +118,7 @@ const MEDITATION_TRACKS = [
 
 export default function Meditation() {
   const router = useRouter();
-  const { token, user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const THEME_COLOR = useThemeColor();
   const { autoStart, trackId } = useLocalSearchParams();
   const [selectedTrack, setSelectedTrack] = useState<string | null>(null);
@@ -403,6 +403,9 @@ export default function Meditation() {
           duration_seconds: selectedDuration
         });
         data = res;
+        
+        // --- SENIOR AUDITOR FIX: Refresh User Stats ---
+        await refreshUser();
       }
 
       // Auto-route to Detox with calculated duration
