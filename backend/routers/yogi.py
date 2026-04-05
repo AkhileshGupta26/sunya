@@ -236,8 +236,14 @@ async def search_vedic(request: YogiRequest):
     logger.info(f"Vedic Search: {request.message[:50]}...")
     
     try:
-        model = genai.GenerativeModel('models/gemini-flash-lite-latest')
-        prompt = f"{VEDIC_SEARCH_PROMPT}\n\nQuestion: {request.message}"
+        generation_config = genai.types.GenerationConfig(
+            temperature=0.8,
+            top_p=0.95,
+            top_k=40,
+            max_output_tokens=1024,
+        )
+        model = genai.GenerativeModel('models/gemini-flash-lite-latest', generation_config=generation_config)
+        prompt = f"{VEDIC_SEARCH_PROMPT}\n\nQuestion: {request.message}\n\nNote: Provide a unique response each time, exploring different ancient texts like Upanishads, Bhagavad Gita, or Vedas relevant to the query."
         response = model.generate_content(prompt)
         
         text = response.text.strip()

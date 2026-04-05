@@ -21,10 +21,18 @@ import Animated, {
   FadeIn, 
   FadeInDown, 
   Layout, 
-  SlideInRight 
+  SlideInRight,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  interpolate,
+  withSequence,
+  Extrapolate
 } from 'react-native-reanimated';
+import { BlurView } from 'expo-blur';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 interface Message {
   id: string;
@@ -35,6 +43,58 @@ interface Message {
     track_type: 'meditation' | 'yoga';
   };
 }
+
+const AIHalo = ({ color }: { color: string }) => {
+  const pulse = useSharedValue(0);
+
+  useEffect(() => {
+    pulse.value = withRepeat(
+      withTiming(1, { duration: 2000 }),
+      -1,
+      true
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const scale = interpolate(pulse.value, [0, 1], [1, 1.4]);
+    const opacity = interpolate(pulse.value, [0, 1], [0.6, 0]);
+    return {
+      transform: [{ scale }],
+      opacity,
+    };
+  });
+
+  return (
+    <Animated.View style={[styles.halo, { backgroundColor: color }, animatedStyle]} />
+  );
+};
+
+const ThinkingDots = ({ color }: { color: string }) => {
+  return (
+    <View style={styles.dotsContainer}>
+      {[0, 1, 2].map((i) => (
+        <AnimatedDot key={i} delay={i * 200} color={color} />
+      ))}
+    </View>
+  );
+};
+
+const AnimatedDot = ({ delay, color }: { delay: number, color: string }) => {
+  const opacity = useSharedValue(0.3);
+  useEffect(() => {
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 400 }),
+        withTiming(0.3, { duration: 400 })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  return <Animated.View style={[styles.dot, { backgroundColor: color }, style]} />;
+};
 
 export default function SunyaYogi() {
   const router = useRouter();
@@ -114,26 +174,33 @@ export default function SunyaYogi() {
   }, [messages, loading]);
 
   return (
-    <LinearGradient colors={['#0F0F1E', '#161622']} style={styles.container}>
+    <LinearGradient colors={['#0F0F1E', '#161622', '#0A0A12']} style={styles.container}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <BlurView intensity={20} tint="dark" style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <MaterialCommunityIcons name="arrow-left" size={24} color="#FFFFFF" />
+            <MaterialCommunityIcons name="chevron-left" size={28} color="#FFFFFF" />
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
-            <MaterialCommunityIcons name="auto-fix" size={20} color={THEME_COLOR} style={{ marginRight: 8 }} />
-            <Text style={styles.headerTitle}>Sunya Yogi</Text>
+            <View style={styles.headerAvatarWrapper}>
+              <AIHalo color={THEME_COLOR} />
+              <View style={[styles.headerAvatar, { backgroundColor: THEME_COLOR }]}>
+                <MaterialCommunityIcons name="meditation" size={20} color="white" />
+              </View>
+            </View>
+            <View>
+              <Text style={styles.headerTitle}>Sunya Yogi</Text>
+              <Text style={styles.headerSubtitle}>Vedic AI Mentor</Text>
+            </View>
           </View>
-          {/* @ts-ignore - Route types will sync on next build */}
           <TouchableOpacity onPress={() => router.push('/vedic-search')} style={styles.searchButton}>
             <MaterialCommunityIcons name="library-shelves" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-        </View>
+        </BlurView>
 
         <ScrollView 
           ref={scrollViewRef}
@@ -150,13 +217,21 @@ export default function SunyaYogi() {
               ]}
             >
               {msg.sender === 'yogi' && (
-                <View style={[styles.avatar, { backgroundColor: THEME_COLOR + '20' }]}>
-                  <MaterialCommunityIcons name="meditation" size={20} color={THEME_COLOR} />
+                <View style={styles.avatarContainer}>
+                  <AIHalo color={THEME_COLOR} />
+                  <View style={[styles.avatar, { backgroundColor: THEME_COLOR }]}>
+                    <MaterialCommunityIcons name="meditation" size={18} color="white" />
+                  </View>
                 </View>
               )}
-              <View style={[
-                msg.sender === 'user' ? styles.userBubble : [styles.yogiBubble, { borderLeftColor: THEME_COLOR }]
-              ]}>
+              <BlurView 
+                intensity={msg.sender === 'yogi' ? 20 : 0} 
+                tint="dark" 
+                style={[
+                  msg.sender === 'user' ? styles.userBubble : styles.yogiBubble,
+                  msg.sender === 'yogi' && { borderColor: THEME_COLOR + '30', borderWidth: 1 }
+                ]}
+              >
                 <Text style={styles.messageText}>{msg.text}</Text>
                 
                 {msg.recommendation && msg.recommendation.track_id && (
@@ -166,12 +241,12 @@ export default function SunyaYogi() {
                       onPress={() => startRecommendedSession(msg.recommendation)}
                     >
                       <MaterialCommunityIcons 
-                        name={msg.recommendation.track_type === 'meditation' ? 'play' : 'yoga'} 
+                        name={msg.recommendation.track_type === 'meditation' ? 'play-circle' : 'yoga'} 
                         size={20} 
                         color="white" 
                       />
                       <Text style={styles.recButtonText}>
-                        Begin {msg.recommendation.track_id
+                        Go to {msg.recommendation.track_id
                           .split('_')
                           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                           .join(' ')}
@@ -179,36 +254,45 @@ export default function SunyaYogi() {
                     </TouchableOpacity>
                   </Animated.View>
                 )}
-              </View>
+              </BlurView>
             </Animated.View>
           ))}
           {loading && (
             <View style={styles.loadingWrapper}>
-              <ActivityIndicator size="small" color={THEME_COLOR} />
-              <Text style={styles.loadingText}>The Yogi is reflecting...</Text>
+               <View style={styles.avatarContainer}>
+                <AIHalo color={THEME_COLOR} />
+                <View style={[styles.avatar, { backgroundColor: THEME_COLOR + '40' }]}>
+                  <MaterialCommunityIcons name="brain" size={18} color="white" />
+                </View>
+              </View>
+              <BlurView intensity={20} tint="dark" style={[styles.yogiBubble, styles.thinkingBubble, { borderColor: THEME_COLOR + '20', borderWidth: 1 }]}>
+                <ThinkingDots color={THEME_COLOR} />
+              </BlurView>
             </View>
           )}
         </ScrollView>
 
         {/* Input Area */}
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Share your heart..."
-            placeholderTextColor="#6B7280"
-            value={input}
-            onChangeText={setInput}
-            multiline
-            maxLength={500}
-          />
-          <TouchableOpacity 
-            style={[styles.sendButton, { backgroundColor: input.trim() ? THEME_COLOR : '#2D2D3D' }]}
-            onPress={sendMessage}
-            disabled={!input.trim() || loading}
-          >
-            <MaterialCommunityIcons name="send" size={20} color="white" />
-          </TouchableOpacity>
-        </View>
+        <BlurView intensity={60} tint="dark" style={styles.inputContainer}>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              placeholder="Share your heart..."
+              placeholderTextColor="#9CA3AF"
+              value={input}
+              onChangeText={setInput}
+              multiline
+              maxLength={500}
+            />
+            <TouchableOpacity 
+              style={[styles.sendButton, { backgroundColor: input.trim() ? THEME_COLOR : '#2D2D3D' }]}
+              onPress={sendMessage}
+              disabled={!input.trim() || loading}
+            >
+              <MaterialCommunityIcons name="send" size={20} color="white" />
+            </TouchableOpacity>
+          </View>
+        </BlurView>
       </KeyboardAvoidingView>
     </LinearGradient>
   );
@@ -224,40 +308,66 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 60,
     paddingHorizontal: 20,
-    paddingBottom: 15,
+    paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#2D2D3D',
+    borderBottomColor: 'rgba(255,255,255,0.05)',
   },
   backButton: {
-    padding: 8,
+    padding: 4,
   },
   searchButton: {
     padding: 8,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
   },
   headerTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    marginLeft: 15,
+  },
+  headerAvatarWrapper: {
+    marginRight: 12,
+    position: 'relative',
+  },
+  headerAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '800',
     color: '#FFFFFF',
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontWeight: '500',
   },
   scrollContent: {
     padding: 20,
     paddingBottom: 40,
   },
-  messageWrapper: {
-    flexDirection: 'row',
+  userWrapper: {
+    alignSelf: 'flex-end',
     marginBottom: 20,
     maxWidth: '85%',
   },
-  userWrapper: {
-    alignSelf: 'flex-end',
-    justifyContent: 'flex-end',
-  },
   yogiWrapper: {
+    flexDirection: 'row',
     alignSelf: 'flex-start',
+    marginBottom: 20,
+    maxWidth: '85%',
+  },
+  avatarContainer: {
+    width: 36,
+    height: 36,
+    position: 'relative',
+    marginRight: 12,
+    marginTop: 4,
   },
   avatar: {
     width: 36,
@@ -265,82 +375,106 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
-    marginTop: 5,
+    zIndex: 1,
   },
-  bubble: {
+  halo: {
+    position: 'absolute',
+    width: 36,
+    height: 36,
     borderRadius: 18,
-    padding: 15,
+    top: 0,
+    right: 0,
   },
   userBubble: {
     backgroundColor: '#37374A',
+    borderRadius: 20,
     borderBottomRightRadius: 4,
+    padding: 16,
   },
   yogiBubble: {
-    backgroundColor: '#1F1F2E',
+    backgroundColor: 'rgba(31, 31, 46, 0.4)',
+    borderRadius: 20,
     borderBottomLeftRadius: 4,
-    borderLeftWidth: 3,
+    padding: 16,
+  },
+  thinkingBubble: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
   },
   messageText: {
     fontSize: 16,
     color: '#E5E7EB',
     lineHeight: 24,
+    fontWeight: '500',
   },
   recContainer: {
-    marginTop: 15,
+    marginTop: 16,
   },
   recButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 12,
-    gap: 8,
+    borderRadius: 14,
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
   },
   recButtonText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontWeight: '800',
     fontSize: 14,
-    textTransform: 'capitalize',
   },
   loadingWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: 46,
+    marginBottom: 40,
   },
-  loadingText: {
-    color: '#9CA3AF',
-    fontSize: 14,
-    marginLeft: 10,
-    fontStyle: 'italic',
+  dotsContainer: {
+    flexDirection: 'row',
+    gap: 4,
+    alignItems: 'center',
+    height: 10,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     padding: 15,
     paddingBottom: Platform.OS === 'ios' ? 40 : 20,
-    backgroundColor: '#161622',
     borderTopWidth: 1,
-    borderTopColor: '#2D2D3D',
+    borderTopColor: 'rgba(255,255,255,0.05)',
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(31, 31, 46, 0.8)',
+    borderRadius: 30,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   input: {
     flex: 1,
-    backgroundColor: '#1F1F2E',
-    borderRadius: 25,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    paddingTop: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    paddingTop: 8,
     color: '#FFFFFF',
     fontSize: 16,
     maxHeight: 100,
-    marginRight: 10,
   },
   sendButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: 10,
   },
 });
