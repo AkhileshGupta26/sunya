@@ -13,6 +13,9 @@ load_dotenv(ROOT_DIR / '.env')
 
 # Configuration
 SECRET_KEY = os.getenv("SECRET_KEY")
+if SECRET_KEY:
+    SECRET_KEY = SECRET_KEY.strip().strip('"').strip("'")
+
 if not SECRET_KEY:
     # Use a fallback for emergency/dev deployment, but log a warning
     print("WARNING: SECRET_KEY not found in environment. Using fallback. Please set this in production dashboard.")
