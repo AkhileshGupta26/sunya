@@ -7,6 +7,11 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # MongoDB connection
+# Debug: List all relevant env keys (names only) to verify Render dashboard sync
+print("--- ENVIRONMENT DIAGNOSTICS ---")
+found_keys = [k for k in os.environ.keys() if any(x in k for x in ['MONGO', 'SECRET', 'GROQ', 'DB_'])]
+print(f"DEBUG: Found relevant environment keys: {found_keys}")
+
 # Check multiple common names for better compatibility with different hosting environments
 mongo_url = os.environ.get('MONGODB_URI') or os.environ.get('MONGO_URI') or os.environ.get('MONGO_URL')
 
