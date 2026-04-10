@@ -1,0 +1,9 @@
+
+> sunya@1.1.0 web
+> expo start --web
+
+env: load .env
+env: export EXPO_TUNNEL_SUBDOMAIN EXPO_PACKAGER_HOSTNAME EXPO_PUBLIC_BACKEND_URL EXPO_USE_FAST_RESOLVER METRO_CACHE_ROOT
+Starting project at C:\Users\MSI\.gemini\antigravity\scratch\sunya\frontend
+› Port 8081 is being used by another process
+› Skipping dev server

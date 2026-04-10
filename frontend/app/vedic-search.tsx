@@ -121,7 +121,7 @@ export default function VedicSearch() {
         <View style={styles.searchBarContainer}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search Vedic wisdom..."
+            placeholder="Vedic Search..."
             placeholderTextColor="#6B7280"
             value={query}
             onChangeText={setQuery}
@@ -164,9 +164,32 @@ export default function VedicSearch() {
         >
           {results.length === 0 && !loading && (
             <Animated.View entering={FadeIn.delay(200)} style={styles.emptyState}>
-              <MaterialCommunityIcons name="book-open-variant" size={60} color="#2D2D3D" />
-              <Text style={styles.emptyText}>Dig deep into the ancient wisdom of the Vedas.</Text>
-              <Text style={styles.emptySubtext}>Try: "What is Tapas?" or "Explain the concept of Dharma."</Text>
+              <View style={styles.guidanceCard}>
+                <LinearGradient
+                   colors={[THEME_COLOR + '20', 'transparent']}
+                   style={StyleSheet.absoluteFill}
+                />
+                <MaterialCommunityIcons name="auto-fix" size={32} color={THEME_COLOR} style={styles.guidanceIcon} />
+                <Text style={styles.guidanceTitle}>Vedic Guidance</Text>
+                <Text style={styles.guidanceDescription}>
+                  Ask anything about ancient philosophy, Sanskrit scriptures, or practical mindfulness.
+                </Text>
+                
+                <View style={styles.examplesList}>
+                  <Text style={styles.exampleCategory}>Scriptural Wisdom</Text>
+                  <Text style={styles.exampleItem}>• "Meaning of Aham Brahmasmi"</Text>
+                  <Text style={styles.exampleItem}>• "Bhagavad Gita Summary"</Text>
+                  
+                  <View style={styles.exampleDivider} />
+                  
+                  <Text style={styles.exampleCategory}>Practical Living</Text>
+                  <Text style={styles.exampleItem}>• "How to handle stress with Yoga?"</Text>
+                  <Text style={styles.exampleItem}>• "What is the best time for Tapas?"</Text>
+                </View>
+              </View>
+
+              <MaterialCommunityIcons name="book-open-variant" size={40} color="#2D2D3D" style={{ marginTop: 30 }} />
+              <Text style={styles.emptyText}>The river of wisdom awaits your question.</Text>
             </Animated.View>
           )}
 
@@ -302,17 +325,59 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: '#D1D5DB',
-    fontSize: 20,
+    fontSize: 18,
     textAlign: 'center',
-    marginTop: 24,
-    fontWeight: '700',
+    marginTop: 15,
+    fontWeight: '600',
+    opacity: 0.5,
   },
-  emptySubtext: {
-    color: '#9CA3AF',
+  guidanceCard: {
+    width: '100%',
+    backgroundColor: '#1F1F2E',
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    overflow: 'hidden',
+  },
+  guidanceIcon: {
+    marginBottom: 16,
+  },
+  guidanceTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  guidanceDescription: {
     fontSize: 15,
-    textAlign: 'center',
-    marginTop: 12,
+    color: '#9CA3AF',
     lineHeight: 22,
+    marginBottom: 20,
+  },
+  examplesList: {
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderRadius: 16,
+    padding: 16,
+  },
+  exampleCategory: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.3)',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  exampleItem: {
+    fontSize: 14,
+    color: '#E5E7EB',
+    marginBottom: 6,
+    fontStyle: 'italic',
+  },
+  exampleDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    marginVertical: 12,
   },
   resultCard: {
     backgroundColor: 'rgba(31, 31, 46, 0.7)',

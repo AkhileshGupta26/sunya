@@ -81,3 +81,10 @@ android-sdk/
 # Mobile Builds
 *.apk
 *.aab
+
+# Environment files
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env

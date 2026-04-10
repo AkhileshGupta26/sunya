@@ -102,7 +102,7 @@ export default function SunyaYogi() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Namaste. I am your Sunya Yogi. How does your soul feel in this sacred moment? Share your heart, and we shall walk the path of stillness together.",
+      text: "Namaste. I am your Sunya Yogi. How does your soul feel in this sacred moment? You can also explore our Vedic Library for ancient wisdom by tapping the search icon above.",
       sender: 'yogi',
     },
   ]);
@@ -197,8 +197,17 @@ export default function SunyaYogi() {
               <Text style={styles.headerSubtitle}>Vedic AI Mentor</Text>
             </View>
           </View>
-          <TouchableOpacity onPress={() => router.push('/vedic-search')} style={styles.searchButton}>
-            <MaterialCommunityIcons name="library-shelves" size={24} color="#FFFFFF" />
+          <TouchableOpacity 
+            onPress={() => {
+              triggerHaptic('selection');
+              router.push('/vedic-search');
+            }} 
+            style={styles.searchButton}
+          >
+            <View style={styles.searchButtonContent}>
+              <MaterialCommunityIcons name="magnify" size={20} color="#FFFFFF" />
+              <Text style={styles.searchText}>Vedic Search</Text>
+            </View>
           </TouchableOpacity>
         </BlurView>
 
@@ -316,9 +325,24 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   searchButton: {
-    padding: 8,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  searchButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  searchText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   headerTitleContainer: {
     flexDirection: 'row',

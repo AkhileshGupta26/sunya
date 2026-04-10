@@ -46,13 +46,21 @@ def verify_token(token: str):
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
         token = credentials.credentials
-        print(f"DEBUG: Received token: {token[:20]}...")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
         if user_id is None:
-            print("DEBUG: user_id is None")
-            raise HTTPException(status_code=401, detail="Invalid authentication - No user ID")
+            raise HTTPException(status_code=401, detail="Invalid auth")
         return user_id
-    except JWTError as e:
-        print(f"DEBUG: JWT Error: {e}")
-        raise HTTPException(status_code=401, detail=f"Invalid authentication: {str(e)}")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+async def get_optional_user(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
+    if not credentials:
+        return "guest_user"
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        return user_id if user_id else "guest_user"
+    except JWTError:
+        return "guest_user"
