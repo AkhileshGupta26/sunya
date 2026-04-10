@@ -61,10 +61,23 @@ async def register(user: UserRegister):
 
 @router.post("/login")
 async def login(user: UserLogin):
+    print(f"DEBUG: Login attempt started for email: {user.email}")
     # Find user
-    user_doc = await db.users.find_one({"email": user.email})
-    if not user_doc or not verify_password(user.password, user_doc["password_hash"]):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+    try:
+        user_doc = await db.users.find_one({"email": user.email})
+        if not user_doc:
+            print(f"DEBUG: User not found: {user.email}")
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        print(f"DEBUG: User found in DB. Verifying password...")
+        if not verify_password(user.password, user_doc["password_hash"]):
+            print(f"DEBUG: Password verification failed for: {user.email}")
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        print(f"DEBUG: Password verified. Creating token...")
+    except Exception as e:
+        print(f"DEBUG: Database or Server Error during login: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error connecting to wisdom stream")
     
     # Create access token
     access_token = create_access_token(data={"sub": str(user_doc["_id"])})

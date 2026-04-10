@@ -46,6 +46,10 @@ def read_root():
 async def startup_db_client():
     # Only creating indexes, connection is handled globally
     try:
+        from backend.database import test_db_connection
+        logging.info("Checking database connection...")
+        await test_db_connection()
+        
         logging.info("Ensuring database indexes...")
         # Email unique index for fast lookups/login
         await client[db_name].users.create_index("email", unique=True)
