@@ -15,12 +15,12 @@ app = FastAPI()
 
 # Include Routers
 app.include_router(auth.router, prefix="/api")
-app.include_router(users.router) 
-app.include_router(sessions.router) 
-app.include_router(circles.router) 
-app.include_router(contests.router) 
-app.include_router(routines.router) 
-app.include_router(yogi.router) 
+app.include_router(users.router, prefix="/api") 
+app.include_router(sessions.router, prefix="/api") 
+app.include_router(circles.router, prefix="/api") 
+app.include_router(contests.router, prefix="/api") 
+app.include_router(routines.router, prefix="/api") 
+app.include_router(yogi.router, prefix="/api") 
 
 # Configure CORS
 app.add_middleware(
