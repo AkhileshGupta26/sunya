@@ -15,8 +15,15 @@ print(f"DEBUG: Found relevant environment keys: {found_keys}")
 # Check multiple common names for better compatibility with different hosting environments
 mongo_url = os.environ.get('MONGODB_URI') or os.environ.get('MONGO_URI') or os.environ.get('MONGO_URL')
 
+if mongo_url:
+    # CRITICAL: Clean the string in case of accidental spaces or quotes from the dashboard
+    mongo_url = mongo_url.strip().strip('"').strip("'")
+    if not (mongo_url.startswith('mongodb://') or mongo_url.startswith('mongodb+srv://')):
+        print(f"ERROR: The URI provided does not start with mongodb:// or mongodb+srv:// (Starts with: {mongo_url[:10]}...)")
+        mongo_url = None # Fallback to localhost so we see the warning below
+
 if not mongo_url:
-    print("WARNING: Database URL (MONGODB_URI/MONGO_URL) not found in environment. Falling back to localhost. This WILL FAIL on Render.")
+    print("WARNING: Database URL (MONGODB_URI/MONGO_URL) not found or invalid in environment. Falling back to localhost. This WILL FAIL on Render.")
     mongo_url = 'mongodb://localhost:27017'
 
 client = AsyncIOMotorClient(mongo_url)
