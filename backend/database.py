@@ -7,9 +7,11 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # MongoDB connection
-mongo_url = os.environ.get('MONGO_URL')
+# Check multiple common names for better compatibility with different hosting environments
+mongo_url = os.environ.get('MONGODB_URI') or os.environ.get('MONGO_URI') or os.environ.get('MONGO_URL')
+
 if not mongo_url:
-    print("WARNING: MONGO_URL not found in environment. Falling back to localhost. This WILL FAIL on Render.")
+    print("WARNING: Database URL (MONGODB_URI/MONGO_URL) not found in environment. Falling back to localhost. This WILL FAIL on Render.")
     mongo_url = 'mongodb://localhost:27017'
 
 client = AsyncIOMotorClient(mongo_url)
