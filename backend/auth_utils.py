@@ -14,8 +14,9 @@ load_dotenv(ROOT_DIR / '.env')
 # Configuration
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
-    raise ValueError("FATAL: SECRET_KEY not found in environment variables. Application cannot start.")
-# SECRET_KEY = "sunya-master-secret-key-2024" # REMOVED for security
+    # Use a fallback for emergency/dev deployment, but log a warning
+    print("WARNING: SECRET_KEY not found in environment. Using fallback. Please set this in production dashboard.")
+    SECRET_KEY = "sunya-emergency-master-key-2024"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 30
 
