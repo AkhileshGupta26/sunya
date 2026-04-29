@@ -106,19 +106,32 @@ export default function Profile() {
   const handleUpdateProfile = async () => {
     setIsUpdating(true);
     try {
+      // 1. Optimistic update: immediately apply gender change to context
+      //    so useThemeColor re-renders instantly without waiting for the API
+      if (user) {
+        // @ts-ignore
+        await updateUser({ ...user, name: editName, settings_gender: editGender });
+      }
+
+      // 2. Persist to backend
       const updatedUser = await api.put('/api/user/profile', {
         name: editName,
         settings_gender: editGender
       });
 
+      // 3. Sync backend response into context + AsyncStorage
       // @ts-ignore
       await updateUser(updatedUser);
+
       setEditProfileModalVisible(false);
       triggerHaptic('success');
       Alert.alert('Success', 'Profile updated!');
 
     } catch (error: any) {
       console.error('Profile update error:', error);
+
+      // Revert optimistic update on failure
+      await refreshUser();
 
       if (error.status === 401) {
         Alert.alert('Session Expired', 'Please login again.');
@@ -419,6 +432,21 @@ export default function Profile() {
             thumbColor={notificationsEnabled ? "#FFFFFF" : "#f4f3f4"}
           />
         </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Explore</Text>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/(tabs)/contest')}>
+          <MaterialCommunityIcons name="trophy-outline" size={24} color={THEME_COLOR} />
+          <Text style={styles.menuText}>Contest Arena</Text>
+          <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/leaderboard')}>
+          <MaterialCommunityIcons name="podium-gold" size={24} color={THEME_COLOR} />
+          <Text style={styles.menuText}>Global Leaderboard</Text>
+          <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>

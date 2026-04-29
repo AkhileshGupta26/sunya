@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { triggerHaptic } from '../../utils/haptics';
 
 
 interface StatsDashboardProps {
@@ -50,6 +51,18 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({ user, themeColor
                     <Text style={styles.statLabel}>Zen Passes</Text>
                 </View>
             </View>
+
+            <TouchableOpacity 
+                style={[styles.leaderboardButton, { borderColor: themeColor + '40' }]} 
+                onPress={() => {
+                    triggerHaptic('selection');
+                    router.push('/(tabs)/contest');
+                }}
+            >
+                <MaterialCommunityIcons name="trophy-variant" size={20} color={themeColor} />
+                <Text style={[styles.leaderboardText, { color: themeColor }]}>Contest Arena</Text>
+                <MaterialCommunityIcons name="chevron-right" size={16} color={themeColor} />
+            </TouchableOpacity>
         </View>
     );
 };

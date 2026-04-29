@@ -109,9 +109,105 @@ const GlobalStandingGraph = ({ token, refresh, themeColor }: { token: string | n
   );
 };
 
+const ProgressLineChart = ({ sessions, themeColor }: { sessions: any[], themeColor: string }) => {
+  const chartHeight = 160;
+  const chartWidth = width - 88; // Accounting for padding
+  const padding = 20;
+
+  // Process sessions into last 30 days
+  const last30Days = Array.from({ length: 15 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (14 - i));
+    const dateStr = d.toISOString().split('T')[0];
+    
+    // Sum minutes for this day
+    const daySessions = sessions.filter(s => s.date === dateStr && s.completed);
+    const totalMinutes = daySessions.reduce((acc, s) => acc + (s.duration_seconds || 0) / 60, 0);
+    
+    return { date: dateStr, minutes: totalMinutes, label: d.toLocaleDateString('en-US', { weekday: 'short' }).charAt(0) };
+  });
+
+  const maxMinutes = Math.max(20, ...last30Days.map(d => d.minutes)) * 1.2;
+  
+  const points = last30Days.map((d, i) => ({
+    x: padding + (i * (chartWidth - 2 * padding) / (last30Days.length - 1)),
+    y: chartHeight - padding - (d.minutes / maxMinutes * (chartHeight - 2 * padding))
+  }));
+
+  // Create SVG path (Bezier Curve)
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const curr = points[i];
+    const next = points[i + 1];
+    const cx1 = curr.x + (next.x - curr.x) / 2;
+    const cy1 = curr.y;
+    const cx2 = curr.x + (next.x - curr.x) / 2;
+    const cy2 = next.y;
+    d += ` C ${cx1} ${cy1}, ${cx2} ${cy2}, ${next.x} ${next.y}`;
+  }
+
+  const fillD = `${d} V ${chartHeight - padding} H ${points[0].x} Z`;
+
+  return (
+    <View style={styles.graphContainer}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <View>
+            <Text style={styles.graphTitle}>Meditation Path</Text>
+            <Text style={styles.graphSubtitle}>Your last 15 days of mindfulness</Text>
+          </View>
+          <MaterialCommunityIcons name="chart-bell-curve-cumulative" size={24} color={themeColor} />
+      </View>
+
+      <View style={{ height: chartHeight, width: '100%', overflow: 'hidden' }}>
+        <Svg height={chartHeight} width={chartWidth}>
+          <Defs>
+            <SvgLinearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={themeColor} stopOpacity="0.3" />
+              <Stop offset="1" stopColor={themeColor} stopOpacity="0" />
+            </SvgLinearGradient>
+          </Defs>
+
+          {/* Grid Lines */}
+          <Line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="#2D2D3D" strokeWidth="1" />
+          <Line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="#2D2D3D" strokeWidth="1" />
+
+          {/* Area Fill */}
+          <Path d={fillD} fill="url(#grad)" />
+
+          {/* Path Line */}
+          <Path d={d} fill="none" stroke={themeColor} strokeWidth="3" strokeLinecap="round" />
+
+          {/* Data Points */}
+          {points.map((p, i) => (
+             last30Days[i].minutes > 0 && (
+              <Circle key={i} cx={p.x} cy={p.y} r="4" fill="#0F0F1E" stroke={themeColor} strokeWidth="2" />
+             )
+          ))}
+
+          {/* Date Labels */}
+          {last30Days.map((d, i) => (
+            i % 2 === 0 && (
+              <SvgText
+                key={i}
+                x={points[i].x}
+                y={chartHeight - 4}
+                fill="#6B7280"
+                fontSize="10"
+                textAnchor="middle"
+              >
+                {d.label}
+              </SvgText>
+            )
+          ))}
+        </Svg>
+      </View>
+    </View>
+  );
+};
+
 const LeaderboardSection = ({ token }: { token: string | null }) => {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const [activeContest, setActiveContest] = useState('none');
+  const [contestType, setContestType] = useState('none');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -125,18 +221,20 @@ const LeaderboardSection = ({ token }: { token: string | null }) => {
       });
       if (res.ok) {
         const data = await res.json();
-        setActiveContest(data.active_contest || 'none');
+        setContestType(data.contest_type || 'none');
         setLeaderboard(data.leaderboard || []);
       }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
 
-  if (activeContest === 'none') return null;
+  if (contestType === 'none') return null;
 
   return (
     <View style={styles.sectionContainer}>
-      <Text style={styles.sectionTitle}>{activeContest.charAt(0).toUpperCase() + activeContest.slice(1)} Leaderboard</Text>
+      <Text style={styles.sectionTitle}>
+        {contestType === 'global' ? 'Global' : contestType.charAt(0).toUpperCase() + contestType.slice(1)} Leaderboard
+      </Text>
       <View style={styles.leaderboardCard}>
         {loading ? (
           <Text style={{ color: '#9CA3AF', textAlign: 'center', padding: 20 }}>Loading rankings...</Text>
@@ -226,6 +324,7 @@ export default function Progress() {
         <Text style={styles.title}>Your Progress</Text>
       </View>
 
+      <ProgressLineChart sessions={sessions} themeColor={themeColor} />
       <GlobalStandingGraph token={token} refresh={refreshing} themeColor={themeColor} />
       <LeaderboardSection token={token} />
 

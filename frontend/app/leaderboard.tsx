@@ -126,18 +126,6 @@ export default function Leaderboard() {
         );
     }
 
-    // Filter Logic: Top 3 + Me
-    const filteredLeaderboard: any[] = [];
-    const top3 = leaderboard.slice(0, 3);
-    filteredLeaderboard.push(...top3);
-
-    const me = leaderboard.find((u: any) => u.is_me);
-    // If I'm not in top 3, add me
-    if (me && me.rank > 3) {
-        // Add divider if gap? (Optional, kept simple for now)
-        filteredLeaderboard.push(me);
-    }
-
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -170,7 +158,7 @@ export default function Leaderboard() {
             </View>
 
             <FlatList
-                data={filteredLeaderboard}
+                data={leaderboard}
                 renderItem={renderItem}
                 keyExtractor={(item: any) => item.id || Math.random().toString()}
                 contentContainerStyle={styles.listContent}

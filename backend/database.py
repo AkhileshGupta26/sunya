@@ -34,8 +34,8 @@ async def test_db_connection():
     try:
         # The is_master command is cheap and does not require auth.
         await client.admin.command('ismaster')
-        print(f"✅ Database connected successfully to: {db_name}")
+        print(f"Database connected successfully to: {db_name}")
         return True
     except Exception as e:
-        print(f"❌ Database connection failed: {e}")
+        print(f"Database connection failed: {e}")
         return False

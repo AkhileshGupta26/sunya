@@ -9,6 +9,7 @@ import {
   Share,
   TextInput,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -24,7 +25,7 @@ import RoutineDetailModal from '@/components/routines/RoutineDetailModal';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL;
 
-const CircleManager = ({ token, API_URL, themeColor }: { token: string | null, API_URL: string, themeColor: string }) => {
+const CircleManager = ({ token, API_URL, themeColor, isWide }: { token: string | null, API_URL: string, themeColor: string, isWide: boolean }) => {
   const [myCircle, setMyCircle] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [joinCode, setJoinCode] = useState('');
@@ -192,12 +193,12 @@ const CircleManager = ({ token, API_URL, themeColor }: { token: string | null, A
   }
 
   return (
-    <View style={styles.circleOptions}>
-      <TouchableOpacity style={[styles.optionButton, { borderColor: themeColor }]} onPress={() => setViewMode('create')}>
+    <View style={[styles.circleOptions, isWide && styles.cardsRowGrid]}>
+      <TouchableOpacity style={[styles.optionButton, { borderColor: themeColor }, isWide && styles.cardContainerGrid]} onPress={() => setViewMode('create')}>
         <MaterialCommunityIcons name="plus-circle" size={32} color={themeColor} />
         <Text style={[styles.optionText, { color: themeColor }]}>Create Circle</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={[styles.optionButton, { borderColor: themeColor }]} onPress={() => setViewMode('join')}>
+      <TouchableOpacity style={[styles.optionButton, { borderColor: themeColor }, isWide && styles.cardContainerGrid]} onPress={() => setViewMode('join')}>
         <MaterialCommunityIcons name="login" size={32} color={themeColor} />
         <Text style={[styles.optionText, { color: themeColor }]}>Join Circle</Text>
       </TouchableOpacity>
@@ -205,20 +206,60 @@ const CircleManager = ({ token, API_URL, themeColor }: { token: string | null, A
   );
 };
 
+const LiveRankingBanner = ({ token, themeColor, type }: { token: string | null, themeColor: string, type: string }) => {
+  const [standing, setStanding] = useState<any>(null);
+
+  useEffect(() => {
+    fetchStanding();
+    const interval = setInterval(fetchStanding, 30000); // Live-ish update every 30s
+    return () => clearInterval(interval);
+  }, [type]);
+
+  const fetchStanding = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/contests/standing?contest_type=${type}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) setStanding(await res.json());
+    } catch (e) { console.error(e); }
+  };
+
+  if (!standing) return null;
+
+  return (
+    <LinearGradient colors={['#1F1F2E', '#161625']} style={styles.liveBanner}>
+      <View style={styles.liveBannerLogo}>
+        <MaterialCommunityIcons name="broadcast" size={20} color={themeColor} />
+        <Text style={[styles.liveLabel, { color: themeColor }]}>LIVE RANKING</Text>
+      </View>
+      <View style={styles.liveStats}>
+        <View style={styles.liveStatItem}>
+          <Text style={styles.liveStatValue}>#{standing.rank}</Text>
+          <Text style={styles.liveStatLabel}>Current Rank</Text>
+        </View>
+        <View style={styles.liveVerticalDivider} />
+        <View style={styles.liveStatItem}>
+          <Text style={styles.liveStatValue}>{standing.my_points} pts</Text>
+          <Text style={styles.liveStatLabel}>Total Score</Text>
+        </View>
+      </View>
+    </LinearGradient>
+  );
+};
+
 export default function Contest() {
   const { token, user, refreshUser } = useAuth();
   const router = useRouter();
   const THEME_COLOR = useThemeColor();
-  const [activeContests, setActiveContests] = useState<string[]>([]);
+  const { width } = useWindowDimensions();
+  const isWide = width > 768;
+  const activeContests = user?.active_contests || [];
   const [loading, setLoading] = useState(false);
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(ROUTINE_CATEGORIES[0]?.id || '');
 
   useEffect(() => {
-    if (user?.active_contests) {
-      setActiveContests(user.active_contests);
-    }
     loadContestStatus();
   }, [user]);
 
@@ -229,8 +270,8 @@ export default function Contest() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
-        const data = await response.json();
-        setActiveContests(data.active_contests || []);
+        // Status is managed by AuthContext/user object, but we can refresh it
+        refreshUser();
       }
     } catch (e) { console.error(e); }
   };
@@ -254,8 +295,6 @@ export default function Contest() {
             });
 
             if (res.ok) {
-              const data = await res.json();
-              setActiveContests(data.active_contests); // Update local
               refreshUser(); // Update global context
               triggerHaptic('success');
               Alert.alert('Success', `You joined the ${type} contest!`);
@@ -287,7 +326,7 @@ export default function Contest() {
     onPress: () => void,
     isResultsMode: boolean = false
   ) => (
-    <TouchableOpacity activeOpacity={0.9} onPress={onPress} style={styles.cardContainer}>
+    <TouchableOpacity activeOpacity={0.9} onPress={onPress} style={[styles.cardContainer, isWide && styles.cardContainerGrid]}>
       <LinearGradient colors={colors as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.cardGradient}>
         <View style={styles.cardContent}>
           <View style={styles.cardTextContainer}>
@@ -304,36 +343,54 @@ export default function Contest() {
   );
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 100 }}>
+    <ScrollView 
+      style={styles.container} 
+      contentContainerStyle={[
+        { paddingBottom: 100 },
+        isWide && styles.webContentContainer
+      ]}
+    >
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Contest Arena</Text>
         <Text style={styles.subtitle}>Compete with others globally</Text>
       </View>
 
+      {/* Live Ranking Banner (Shows for active participants) */}
+      <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
+        {activeContests.includes('weekly') && (
+           <LiveRankingBanner token={token} themeColor={THEME_COLOR} type="weekly" />
+        )}
+        {!activeContests.includes('weekly') && activeContests.includes('monthly') && (
+           <LiveRankingBanner token={token} themeColor={THEME_COLOR} type="monthly" />
+        )}
+      </View>
+
       {/* Contests Stack */}
       <View style={styles.sectionContainer}>
-        {/* Weekly Contest Card */}
-        {renderContestCard(
-          "Weekly Contest",
-          "Compete for the top spot",
-          activeContests.includes('weekly') ? "REGISTERED ✅" : "JOIN CONTEST",
-          "trophy",
-          ['#F59E0B', '#EA580C'],
-          () => activeContests.includes('weekly') ? openLeaderboard('weekly') : handleJoinContest('weekly'),
-          true
-        )}
+        <View style={[styles.cardsRow, isWide && styles.cardsRowGrid]}>
+          {/* Weekly Contest Card */}
+          {renderContestCard(
+            "Weekly Contest",
+            "Compete for the top spot",
+            activeContests.includes('weekly') ? "REGISTERED ✅" : "JOIN CONTEST",
+            "trophy",
+            ['#F59E0B', '#EA580C'],
+            () => activeContests.includes('weekly') ? openLeaderboard('weekly') : handleJoinContest('weekly'),
+            true
+          )}
 
-        {/* 21-Day Challenge Card */}
-        {renderContestCard(
-          "21-Day Challenge",
-          "Build a life-changing habit",
-          activeContests.includes('monthly') ? "REGISTERED (Active)" : "JOIN CHALLENGE",
-          "check-circle",
-          ['#8B5CF6', '#6D28D9'],
-          () => activeContests.includes('monthly') ? openLeaderboard('monthly') : handleJoinContest('monthly'),
-          false
-        )}
+          {/* 21-Day Challenge Card */}
+          {renderContestCard(
+            "21-Day Challenge",
+            "Build a life-changing habit",
+            activeContests.includes('monthly') ? "REGISTERED (Active)" : "JOIN CHALLENGE",
+            "check-circle",
+            ['#8B5CF6', '#6D28D9'],
+            () => activeContests.includes('monthly') ? openLeaderboard('monthly') : handleJoinContest('monthly'),
+            false
+          )}
+        </View>
 
         <View style={{ marginTop: 24, marginBottom: 24 }}>
           <Text style={[styles.sectionTitle, { marginBottom: 16, paddingHorizontal: 4 }]}>Routines of Greatness</Text>
@@ -410,7 +467,7 @@ export default function Contest() {
         <Text style={styles.sectionTitle}>Social Circle</Text>
       </View>
 
-      <CircleManager token={token} API_URL={API_URL} themeColor={THEME_COLOR} />
+      <CircleManager token={token} API_URL={API_URL} themeColor={THEME_COLOR} isWide={isWide} />
 
     </ScrollView>
   );
@@ -420,31 +477,49 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0F0F1E',
-    ...Platform.select({
-      web: {
-        alignSelf: 'center',
-        width: '100%',
-        maxWidth: 600,
-      }
-    })
+  },
+  webContentContainer: {
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   header: { padding: 24, paddingTop: 60, alignItems: 'center', marginBottom: 8 },
   title: { fontSize: 28, fontWeight: 'bold', color: '#FFFFFF', textAlign: 'center' },
   subtitle: { fontSize: 14, color: '#9CA3AF', marginTop: 4, textAlign: 'center' },
 
   sectionContainer: { marginTop: 0, paddingHorizontal: 20 },
+  cardsRow: {
+    flexDirection: 'column',
+    gap: 16,
+  },
+  cardsRowGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
 
   // New Card Styles
   cardContainer: {
     height: 160,
     borderRadius: 24,
-    marginBottom: 16,
+    marginBottom: 0,
     overflow: 'hidden',
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
+    width: '100%',
+  },
+  cardContainerGrid: {
+    ...Platform.select({
+      web: {
+        width: 'calc(50% - 8px)',
+      },
+      default: {
+        width: '48%', // fallback for other platforms if wide
+      }
+    })
   },
   cardGradient: { flex: 1, padding: 24, justifyContent: 'center' },
   cardContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
@@ -495,9 +570,13 @@ const styles = StyleSheet.create({
   actionButtonText: { color: 'white', fontWeight: 'bold' },
 
   // The "Create / Join" Buttons from screenshot (Grid)
-  circleOptions: { flexDirection: 'row', paddingHorizontal: 20, gap: 16 },
+  circleOptions: { 
+    flexDirection: 'column', 
+    paddingHorizontal: 20, 
+    gap: 16 
+  },
   optionButton: {
-    flex: 1,
+    width: '100%',
     backgroundColor: '#1F1F2E',
     padding: 24,
     borderRadius: 24,
@@ -516,6 +595,25 @@ const styles = StyleSheet.create({
   cancelText: { color: '#9CA3AF' },
   confirmButton: { flex: 1, backgroundColor: '#7C3AED', padding: 12, borderRadius: 8, alignItems: 'center' },
   confirmText: { color: 'white', fontWeight: 'bold' },
+
+  // Live Banner Styles
+  liveBanner: {
+    marginHorizontal: 0,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#2D2D3D',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  liveBannerLogo: { flexDirection: 'column', alignItems: 'center', borderRightWidth: 1, borderRightColor: '#2D2D3D', paddingRight: 16 },
+  liveLabel: { fontSize: 10, fontWeight: 'bold', marginTop: 4 },
+  liveStats: { flex: 1, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
+  liveStatItem: { alignItems: 'center' },
+  liveStatValue: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+  liveStatLabel: { color: '#9CA3AF', fontSize: 10, marginTop: 2 },
+  liveVerticalDivider: { width: 1, height: 24, backgroundColor: '#2D2D3D' },
 
   // Category Pills
   categoryPill: {

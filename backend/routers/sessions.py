@@ -4,6 +4,9 @@ from bson import ObjectId
 from backend.database import db
 from backend.models import MeditationSession, SessionResponse
 from backend.auth_utils import get_current_user
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/sessions", tags=["Sessions"])
 
@@ -238,7 +241,8 @@ async def get_session_history(user_id: str = Depends(get_current_user)):
                 "id": str(s["_id"]),
                 "date": s["date"],
                 "completed": s["completed"],
-                "track_type": s.get("track_type")
+                "track_type": s.get("track_type"),
+                "duration_seconds": s.get("duration_seconds", 0)
             }
             for s in sessions
         ]
